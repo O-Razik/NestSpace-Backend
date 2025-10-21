@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AA70F358-D137-4077-B427-194CC90A202D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UserSpaceService", "UserSpaceService", "{ACFBF53C-5C8C-492A-8C49-4918586A25B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserSpaceService.DAL", "src\UserSpaceService\UserSpaceService.DAL\UserSpaceService.DAL.csproj", "{0F2092E9-64FF-4538-A288-9D38CD507B85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserSpaceService.ABS", "src\UserSpaceService\UserSpaceService.ABS\UserSpaceService.ABS.csproj", "{76BAE89D-A8C3-4DEC-8886-37F917A628BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserSpaceService.BLL", "src\UserSpaceService\UserSpaceService.BLL\UserSpaceService.BLL.csproj", "{11DE9B26-3877-4A57-AD4F-585DA5EF14F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserSpaceService.API", "src\UserSpaceService\UserSpaceService.API\UserSpaceService.API.csproj", "{5D30A779-4C40-4E1C-BC3E-0AADFB263E8E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6DD674D5-FF00-4BB9-95AD-E2BC356056CE}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{ACFBF53C-5C8C-492A-8C49-4918586A25B2} = {AA70F358-D137-4077-B427-194CC90A202D}
+		{0F2092E9-64FF-4538-A288-9D38CD507B85} = {ACFBF53C-5C8C-492A-8C49-4918586A25B2}
+		{76BAE89D-A8C3-4DEC-8886-37F917A628BC} = {ACFBF53C-5C8C-492A-8C49-4918586A25B2}
+		{11DE9B26-3877-4A57-AD4F-585DA5EF14F4} = {ACFBF53C-5C8C-492A-8C49-4918586A25B2}
+		{5D30A779-4C40-4E1C-BC3E-0AADFB263E8E} = {ACFBF53C-5C8C-492A-8C49-4918586A25B2}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0F2092E9-64FF-4538-A288-9D38CD507B85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F2092E9-64FF-4538-A288-9D38CD507B85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F2092E9-64FF-4538-A288-9D38CD507B85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F2092E9-64FF-4538-A288-9D38CD507B85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76BAE89D-A8C3-4DEC-8886-37F917A628BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76BAE89D-A8C3-4DEC-8886-37F917A628BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76BAE89D-A8C3-4DEC-8886-37F917A628BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76BAE89D-A8C3-4DEC-8886-37F917A628BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11DE9B26-3877-4A57-AD4F-585DA5EF14F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11DE9B26-3877-4A57-AD4F-585DA5EF14F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11DE9B26-3877-4A57-AD4F-585DA5EF14F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11DE9B26-3877-4A57-AD4F-585DA5EF14F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D30A779-4C40-4E1C-BC3E-0AADFB263E8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D30A779-4C40-4E1C-BC3E-0AADFB263E8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D30A779-4C40-4E1C-BC3E-0AADFB263E8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D30A779-4C40-4E1C-BC3E-0AADFB263E8E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
