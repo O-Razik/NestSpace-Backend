@@ -13,6 +13,11 @@ namespace UserSpaceService.API.Controllers;
 /// </summary>
 /// <param name="spaceService"></param>
 /// <param name="httpContextAccessor"></param>
+/// <param name="spaceDtoMapper"></param>
+/// <param name="spaceShortDtoMapper"></param>
+/// <param name="spaceMemberDtoMapper"></param>
+/// <param name="spaceMemberShortMapper"></param>
+/// <param name="spaceRoleDtoMapper"></param>
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]

@@ -7,13 +7,14 @@ using UserSpaceService.ABS.IServices;
 using UserSpaceService.BLL.DTOs;
 using UserSpaceService.BLL.Helpers;
 using UserSpaceService.BLL.Mappers;
+using UserSpaceService.BLL.Queues;
 using UserSpaceService.BLL.Services;
 using UserSpaceService.DAL.Data;
 using UserSpaceService.DAL.Helpers;
 using UserSpaceService.DAL.Models;
 using UserSpaceService.DAL.Repositories;
 
-namespace UserSpaceService.API.Extentions;
+namespace UserSpaceService.API.Extensions;
 
 public static class BuilderExtension
 {
@@ -69,5 +70,15 @@ public static class BuilderExtension
         builder.Services.AddScoped<IMapper<ISpace, SpaceDtoShort>, SpaceShortMapper>();
         builder.Services.AddScoped<IMapper<ISpaceRole, SpaceRoleDto>, SpaceRoleMapper>();
         builder.Services.AddScoped<IMapper<IExternalLogin, ExternalLoginDto>, ExternalLoginMapper>(); 
+    }
+    
+    public static WebApplicationBuilder AddQueueServices(this WebApplicationBuilder builder)
+    {
+        builder.Services.Configure<RabbitSettings>(
+            builder.Configuration.GetSection("RabbitSettings"));
+
+        builder.Services.AddScoped<IEventPublisher, RabbitMqPublisher>();
+        
+        return builder;
     }
 }

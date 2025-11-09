@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using UserSpaceService.API.Extentions;
+using UserSpaceService.API.Extensions;
 
 namespace UserSpaceService.API;
 
@@ -49,6 +49,7 @@ public static class Program
         
         builder.AddSqlDbContext();
         builder.AddModels();
+        builder.AddQueueServices();
         builder.AddRepositories();
         builder.AddServices();
         builder.AddMappersAndFactories();
