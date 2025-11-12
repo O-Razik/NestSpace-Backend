@@ -1,6 +1,8 @@
+using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.ABS.IServices;
+using UserSpaceService.BLL.Queues;
 
 namespace UserSpaceService.BLL.Services;
 
@@ -8,7 +10,8 @@ public class SpaceService(
     ISpaceRepository spaceRepository,
     ISpaceRoleRepository spaceRoleRepository,
     ISpaceMemberRepository spaceMemberRepository,
-    IUserRepository userRepository)
+    IUserRepository userRepository,
+    IEventPublisher eventPublisher)
     : ISpaceService
 {
     public async Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId)
@@ -37,7 +40,23 @@ public class SpaceService(
         var creator = await userRepository.GetByIdAsync(creatorId)
                       ?? throw new InvalidOperationException("Creator user ID is not available.");
 
-        return await spaceRepository.CreateAsync(creator.Id, name);
+        var space = await spaceRepository.CreateAsync(creator.Id, name);
+        
+        var chatEvent = new ChatCreateEvent
+        {
+            SpaceId = space.Id,
+            ChatId = Guid.NewGuid(),
+            MemberId = creatorId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await eventPublisher.PublishAsync(
+            chatEvent,
+            routingKey: "chat.create",
+            exchangeName: "chat.exchange"
+        );
+        
+        return space;
     }
 
     public async Task<ISpace?> UpdateSpaceNameAsync(Guid spaceId, string newName)
