@@ -1,0 +1,96 @@
+using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.IHelpers;
+using ChatNotifyService.ABS.IRepositories;
+using ChatNotifyService.ABS.IServices;
+using ChatNotifyService.BLL.Dtos;
+using ChatNotifyService.BLL.Mappers;
+using ChatNotifyService.BLL.RabbitMQ;
+using ChatNotifyService.BLL.Services;
+using ChatNotifyService.DAL.Entities;
+using ChatNotifyService.DAL.Data;
+using ChatNotifyService.DAL.Factories;
+using ChatNotifyService.DAL.Repositories;
+
+namespace ChatNotifyService.API.Extensions;
+
+public static class BuilderExtension
+{
+    public static void AddNoSqlDbContext(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<ChatNotifyDbContext>(sp =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var databaseName = configuration["DatabaseSettings:DatabaseName"];
+            return new ChatNotifyDbContext(connectionString, databaseName);
+        });
+    }
+    
+    public static async Task InitializeMongoIndexesAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ChatNotifyDbContext>();
+        await dbContext.InitializeIndexesAsync();
+    }
+    
+    public static void AddQueues(this WebApplicationBuilder builder)
+    {
+        builder.Services.Configure<RabbitSettings>(
+        builder.Configuration.GetSection("RabbitSettings"));
+         
+        builder.Services.AddSingleton<RabbitMqConsumer>();
+        builder.Services.AddHostedService<RabbitMqConsumerHostedService>();
+    }
+
+    public static void AddEntities(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IChat, Chat>();
+        builder.Services.AddScoped<IMessage, Message>();
+        builder.Services.AddScoped<IChatMember, ChatMember>();
+        builder.Services.AddScoped<IMessageRead, MessageRead>();
+    }
+
+    public static void AddRepositories(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IChatRepository, ChatRepository>();
+        builder.Services.AddScoped<IChatMemberRepository, ChatMemberRepository>();
+        builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+        builder.Services.AddScoped<IMessageReadRepository, MessageReadRepository>();
+    }
+    
+    public static void AddServices(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IChatService, ChatService>();
+        builder.Services.AddScoped<IMessageService, MessageService>();
+        builder.Services.AddScoped<IChatNotificationService, ChatNotificationService>();
+    }
+    
+    public static void AddFactories(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddTransient<IEntityFactory<IChat>, ChatFactory>();
+        builder.Services.AddTransient<IEntityFactory<IMessage>, MessageFactory>();
+        builder.Services.AddTransient<IEntityFactory<IChatMember>, ChatMemberFactory>();
+        builder.Services.AddTransient<IEntityFactory<IMessageRead>, MessageReadFactory>();
+    }
+    
+    public static void AddMappers(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddTransient<ChatMemberMapper>();
+        builder.Services.AddTransient<MessageReadMapper>();
+        builder.Services.AddTransient<ChatMapper>();
+        builder.Services.AddTransient<IBigMapper<IChat, ChatDto, ChatDtoShort>, ChatMapper>();
+        builder.Services.AddTransient<IBigMapper<IMessage, MessageDto, MessageDtoShort>, MessageMapper>();
+        builder.Services.AddTransient<IBigMapper<IChatMember, ChatMemberDto, ChatMemberDtoShort>, ChatMemberMapper>();
+        builder.Services.AddTransient<IBigMapper<IMessageRead, MessageReadDto, MessageReadDtoShort>, MessageReadMapper>();
+    }
+    
+    public static void AddInfrastructure(this WebApplicationBuilder builder)
+    {
+        builder.AddEntities();
+        builder.AddRepositories();
+        builder.AddServices();
+        builder.AddFactories();
+        builder.AddMappers();
+        builder.Services.AddSignalR();
+    }
+}
