@@ -114,4 +114,15 @@ public class ChatService(
 
         return removed;
     }
+    
+    public async Task<bool> IsMemberAsync(Guid chatId, Guid userId)
+    {
+        if(chatId == Guid.Empty)
+            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
+        
+        if(userId == Guid.Empty)
+            throw new ArgumentException("UserId cannot be empty", nameof(userId));
+        
+        return await memberRepository.IsMemberAsync(chatId, userId);
+    }
 }

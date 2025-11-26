@@ -68,4 +68,13 @@ public class ChatMemberRepository(ChatNotifyDbContext dbContext) : IChatMemberRe
 
         return result.IsAcknowledged && result.ModifiedCount > 0;
     }
+    
+    public async Task<bool> IsMemberAsync(Guid chatId, Guid userId)
+    {
+        var chat = await dbContext.Chats
+            .Find(c => c.Id == chatId)
+            .FirstOrDefaultAsync();
+
+        return chat != null && chat.Members.Any(m => m.MemberId == userId);
+    }
 }

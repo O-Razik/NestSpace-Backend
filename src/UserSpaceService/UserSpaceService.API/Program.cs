@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using UserSpaceService.API.Extensions;
 
 namespace UserSpaceService.API;
@@ -46,13 +47,15 @@ public static class Program
                 }
             });
         });
-        
-        builder.AddSqlDbContext();
-        builder.AddModels();
-        builder.AddQueueServices();
-        builder.AddRepositories();
-        builder.AddServices();
-        builder.AddMappersAndFactories();
+
+        builder.AddSqlDbContext()
+            .AddModels()
+            .AddQueueServices()
+            .AddRepositories()
+            .AddServices()
+            .AddMappersAndFactories()
+            .AddOpenTelemetry()
+            .AddLogging();
         
         builder.Services.AddAuthorization();
         
@@ -83,6 +86,7 @@ public static class Program
 
         
         var app = builder.Build();
+        Log.Information("Startup log");
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

@@ -26,9 +26,6 @@ public static class Program
                 };
             });
         builder.Services.AddAuthorization();
-        
-        builder.AddNoSqlDbContext();
-        builder.AddQueues();
         builder.AddInfrastructure();
 
         builder.Services.AddEndpointsApiExplorer();

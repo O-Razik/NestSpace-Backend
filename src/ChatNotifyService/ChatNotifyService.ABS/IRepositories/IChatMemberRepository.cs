@@ -11,4 +11,6 @@ public interface IChatMemberRepository
     Task<IChatMember> AddMemberToChatAsync(Guid chatId, Guid memberId);
     
     Task<bool> RemoveMemberFromChatAsync(Guid chatId, Guid memberId);
+    
+    Task<bool> IsMemberAsync(Guid chatId, Guid userId);
 }

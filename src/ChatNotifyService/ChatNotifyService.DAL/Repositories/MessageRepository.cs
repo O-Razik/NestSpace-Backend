@@ -40,15 +40,27 @@ public class MessageRepository(ChatNotifyDbContext dbContext) : IMessageReposito
 
     public async Task<IMessage?> GetByIdAsync(Guid messageId)
     {
-        return await dbContext.Messages
-            .Find(message => message.Id == messageId)
+        var message = await dbContext.Messages
+            .Find(m => m.Id == messageId)
             .FirstOrDefaultAsync();
+
+        if (message == null) return message;
+        
+        message.Sender = await dbContext.ChatMembers
+            .Find(u => u.MemberId == message.SenderId)
+            .FirstOrDefaultAsync();
+            
+        message.Reads = await dbContext.MessageReads
+            .Find(r => r.MessageId == message.Id)
+            .ToListAsync();
+
+        return message;
     }
 
     public async Task<IMessage> CreateAsync(IMessage message)
     {
         await dbContext.Messages.InsertOneAsync((Message)message);
-        return message;
+        return await GetByIdAsync(message.Id) ?? throw new InvalidOperationException("Failed to retrieve the created message.");
     }
 
     public async Task<IMessage?> UpdateAsync(IMessage updatedMessage)
