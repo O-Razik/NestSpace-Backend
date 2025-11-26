@@ -3,6 +3,7 @@ using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IServices;
 using ChatNotifyService.BLL.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatNotifyService.API.Controllers;
@@ -11,10 +12,12 @@ namespace ChatNotifyService.API.Controllers;
 /// Controller for managing chat and its members.
 /// </summary>
 /// <param name="chatService"></param>
-[Route("api/[controller]")]
+[Authorize]
+[Route("api/space/{spaceId}/chat")]
 [ApiController]
 public class ChatController(
     IChatService chatService,
+    IHttpContextAccessor httpContextAccessor,
     IBigMapper<IChat, ChatDto, ChatDtoShort> chatMapper,
     IBigMapper<IChatMember, ChatMemberDto, ChatMemberDtoShort> memberMapper) : ControllerBase
 {
@@ -22,10 +25,16 @@ public class ChatController(
     /// Gets all chats in a specific space for the authenticated member.
     /// </summary>
     /// <param name="spaceId"></param>
-    [HttpGet("space/{spaceId}")]
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<ChatDtoShort>>> GetAllChats(Guid spaceId)
     {
-        var memberId = Guid.Parse("b38d964b-813b-4294-8176-0a897b67b65d"); //Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var senderIdClaim = httpContextAccessor.HttpContext?
+            .User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+        if (senderIdClaim == null)
+            return Unauthorized("Invalid token.");
+            
+        var memberId = Guid.Parse(senderIdClaim);
         var chats = await chatService.GetAllChatsAsync(spaceId, memberId);
         return Ok(chats.Select(chatMapper.ToShortDto));
     }
@@ -63,6 +72,10 @@ public class ChatController(
     [HttpPut]
     public async Task<ActionResult<ChatDto?>> UpdateChat([FromBody] ChatDtoShort updatedChat)
     {
+        var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!await chatService.IsMemberAsync(updatedChat.Id, memberId))
+            return Forbid("You are not a member of this chat.");
+
         var chat = await chatService.UpdateChatAsync(chatMapper.ToEntity(updatedChat));
         if (chat == null)
             return NotFound();
@@ -90,7 +103,7 @@ public class ChatController(
     /// </summary>
     /// <param name="spaceId"></param>
     /// <param name="chatId"></param>
-    [HttpGet("space/{spaceId}/chat/{chatId}/members")]
+    [HttpGet("{chatId}/members")]
     public async Task<ActionResult<IEnumerable<ChatMemberDto>>> GetChatMembers(Guid spaceId, Guid chatId)
     {
         var members = await chatService.GetChatMembersAsync(spaceId, chatId);
