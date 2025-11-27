@@ -1,6 +1,6 @@
 namespace EventScheduleService.ABS.IModels;
 
-public interface IEvent
+public interface IEventCategory
 {
     public Guid Id { get; set; }
     
