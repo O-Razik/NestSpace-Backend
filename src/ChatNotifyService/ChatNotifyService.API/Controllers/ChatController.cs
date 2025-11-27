@@ -73,8 +73,8 @@ public class ChatController(
     public async Task<ActionResult<ChatDto?>> UpdateChat([FromBody] ChatDtoShort updatedChat)
     {
         var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        if (!await chatService.IsMemberAsync(updatedChat.Id, memberId))
-            return Forbid("You are not a member of this chat.");
+        //if (!await chatService.IsMemberAsync(updatedChat.Id, memberId))
+        //    return Forbid("You are not a member of this chat.");
 
         var chat = await chatService.UpdateChatAsync(chatMapper.ToEntity(updatedChat));
         if (chat == null)
