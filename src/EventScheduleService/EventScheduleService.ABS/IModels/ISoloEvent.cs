@@ -6,7 +6,7 @@ public interface ISoloEvent
     
     public Guid SpaceId { get; set; }
     
-    public Guid EventId { get; set; }
+    public Guid CategoryId { get; set; }
     
     public string Title { get; set; }
     
@@ -18,7 +18,7 @@ public interface ISoloEvent
     
     public bool IsYearly { get; set; }
     
-    IEvent Event { get; set; }
+    IEventCategory EventCategory { get; set; }
     
     ICollection<IEventTag> Tags { get; set; }
 }

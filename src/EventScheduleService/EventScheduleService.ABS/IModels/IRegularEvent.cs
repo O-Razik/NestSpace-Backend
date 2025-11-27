@@ -29,7 +29,7 @@ public interface IRegularEvent
     
     public Frequency Frequency { get; set; }
     
-    public Guid EventId { get; set; }
+    public Guid CategoryId { get; set; }
     
     public string Tittle { get; set; }
     
@@ -39,7 +39,7 @@ public interface IRegularEvent
     
     public TimeSpan Duration { get; set; }
     
-    public IEvent Event { get; set; }
+    public IEventCategory EventCategory { get; set; }
     
     public ICollection<IEventTag> Tags { get; set; }
 }
