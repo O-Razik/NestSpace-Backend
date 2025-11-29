@@ -14,13 +14,13 @@ public interface IEventService
     
     Task<bool> DeleteCategoryAsync(Guid eventId);
     
-    Task<IEnumerable<IEventTag>> GetMarkersBySpaceAsync(Guid spaceId);
+    Task<IEnumerable<IEventTag>> GetTagsBySpaceAsync(Guid spaceId);
     
-    Task<IEventTag?> GetMarkerByIdAsync(Guid markerId);
+    Task<IEventTag?> GetTagByIdAsync(Guid markerId);
     
-    Task<IEventTag> CreateMarkerAsync(IEventTag newTag);
+    Task<IEventTag> CreateTagAsync(IEventTag newTag);
     
-    Task<IEventTag?> UpdateMarkerAsync(IEventTag updatedTag);
+    Task<IEventTag?> UpdateTagAsync(IEventTag updatedTag);
     
-    Task<bool> DeleteMarkerAsync(Guid markerId);
+    Task<bool> DeleteTagAsync(Guid markerId);
 }
