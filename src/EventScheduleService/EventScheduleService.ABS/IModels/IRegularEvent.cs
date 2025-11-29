@@ -31,7 +31,7 @@ public interface IRegularEvent
     
     public Guid CategoryId { get; set; }
     
-    public string Tittle { get; set; }
+    public string Title { get; set; }
     
     public string Description { get; set; }
     

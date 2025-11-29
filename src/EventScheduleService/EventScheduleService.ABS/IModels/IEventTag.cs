@@ -6,7 +6,7 @@ public interface IEventTag
     
     public Guid SpaceId { get; set; }
     
-    public string Tittle { get; set; }
+    public string Title { get; set; }
     
     public string Color { get; set; }
     

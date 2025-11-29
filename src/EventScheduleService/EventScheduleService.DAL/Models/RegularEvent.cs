@@ -22,9 +22,9 @@ public class RegularEvent : IRegularEvent
     [Column("event_id")]
     public Guid CategoryId { get; set; }
     
-    [Column("tittle")]
+    [Column("title")]
     [MaxLength(255)]
-    public required string Tittle { get; set; }
+    public required string Title { get; set; }
     
     [Column("description")]
     [MaxLength(500)]

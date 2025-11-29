@@ -13,9 +13,9 @@ public class EventTag : IEventTag
     [Column("space_id")]
     public Guid SpaceId { get; set; }
     
-    [Column("tittle")]
+    [Column("title")]
     [MaxLength(255)]
-    public required string Tittle { get; set; }
+    public required string Title { get; set; }
     
     [Column("color")]
     [MaxLength(255)]
