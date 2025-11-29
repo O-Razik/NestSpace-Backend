@@ -24,23 +24,64 @@ public class SoloEventRepository(EventScheduleDbContext context) : ISoloEventRep
     public async Task<ISoloEvent> AddAsync(ISoloEvent entity)
     {
         var soloEvent = (SoloEvent)entity;
+        foreach (var tag in entity.Tags)
+        {
+            context.Entry(tag).State = EntityState.Unchanged;
+        }
+        
         context.SoloEvents.Add(soloEvent);
         await context.SaveChangesAsync();
-        return soloEvent;
+        return (await GetByIdAsync(soloEvent.Id))!;
     }
 
     public async Task<ISoloEvent?> UpdateAsync(ISoloEvent entity)
     {
         var soloEvent = (SoloEvent)entity;
-        var existingSoloEvent = await context.SoloEvents.FindAsync(soloEvent.Id);
+        var existingSoloEvent = await context.SoloEvents
+            .Include(e => e.Tags)
+            .FirstOrDefaultAsync(e => e.Id == soloEvent.Id);
+
         if (existingSoloEvent == null)
-        {
             return null;
+
+        context.Entry(existingSoloEvent).CurrentValues.SetValues(new
+        {
+            soloEvent.Title,
+            soloEvent.Description,
+            soloEvent.SpaceId,
+            soloEvent.CategoryId,
+            soloEvent.StartDate,
+            soloEvent.EndDate,
+            soloEvent.IsYearly
+        });
+
+        var newTagIds = soloEvent.Tags.Select(t => t.Id).ToList();
+        var existingTagIds = existingSoloEvent.Tags.Select(t => t.Id).ToList();
+
+        // Remove deleted tags
+        var tagsToRemove = existingSoloEvent.Tags
+            .Where(t => !newTagIds.Contains(t.Id))
+            .ToList();
+
+        foreach (var tag in tagsToRemove)
+            existingSoloEvent.Tags.Remove(tag);
+
+        // Add new tags
+        var tagIdsToAdd = newTagIds
+            .Where(newId => !existingTagIds.Contains(newId))
+            .ToList();
+
+        foreach (var stub in tagIdsToAdd
+                     .Select(tagId => new EventTag { Id = tagId }))
+        {
+            context.Entry(stub).State = EntityState.Unchanged;
+            existingSoloEvent.Tags.Add(stub);
         }
-        context.Entry(existingSoloEvent).CurrentValues.SetValues(soloEvent);
+
         await context.SaveChangesAsync();
         return existingSoloEvent;
     }
+
 
     public async Task<bool> DeleteAsync(Guid id)
     {

@@ -15,11 +15,11 @@ public class EventCategory : IEventCategory
     
     [Column("tittle")]
     [MaxLength(255)]
-    public required string Tittle { get; set; }
+    public string Title { get; set; } = string.Empty;
     
     [Column("description")]
     [MaxLength(255)]
-    public required string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
     
     public ICollection<SoloEvent> SoloEvents { get; set; } = new List<SoloEvent>();
     

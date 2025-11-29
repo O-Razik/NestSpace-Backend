@@ -24,24 +24,65 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
     public async Task<IRegularEvent> AddAsync(IRegularEvent entity)
     {
         var regularEvent = (RegularEvent)entity;
+        foreach (var tag in regularEvent.Tags)
+        {
+            context.Entry(tag).State = EntityState.Unchanged;
+        }
+        
         context.RegularEvents.Add(regularEvent);
         await context.SaveChangesAsync();
-        return regularEvent;
+        return (await GetByIdAsync(regularEvent.Id))!;
     }
 
     public async Task<IRegularEvent?> UpdateAsync(IRegularEvent entity)
     {
         var regularEvent = (RegularEvent)entity;
-        var existingRegularEvent = await context.RegularEvents.FindAsync(regularEvent.Id);
+
+        var existingRegularEvent = await context.RegularEvents
+            .Include(r => r.Tags)
+            .FirstOrDefaultAsync(r => r.Id == regularEvent.Id);
+
         if (existingRegularEvent == null)
-        {
             return null;
+
+        context.Entry(existingRegularEvent).CurrentValues.SetValues(new
+        {
+            regularEvent.Title,
+            regularEvent.Description,
+            regularEvent.SpaceId,
+            regularEvent.Day,
+            regularEvent.Frequency,
+            regularEvent.CategoryId,
+            regularEvent.StartTime,
+            regularEvent.Duration
+        });
+
+        var newTagIds = regularEvent.Tags.Select(t => t.Id).ToList();
+        var existingTagIds = existingRegularEvent.Tags.Select(t => t.Id).ToList();
+
+        // Remove deleted tags
+        var tagsToRemove = existingRegularEvent.Tags
+            .Where(t => !newTagIds.Contains(t.Id))
+            .ToList();
+
+        foreach (var tag in tagsToRemove)
+            existingRegularEvent.Tags.Remove(tag);
+
+        // Add new tags
+        var tagIdsToAdd = newTagIds
+            .Where(newId => !existingTagIds.Contains(newId));
+
+        foreach (var stub in tagIdsToAdd
+                     .Select(tagId => new EventTag { Id = tagId }))
+        {
+            context.Entry(stub).State = EntityState.Unchanged;
+            existingRegularEvent.Tags.Add(stub);
         }
-        context.Entry(existingRegularEvent).CurrentValues.SetValues(regularEvent);
+
         await context.SaveChangesAsync();
         return existingRegularEvent;
     }
-
+    
     public async Task<bool> DeleteAsync(Guid id)
     {
         var regularEvent = await context.RegularEvents.FindAsync(id);

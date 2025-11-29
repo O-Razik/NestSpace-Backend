@@ -6,7 +6,8 @@ namespace EventScheduleService.DAL.Models;
 
 public class SoloEvent : ISoloEvent
 {
-    [Key] [Column("solo_event_id")]
+    [Key]
+    [Column("solo_event_id")]
     public Guid Id { get; set; }
 
     [Column("space_id")] 
@@ -15,8 +16,9 @@ public class SoloEvent : ISoloEvent
     [Column("category_id")]
     public Guid CategoryId { get; set; }
 
-    [Column("title")] [MaxLength(255)]
-    public required string Title { get; set; }
+    [Column("title")] 
+    [MaxLength(255)]
+    public string Title { get; set; } = string.Empty;
 
     [Column("description")]
     [MaxLength(255)]

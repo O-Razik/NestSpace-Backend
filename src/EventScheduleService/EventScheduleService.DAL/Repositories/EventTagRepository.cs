@@ -28,35 +28,35 @@ public class EventTagRepository(EventScheduleDbContext context) : IEventTagRepos
 
     public async Task<IEventTag> AddAsync(IEventTag entity)
     {
-        var marker = (EventTag)entity;
-        context.EventTags.Add(marker);
+        var tag = (EventTag)entity;
+        context.EventTags.Add(tag);
         await context.SaveChangesAsync();
-        return marker;
+        return tag;
     }
 
     public async Task<IEventTag?> UpdateAsync(IEventTag entity)
     {
-        var marker = (EventTag)entity;
-        var existingMarker = await context.EventTags.FindAsync(marker.Id);
+        var tag = (EventTag)entity;
+        var existingMarker = await context.EventTags.FindAsync(tag.Id);
         if (existingMarker == null)
         {
             return null;
         }
 
-        context.Entry(existingMarker).CurrentValues.SetValues(marker);
+        context.Entry(existingMarker).CurrentValues.SetValues(tag);
         await context.SaveChangesAsync();
         return existingMarker;
     }
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        var marker = await context.EventTags.FindAsync(id);
-        if (marker == null)
+        var tag = await context.EventTags.FindAsync(id);
+        if (tag == null)
         {
             return false;
         }
 
-        context.EventTags.Remove(marker);
+        context.EventTags.Remove(tag);
         await context.SaveChangesAsync();
         return true;
     }

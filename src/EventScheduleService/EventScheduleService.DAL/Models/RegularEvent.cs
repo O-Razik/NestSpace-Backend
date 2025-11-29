@@ -24,14 +24,14 @@ public class RegularEvent : IRegularEvent
     
     [Column("title")]
     [MaxLength(255)]
-    public required string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     
     [Column("description")]
     [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
 
     [Column("start_time", TypeName = "time")]
-    public required TimeOnly StartTime { get; set; }
+    public TimeOnly StartTime { get; set; }
 
     [Column("duration", TypeName = "time")]
     [Range(typeof(TimeSpan), "00:00:00", "24:00:00", ErrorMessage = "Duration must be between 0 and 24 hours.")]

@@ -30,7 +30,7 @@ public class EventScheduleDbContext : DbContext
         modelBuilder.Entity<EventCategory>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Tittle).HasMaxLength(255);
+            entity.Property(e => e.Title).HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(255);
             entity.HasMany(ec => ec.SoloEvents).WithOne(se => se.Category)
                 .HasForeignKey(se => se.CategoryId).OnDelete(DeleteBehavior.Cascade);

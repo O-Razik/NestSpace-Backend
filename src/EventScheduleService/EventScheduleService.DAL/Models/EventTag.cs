@@ -15,11 +15,11 @@ public class EventTag : IEventTag
     
     [Column("title")]
     [MaxLength(255)]
-    public required string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     
     [Column("color")]
     [MaxLength(255)]
-    public required string Color { get; set; }
+    public string Color { get; set; } = string.Empty;
     
     public ICollection<SoloEvent> SoloEvents { get; set; } = null!;
 
