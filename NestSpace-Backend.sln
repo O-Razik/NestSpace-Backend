@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventScheduleService.ABS", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventScheduleService.BLL", "src\EventScheduleService\EventScheduleService.BLL\EventScheduleService.BLL.csproj", "{AFDE3FB7-6DBF-459D-B860-2AFEF79C33C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventScheduleService.API", "src\EventScheduleService\EventScheduleService.API\EventScheduleService.API.csproj", "{4DA1089C-8F27-4372-840F-1BCB8BA1FCD9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,7 @@ Global
 		{D0AFBF32-0E66-48F8-8C1E-A7DE6BBC0ACE} = {CC4C8DF3-98B0-4530-8E3A-886802C5E069}
 		{94A81807-CCEE-4E77-BB5A-87BB501586DC} = {CC4C8DF3-98B0-4530-8E3A-886802C5E069}
 		{AFDE3FB7-6DBF-459D-B860-2AFEF79C33C2} = {CC4C8DF3-98B0-4530-8E3A-886802C5E069}
+		{4DA1089C-8F27-4372-840F-1BCB8BA1FCD9} = {CC4C8DF3-98B0-4530-8E3A-886802C5E069}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{0F2092E9-64FF-4538-A288-9D38CD507B85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -111,5 +114,9 @@ Global
 		{AFDE3FB7-6DBF-459D-B860-2AFEF79C33C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFDE3FB7-6DBF-459D-B860-2AFEF79C33C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFDE3FB7-6DBF-459D-B860-2AFEF79C33C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DA1089C-8F27-4372-840F-1BCB8BA1FCD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DA1089C-8F27-4372-840F-1BCB8BA1FCD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DA1089C-8F27-4372-840F-1BCB8BA1FCD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DA1089C-8F27-4372-840F-1BCB8BA1FCD9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
