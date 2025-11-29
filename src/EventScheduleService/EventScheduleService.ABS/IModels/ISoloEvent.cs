@@ -18,7 +18,7 @@ public interface ISoloEvent
     
     public bool IsYearly { get; set; }
     
-    IEventCategory EventCategory { get; set; }
+    IEventCategory Category { get; set; }
     
     ICollection<IEventTag> Tags { get; set; }
 }

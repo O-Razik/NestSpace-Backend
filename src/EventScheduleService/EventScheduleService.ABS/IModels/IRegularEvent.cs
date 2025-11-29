@@ -39,7 +39,7 @@ public interface IRegularEvent
     
     public TimeSpan Duration { get; set; }
     
-    public IEventCategory EventCategory { get; set; }
+    public IEventCategory Category { get; set; }
     
     public ICollection<IEventTag> Tags { get; set; }
 }
