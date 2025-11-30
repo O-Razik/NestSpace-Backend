@@ -1,3 +1,4 @@
+using EventScheduleService.ABS.IModels;
 using EventScheduleService.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 namespace EventScheduleService.DAL.Data;
@@ -5,8 +6,7 @@ namespace EventScheduleService.DAL.Data;
 public class EventScheduleDbContext : DbContext
 {
     public EventScheduleDbContext(
-        DbContextOptions<EventScheduleDbContext> options
-        )
+        DbContextOptions<EventScheduleDbContext> options)
         : base(options)
     {
     }
@@ -71,16 +71,9 @@ public class EventScheduleDbContext : DbContext
         });
         
         // enum Day
-        modelBuilder.HasPostgresEnum(
-            null, "day",
-            ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-        );
-        
+        modelBuilder.HasPostgresEnum<Day>(schema: "public", name: "day");
         // enum Frequency
-        modelBuilder.HasPostgresEnum(
-            null, "frequency",
-            ["weekly", "biweekly", "triweekly", "monthly"]
-        );
+        modelBuilder.HasPostgresEnum<Frequency>(schema: "public", name: "frequency");
 
         // RegularEvent
         modelBuilder.Entity<RegularEvent>(entity =>
@@ -89,11 +82,18 @@ public class EventScheduleDbContext : DbContext
             entity.Property(e => e.Title).HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.Day)
+                .HasColumnType("day")
+                .HasConversion<int>()
                 .HasConversion<string>()
-                .HasColumnType("day");
+                .HasConversion<Day>()
+                .IsRequired();
+
             entity.Property(e => e.Frequency)
+                .HasColumnType("frequency")
+                .HasConversion<int>()
                 .HasConversion<string>()
-                .HasColumnType("frequency");
+                .HasConversion<Frequency>()
+                .IsRequired();
         });
 
         base.OnModelCreating(modelBuilder);

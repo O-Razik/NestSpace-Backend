@@ -7,12 +7,12 @@ namespace EventScheduleService.BLL.Mappers.Create;
 public class RegularEventCreateMapper(
     IEntityFactory<IRegularEvent> factory,
     IEntityFactory<IEventTag> tagFactory)
-    : IShortMapper<IRegularEvent, RegularEventCreateDto>
+    : ICreateMapper<IRegularEvent, RegularEventCreateDto>
 {
-    public IRegularEvent ToEntity(RegularEventCreateDto dto)
+    public IRegularEvent ToEntity(Guid spaceId, RegularEventCreateDto dto)
     {
         var regularEvent = factory.CreateEntity();
-        regularEvent.SpaceId = dto.SpaceId;
+        regularEvent.SpaceId = spaceId;
         regularEvent.CategoryId = dto.CategoryId;
         regularEvent.Title = dto.Title;
         regularEvent.Description = dto.Description;

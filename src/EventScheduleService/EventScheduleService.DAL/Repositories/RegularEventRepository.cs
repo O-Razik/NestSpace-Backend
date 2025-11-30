@@ -12,12 +12,16 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
     {
         return await context.RegularEvents
             .Where(re => re.SpaceId == spaceId)
+            .Include(re => re.Tags)
+            .Include(re => re.Category)
             .ToListAsync();
     }
 
     public async Task<IRegularEvent?> GetByIdAsync(Guid id)
     {
         return await context.RegularEvents
+            .Include(re => re.Tags)
+            .Include(re => re.Category)
             .FirstOrDefaultAsync(re => re.Id == id);
     }
 
@@ -40,7 +44,7 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
 
         var existingRegularEvent = await context.RegularEvents
             .Include(r => r.Tags)
-            .FirstOrDefaultAsync(r => r.Id == regularEvent.Id);
+            .FirstOrDefaultAsync(r => r.Id == regularEvent.Id && r.SpaceId == regularEvent.SpaceId);
 
         if (existingRegularEvent == null)
             return null;

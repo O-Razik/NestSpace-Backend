@@ -18,6 +18,8 @@ public class EventCategoryRepository(EventScheduleDbContext context) : IEventCat
     public async Task<IEventCategory?> GetByIdAsync(Guid eventId)
     {
         return await context.EventCategories
+            .Include(ec => ec.SoloEvents)
+            .Include(ec => ec.RegularEvents)
             .FirstOrDefaultAsync(ec => ec.Id == eventId);
     }
 
@@ -26,7 +28,7 @@ public class EventCategoryRepository(EventScheduleDbContext context) : IEventCat
         var eventCategoryEntity = (EventCategory)newEvent;
         context.EventCategories.Add(eventCategoryEntity);
         await context.SaveChangesAsync();
-        return eventCategoryEntity;
+        return (await this.GetByIdAsync(eventCategoryEntity.Id))!;
     }
 
     public async Task<IEventCategory?> UpdateAsync(IEventCategory updatedEvent)

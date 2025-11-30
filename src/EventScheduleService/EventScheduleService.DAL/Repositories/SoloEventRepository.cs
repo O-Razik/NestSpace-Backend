@@ -12,12 +12,16 @@ public class SoloEventRepository(EventScheduleDbContext context) : ISoloEventRep
     {
         return await context.SoloEvents
             .Where(se => se.SpaceId == spaceId)
+            .Include(se => se.Tags)
+            .Include(se => se.Category)
             .ToListAsync();
     }
 
     public async Task<ISoloEvent?> GetByIdAsync(Guid id)
     {
         return await context.SoloEvents
+            .Include(se => se.Tags)
+            .Include(se => se.Category)
             .FirstOrDefaultAsync(se => se.Id == id);
     }
 
@@ -39,7 +43,7 @@ public class SoloEventRepository(EventScheduleDbContext context) : ISoloEventRep
         var soloEvent = (SoloEvent)entity;
         var existingSoloEvent = await context.SoloEvents
             .Include(e => e.Tags)
-            .FirstOrDefaultAsync(e => e.Id == soloEvent.Id);
+            .FirstOrDefaultAsync(e => e.Id == soloEvent.Id && e.SpaceId == soloEvent.SpaceId);
 
         if (existingSoloEvent == null)
             return null;

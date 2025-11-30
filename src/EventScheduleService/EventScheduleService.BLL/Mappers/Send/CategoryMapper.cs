@@ -44,6 +44,7 @@ public class CategoryMapper(
         return new CategoryShortDto
         {
             Id = source.Id,
+            SpaceId = source.SpaceId,
             Title = source.Title
         };
     }

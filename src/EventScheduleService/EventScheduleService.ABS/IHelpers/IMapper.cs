@@ -18,7 +18,7 @@ public interface IMapper<TSource, TDto, TShortDto>
     TSource ToEntity(TShortDto dto);
 }
 
-public interface IShortMapper<out TSource, in TDto>
+public interface ICreateMapper<out TSource, in TDto>
 {
-    TSource ToEntity(TDto dto);
+    TSource ToEntity(Guid spaceId, TDto dto);
 }
