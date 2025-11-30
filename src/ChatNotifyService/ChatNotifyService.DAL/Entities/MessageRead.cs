@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using ChatNotifyService.ABS.IEntities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -6,19 +7,18 @@ namespace ChatNotifyService.DAL.Entities;
 
 public class MessageRead : IMessageRead
 {
-    [BsonRepresentation(BsonType.String)]
+    [Column("message_id")]
     public Guid MessageId { get; set; }
 
-    [BsonRepresentation(BsonType.String)]
+    [Column("reader_id")]
     public Guid ReaderId { get; set; }
 
-    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+    [Column("read_at")]
     public DateTime ReadAt { get; set; }
 
-    [BsonElement("reader")]
+    [ForeignKey("ReaderId")]
     public ChatMember Reader { get; set; } = null!;
 
-    [BsonIgnore]
     IChatMember IMessageRead.Reader
     {
         get => Reader;

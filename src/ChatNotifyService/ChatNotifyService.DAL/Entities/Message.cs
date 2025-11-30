@@ -1,51 +1,50 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using ChatNotifyService.ABS.IEntities;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatNotifyService.DAL.Entities;
 
 public class Message : IMessage
 {
-    [BsonId]
-    [BsonRepresentation(BsonType.String)]
+    [Key]
+    [Column("message_id")]
     public Guid Id { get; set; }
 
-    [BsonRepresentation(BsonType.String)]
+    [Column("chat_id")]
     public Guid ChatId { get; set; }
 
-    [BsonRepresentation(BsonType.String)]
+    [Column("sender_id")]
     public Guid SenderId { get; set; }
 
-    [BsonElement("content")]
+    [Column("content")]
     public string Content { get; set; } = null!;
 
-    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+    [Column("timestamp")]
     public DateTime SentAt { get; set; }
 
-    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+    [Column("modified_at")]
     public DateTime? ModifiedAt { get; set; }
 
+    [Column("is_edited")]
     public bool IsEdited { get; set; }
-
+    
+    [Column("is_deleted")]
     public bool IsDeleted { get; set; }
 
-    [BsonRepresentation(BsonType.String)]
+    [Column("reply_to_message_id")]
     public Guid? ReplyToMessageId { get; set; }
 
-    [BsonElement("sender")]
+    [ForeignKey("SenderId")]
     public ChatMember Sender { get; set; } = null!;
-
-    [BsonElement("reads")]
+    
     public ICollection<MessageRead> Reads { get; set; } = new List<MessageRead>();
 
-    [BsonIgnore]
     IChatMember IMessage.Sender
     {
         get => Sender;
         set => Sender = (ChatMember)value;
     }
 
-    [BsonIgnore]
     ICollection<IMessageRead> IMessage.Reads
     {
         get => Reads.Cast<IMessageRead>().ToList();

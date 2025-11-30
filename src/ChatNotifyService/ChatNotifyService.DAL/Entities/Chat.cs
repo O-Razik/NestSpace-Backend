@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using ChatNotifyService.ABS.IEntities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -6,17 +8,16 @@ namespace ChatNotifyService.DAL.Entities;
 
 public class Chat : IChat
 {
-    [BsonId]
-    [BsonRepresentation(BsonType.String)]
+    [Key]
+    [Column("chat_id")]
     public Guid Id { get; set; }
 
-    [BsonRepresentation(BsonType.String)]
+    [Column("space_id")]
     public Guid SpaceId { get; set; }
 
-    [BsonElement("name")]
+    [Column("name")]
     public string Name { get; set; } = null!;
 
-    [BsonElement("members")]
     public ICollection<ChatMember> Members { get; set; } = new List<ChatMember>();
 
     [BsonIgnore]
