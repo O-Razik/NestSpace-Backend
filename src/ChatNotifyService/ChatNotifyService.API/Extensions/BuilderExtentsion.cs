@@ -29,7 +29,7 @@ public static class BuilderExtension
         {
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
-                npgsqlOptions.MapEnum<PermissionLevel>("permission_level");
+                npgsqlOptions.MapEnum<PermissionLevel>(schemaName: "public", enumName:"permission_level");
             });
         });
 

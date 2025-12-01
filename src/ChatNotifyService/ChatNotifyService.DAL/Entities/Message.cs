@@ -17,7 +17,8 @@ public class Message : IMessage
     public Guid SenderId { get; set; }
 
     [Column("content")]
-    public string Content { get; set; } = null!;
+    [MaxLength(1000)]
+    public string Content { get; set; } = string.Empty;
 
     [Column("timestamp")]
     public DateTime SentAt { get; set; }

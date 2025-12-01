@@ -7,6 +7,9 @@ public class MessageRead : IMessageRead
 {
     [Column("message_id")]
     public Guid MessageId { get; set; }
+    
+    [Column("chat_id")]
+    public Guid ChatId { get; set; }
 
     [Column("reader_id")]
     public Guid ReaderId { get; set; }
@@ -16,10 +19,19 @@ public class MessageRead : IMessageRead
 
     [ForeignKey("ReaderId")]
     public ChatMember Reader { get; set; } = null!;
+    
+    [ForeignKey("MessageId")]
+    public Message Message { get; set; } = null!;
 
     IChatMember IMessageRead.Reader
     {
         get => Reader;
         set => Reader = (ChatMember)value;
+    }
+    
+    IMessage IMessageRead.Message
+    {
+        get => Message;
+        set => Message = (Message)value;
     }
 }

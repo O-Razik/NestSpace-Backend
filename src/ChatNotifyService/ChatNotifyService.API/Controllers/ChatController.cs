@@ -67,6 +67,27 @@ public class ChatController(
     public async Task<ActionResult<ChatDto>> CreateChat(
         [FromRoute] Guid spaceId, [FromBody] ChatCreateDto chat)
     {
+        var senderIdClaim = httpContextAccessor.HttpContext?
+            .User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (senderIdClaim == null)
+            return Unauthorized("Invalid token.");
+        
+        var senderGuid = Guid.Parse(senderIdClaim);
+        if (chat.Members.All(m => m.MemberId != senderGuid))
+        {
+            chat.Members.Add(new MemberCreateDto
+            {
+                MemberId = senderGuid,
+                PermissionLevel = PermissionLevel.Admin
+            });
+        }
+        else
+        {
+            var senderMember = chat.Members.First(m => m.MemberId == senderGuid);
+            senderMember.PermissionLevel = PermissionLevel.Admin;
+        }
+        
         var newChat = chatCreateMapper.ToEntity(spaceId, chat);
         var createdChat = await chatService.CreateChatAsync(newChat);
         return Created(
