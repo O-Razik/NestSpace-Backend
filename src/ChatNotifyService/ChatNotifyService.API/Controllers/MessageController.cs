@@ -17,7 +17,7 @@ namespace ChatNotifyService.API.Controllers;
 /// <param name="messageMapper"></param>
 /// <param name="messageCreateMapper"></param>
 [Authorize]
-[Route("api/space/{spaceId:guid}/chat/{chatId:guid}/")]
+[Route("api/space/{spaceId:guid}/chat/{chatId:guid}/messages")]
 [ApiController]
 public class MessageController(
     IMessageService messageService,
@@ -42,7 +42,7 @@ public class MessageController(
     /// <param name="pageNumber"></param>
     /// <param name="pageSize"></param>
     /// <returns></returns>
-    [HttpGet("messages")]
+    [HttpGet("all")]
     public async Task<ActionResult<IEnumerable<MessageDtoShort>>> GetMessagesAll(
         [FromRoute] Guid chatId,
         [FromQuery] int pageNumber = 1,
@@ -60,7 +60,7 @@ public class MessageController(
     /// <param name="chatId"></param>
     /// <param name="count"></param>
     /// <returns></returns>
-    [HttpGet("messages/recent")]
+    [HttpGet("recent")]
     public async Task<ActionResult<IEnumerable<MessageDtoShort>>> GetRecentMessages(
         [FromRoute] Guid spaceId,
         [FromRoute] Guid chatId,
@@ -75,7 +75,7 @@ public class MessageController(
     /// </summary>
     /// <param name="chatId"></param>
     /// <returns></returns>
-    [HttpGet("messages/unread")]
+    [HttpGet("unread")]
     public async Task<ActionResult<IEnumerable<MessageDtoShort>>> GetUnreadMessages(
         [FromRoute] Guid chatId)
     {
@@ -91,7 +91,7 @@ public class MessageController(
     /// <param name="chatId"></param>
     /// <param name="messageId"></param>
     /// <returns></returns>
-    [HttpGet("message/{messageId:guid}")]
+    [HttpGet("{messageId:guid}")]
     public async Task<ActionResult<MessageDto>> GetMessageById(
         [FromRoute] Guid spaceId,
         [FromRoute] Guid chatId,
@@ -108,7 +108,7 @@ public class MessageController(
     /// <param name="chatId"></param>
     /// <param name="createDto"></param>
     /// <returns></returns>
-    [HttpPost("message")]
+    [HttpPost()]
     public async Task<ActionResult<MessageDto>> SendMessage(
         [FromRoute] Guid chatId,
         [FromBody] MessageCreateDto createDto)
@@ -129,7 +129,7 @@ public class MessageController(
     /// <param name="messageId"></param>
     /// <param name="updateDto"></param>
     /// <returns></returns>
-    [HttpPut("message/{messageId:guid}")]
+    [HttpPut("{messageId:guid}")]
     public async Task<ActionResult<MessageDto>> EditMessage(
         [FromRoute] Guid spaceId,
         [FromRoute] Guid chatId,
@@ -152,7 +152,7 @@ public class MessageController(
     /// <param name="chatId"></param>
     /// <param name="messageId"></param>
     /// <returns></returns>
-    [HttpPost("message/{messageId:guid}/read")]
+    [HttpPost("{messageId:guid}/read")]
     public async Task<IActionResult> MarkMessageAsRead(
         [FromRoute] Guid spaceId,
         [FromRoute] Guid chatId,
@@ -185,7 +185,7 @@ public class MessageController(
     /// </summary>
     /// <param name="messageId"></param>
     /// <returns></returns>
-    [HttpDelete("message/{messageId:guid}")]
+    [HttpDelete("{messageId:guid}")]
     public async Task<IActionResult> DeleteMessage(
         [FromRoute] Guid messageId)
     {
