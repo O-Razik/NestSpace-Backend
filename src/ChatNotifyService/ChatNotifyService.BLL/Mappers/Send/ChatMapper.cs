@@ -1,8 +1,8 @@
 using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IHelpers;
-using ChatNotifyService.BLL.Dtos;
+using ChatNotifyService.BLL.Dtos.Send;
 
-namespace ChatNotifyService.BLL.Mappers;
+namespace ChatNotifyService.BLL.Mappers.Send;
 
 public class ChatMapper(
     IEntityFactory<IChat> chatFactory,

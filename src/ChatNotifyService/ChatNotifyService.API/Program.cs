@@ -29,9 +29,14 @@ public static class Program
             });
         builder.Services.AddAuthorization();
         
-        builder.AddNoSqlDbContext();
-        builder.AddQueues();
-        builder.AddInfrastructure();
+        builder.AddSqlDbContext()
+            .AddQueues()
+            .AddEntities()
+            .AddRepositories()
+            .AddServices()
+            .AddFactories()
+            .AddMappers();
+        builder.Services.AddSignalR();
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
@@ -78,8 +83,6 @@ public static class Program
         app.UseAuthorization();
         
         app.MapControllers();
-        
-        await app.InitializeMongoIndexesAsync();
 
         await app.RunAsync();
     }

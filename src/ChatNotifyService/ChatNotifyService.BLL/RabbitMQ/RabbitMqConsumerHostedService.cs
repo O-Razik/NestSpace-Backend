@@ -1,6 +1,8 @@
 using ChatNotifyService.ABS.IServices;
 using ChatNotifyService.BLL.Dtos;
+using ChatNotifyService.BLL.Dtos.Send;
 using ChatNotifyService.BLL.Mappers;
+using ChatNotifyService.BLL.Mappers.Send;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -35,9 +37,9 @@ public class RabbitMqConsumerHostedService(
                     Id = evt.ChatId,
                     SpaceId = evt.SpaceId,
                     Name = "Main Chat",
-                    Members = new List<ChatMemberDto>()
+                    Members = new List<MemberDto>()
                     {
-                        new ChatMemberDto
+                        new MemberDto
                         {
                             MemberId = evt.MemberId,
                             ChatId = evt.ChatId,

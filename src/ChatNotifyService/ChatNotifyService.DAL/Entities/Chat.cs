@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using ChatNotifyService.ABS.IEntities;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatNotifyService.DAL.Entities;
 
@@ -20,7 +18,6 @@ public class Chat : IChat
 
     public ICollection<ChatMember> Members { get; set; } = new List<ChatMember>();
 
-    [BsonIgnore]
     ICollection<IChatMember> IChat.Members
     {
         get => Members.Cast<IChatMember>().ToList();

@@ -4,7 +4,7 @@ using ChatNotifyService.ABS.IEntities;
 
 namespace ChatNotifyService.DAL.Entities;
 
-class SpaceActivityLog : ISpaceActivityLog
+public class SpaceActivityLog : ISpaceActivityLog
 {
     [Key]
     [Column("log_id")]

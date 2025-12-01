@@ -84,19 +84,19 @@ public class ChatService(
         if(chatId == Guid.Empty)
             throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
         
-        return await memberRepository.GetAllAsync(spaceId, chatId);
+        return await memberRepository.GetAllAsync(chatId);
     }
 
-    public async Task<IChatMember> AddMemberToChatAsync(Guid chatId, Guid memberId)
+    public async Task<IChatMember> AddMemberToChatAsync(IChatMember chatMember)
     {
-        if(chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
+        if(chatMember.ChatId == Guid.Empty)
+            throw new ArgumentException("ChatId cannot be empty", nameof(chatMember.ChatId));
         
-        if(memberId == Guid.Empty)
-            throw new ArgumentException("MemberId cannot be empty", nameof(memberId));
+        if(chatMember.MemberId == Guid.Empty)
+            throw new ArgumentException("MemberId cannot be empty", nameof(chatMember.MemberId));
         
-        var member = await memberRepository.AddMemberToChatAsync(chatId, memberId);
-        await notificationService.NotifyMemberAddedAsync(chatId, member);
+        var member = await memberRepository.AddMemberToChatAsync(chatMember);
+        await notificationService.NotifyMemberAddedAsync(member.ChatId, member);
         return member;
     }
 
