@@ -2,7 +2,8 @@ using System.Security.Claims;
 using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IServices;
-using ChatNotifyService.BLL.Dtos;
+using ChatNotifyService.BLL.Dtos.Create;
+using ChatNotifyService.BLL.Dtos.Send;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,20 +14,23 @@ namespace ChatNotifyService.API.Controllers;
 /// </summary>
 /// <param name="chatService"></param>
 [Authorize]
-[Route("api/space/{spaceId}/chat")]
+[Route("api/space/{spaceId:guid}/chat")]
 [ApiController]
 public class ChatController(
     IChatService chatService,
     IHttpContextAccessor httpContextAccessor,
     IBigMapper<IChat, ChatDto, ChatDtoShort> chatMapper,
-    IBigMapper<IChatMember, ChatMemberDto, ChatMemberDtoShort> memberMapper) : ControllerBase
+    ICreateMapper<IChat, ChatCreateDto> chatCreateMapper,
+    IBigMapper<IChatMember, MemberDto, MemberDtoShort> memberMapper,
+    ICreateMapper<IChatMember, MemberCreateDto> memberCreateMapper)
+        : ControllerBase
 {
     /// <summary>
     /// Gets all chats in a specific space for the authenticated member.
     /// </summary>
     /// <param name="spaceId"></param>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ChatDtoShort>>> GetAllChats(Guid spaceId)
+    public async Task<ActionResult<IEnumerable<ChatDtoShort>>> GetAllChats([FromRoute] Guid spaceId)
     {
         var senderIdClaim = httpContextAccessor.HttpContext?
             .User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -43,8 +47,8 @@ public class ChatController(
     /// Gets a specific chat by its ID for the authenticated member.
     /// </summary>
     /// <param name="chatId">The ID of the chat to retrieve.</param>
-    [HttpGet("{chatId}")]
-    public async Task<ActionResult<ChatDto>> GetChatById(Guid chatId)
+    [HttpGet("{chatId:guid}")]
+    public async Task<ActionResult<ChatDto>> GetChatById([FromRoute] Guid chatId)
     {
         var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var chat = await chatService.GetChatByIdAsync(chatId, memberId);
@@ -53,16 +57,21 @@ public class ChatController(
         
         return Ok(chatMapper.ToDto(chat));
     }
-    
+
     /// <summary>
     /// Creates a new chat.
     /// </summary>
+    /// <param name="spaceId"></param>
     /// <param name="chat"></param>
     [HttpPost]
-    public async Task<ActionResult<ChatDto>> CreateChat([FromBody] ChatDto chat)
+    public async Task<ActionResult<ChatDto>> CreateChat(
+        [FromRoute] Guid spaceId, [FromBody] ChatCreateDto chat)
     {
-        var createdChat = await chatService.CreateChatAsync(chatMapper.ToEntity(chat));
-        return CreatedAtAction(nameof(GetChatById), new { chatId = createdChat.Id }, chatMapper.ToDto(createdChat));
+        var newChat = chatCreateMapper.ToEntity(spaceId, chat);
+        var createdChat = await chatService.CreateChatAsync(newChat);
+        return Created(
+            "chat/" + createdChat.Id,
+            chatMapper.ToDto(createdChat));
     }
     
     /// <summary>
@@ -87,8 +96,8 @@ public class ChatController(
     /// Deletes a chat by its ID.
     /// </summary>
     /// <param name="chatId"></param>
-    [HttpDelete("{chatId}")]
-    public async Task<IActionResult> DeleteChat(Guid chatId)
+    [HttpDelete("{chatId:guid}")]
+    public async Task<IActionResult> DeleteChat([FromRoute] Guid chatId)
     {
         var memberId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var deleted = await chatService.DeleteChatAsync(chatId, memberId);
@@ -103,22 +112,24 @@ public class ChatController(
     /// </summary>
     /// <param name="spaceId"></param>
     /// <param name="chatId"></param>
-    [HttpGet("{chatId}/members")]
-    public async Task<ActionResult<IEnumerable<ChatMemberDto>>> GetChatMembers(Guid spaceId, Guid chatId)
+    [HttpGet("{chatId:guid}/members")]
+    public async Task<ActionResult<IEnumerable<MemberDto>>> GetChatMembers(
+        [FromRoute] Guid spaceId, [FromRoute] Guid chatId)
     {
         var members = await chatService.GetChatMembersAsync(spaceId, chatId);
         return Ok(members.Select(memberMapper.ToDto));
     }
-    
+
     /// <summary>
     /// Adds a member to a specific chat.
     /// </summary>
     /// <param name="chatId"> </param>
-    /// <param name="memberId"></param>
-    [HttpPost("{chatId}/members/{memberId}")]
-    public async Task<ActionResult<ChatMemberDto?>> AddMemberToChat(Guid chatId, Guid memberId)
+    /// <param name="newMember"></param>
+    [HttpPost("{chatId:guid}/members")]
+    public async Task<ActionResult<MemberDto?>> AddMemberToChat(
+        [FromRoute] Guid chatId, [FromBody] MemberCreateDto newMember)
     {
-        var member = await chatService.AddMemberToChatAsync(chatId, memberId);
+        var member = await chatService.AddMemberToChatAsync(memberCreateMapper.ToEntity(chatId, newMember));
         return Ok(memberMapper.ToDto(member));
     }
     
@@ -127,8 +138,9 @@ public class ChatController(
     /// </summary>
     /// <param name="chatId"></param>
     /// <param name="memberId"></param>
-    [HttpDelete("{chatId}/members/{memberId}")]
-    public async Task<IActionResult> RemoveMemberFromChat(Guid chatId, Guid memberId)
+    [HttpDelete("{chatId:guid}/members/{memberId:guid}")]
+    public async Task<IActionResult> RemoveMemberFromChat(
+        [FromRoute] Guid chatId, [FromRoute] Guid memberId)
     {
         var removed = await chatService.RemoveMemberFromChatAsync(chatId, memberId);
         if (!removed)

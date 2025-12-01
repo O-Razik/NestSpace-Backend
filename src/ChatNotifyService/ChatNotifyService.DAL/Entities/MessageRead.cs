@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using ChatNotifyService.ABS.IEntities;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace ChatNotifyService.DAL.Entities;
 

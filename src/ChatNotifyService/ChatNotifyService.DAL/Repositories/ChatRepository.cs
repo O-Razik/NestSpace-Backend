@@ -2,49 +2,72 @@ using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IRepositories;
 using ChatNotifyService.DAL.Data;
 using ChatNotifyService.DAL.Entities;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Repositories;
 
-public class ChatRepository(ChatNotifyDbContext dbContext) : IChatRepository
+public class ChatRepository(ChatNotifyDbContext context) : IChatRepository
 {
     public async Task<IEnumerable<IChat>> GetAllAsync(Guid spaceId, Guid memberId)
     {
-        return await dbContext.Chats
-            .Find(chat => chat.SpaceId == spaceId && chat.Members.FirstOrDefault(m => m.MemberId == memberId) != null)
+        return await context.Chats
+            .Include(c => c.Members)
+            .Where(c =>
+                c.SpaceId == spaceId &&
+                c.Members.Any(m => m.MemberId == memberId))
             .ToListAsync();
     }
 
     public async Task<IChat?> GetByIdAsync(Guid chatId, Guid memberId)
     {
-        return await dbContext.Chats
-            .Find(chat => chat.Id == chatId && chat.Members.FirstOrDefault(m => m.MemberId == memberId) != null)
-            .FirstOrDefaultAsync();
+        return await context.Chats
+            .Include(c => c.Members)
+            .FirstOrDefaultAsync(c =>
+                c.Id == chatId &&
+                c.Members.Any(m => m.MemberId == memberId));
     }
 
     public async Task<IChat> CreateAsync(IChat chat)
     {
-        await dbContext.Chats.InsertOneAsync((Chat)chat);
-        return chat;
+        var entity = (Chat)chat;
+        if (entity.Id == Guid.Empty)
+            entity.Id = Guid.NewGuid();
+
+        foreach (var member in entity.Members)
+            member.ChatId = entity.Id;
+
+        context.Chats.Add(entity);
+        await context.SaveChangesAsync();
+        return entity;
     }
 
-    public async Task<IChat?> UpdateAsync(IChat updatedChat)
+    public async Task<IChat?> UpdateAsync(IChat chat)
     {
-        var result = await dbContext.Chats.ReplaceOneAsync(
-            chat => chat.Id == updatedChat.Id,
-            (Chat)updatedChat);
+        var updatedChat = (Chat)chat;
 
-        if (result.IsAcknowledged && result.ModifiedCount > 0)
-        {
-            return updatedChat;
-        }
+        var existingChat = await context.Chats
+            .FirstOrDefaultAsync(c => c.Id == updatedChat.Id);
 
-        return null;
+        if (existingChat == null)
+            return null;
+
+        existingChat.Name = updatedChat.Name;
+        await context.SaveChangesAsync();
+        return existingChat;
     }
 
     public async Task<bool> DeleteAsync(IChat chat)
     {
-        var result = await dbContext.Chats.DeleteOneAsync(c => c.Id == chat.Id);
-        return result.IsAcknowledged && result.DeletedCount > 0;
+        var entity = (Chat)chat;
+
+        var existing = await context.Chats
+            .FirstOrDefaultAsync(c => c.Id == entity.Id);
+
+        if (existing == null)
+            return false;
+
+        context.Chats.Remove(existing);
+        await context.SaveChangesAsync();
+        return true;
     }
 }

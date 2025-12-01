@@ -2,70 +2,74 @@ using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IRepositories;
 using ChatNotifyService.DAL.Data;
 using ChatNotifyService.DAL.Entities;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Repositories;
 
-public class ChatMemberRepository(ChatNotifyDbContext dbContext) : IChatMemberRepository
+public class ChatMemberRepository(ChatNotifyDbContext context) : IChatMemberRepository
 {
-    public async Task<IEnumerable<IChatMember>> GetAllAsync(Guid spaceId, Guid chatId)
+    public async Task<IEnumerable<IChatMember>> GetAllAsync(Guid chatId)
     {
-        var chat = await dbContext.Chats
-            .Find(c => c.SpaceId == spaceId && c.Id == chatId)
-            .FirstOrDefaultAsync();
+        var chatMembers = await context.ChatMembers
+            .Where(c => c.ChatId == chatId)
+            .ToListAsync();
 
-        return chat?.Members ?? Enumerable.Empty<IChatMember>();
+        return chatMembers;
     }
 
     public async Task<IChatMember?> GetByIdAsync(Guid chatId, Guid memberId)
     {
-        var chat = await dbContext.Chats
-            .Find(c => c.Id == chatId)
+        var chatMember = await context.ChatMembers
+            .Where(c => c.ChatId == chatId && c.MemberId == memberId)
             .FirstOrDefaultAsync();
 
-        return chat?.Members.FirstOrDefault(m => m.MemberId == memberId);
+        return chatMember;
     }
 
-    public async Task<IChatMember> AddMemberToChatAsync(Guid chatId, Guid memberId)
+    public async Task<IChatMember> AddMemberToChatAsync(IChatMember chatMember)
     {
-        var chat = await dbContext.Chats
-            .Find(c => c.Id == chatId)
-            .FirstOrDefaultAsync();
-
-        if (chat == null)
-        {
+        var newMember = (ChatMember)chatMember;
+        var exists = await context.Chats.AnyAsync(c => c.Id == newMember.ChatId);
+        if (!exists)
             throw new Exception("Chat not found");
-        }
 
-        var newMember = new ChatMember
-        {
-            MemberId = memberId,
-            JoinedAt = DateTime.UtcNow
-        };
+        newMember.JoinedAt = DateTime.UtcNow;
+        context.ChatMembers.Add(newMember);
+        await context.SaveChangesAsync();
 
-        chat.Members.Add(newMember);
-
-        await dbContext.Chats.ReplaceOneAsync(c => c.Id == chatId, chat);
-
-        return newMember;
+        return (await GetByIdAsync(chatMember.ChatId, chatMember.MemberId))!;
     }
+    
+    public async Task<IChatMember> UpdateMemberInChatAsync(IChatMember chatMember)
+    {
+        var updatedMember = (ChatMember)chatMember;
+
+        var existingMember = await context.ChatMembers
+            .FirstOrDefaultAsync(cm =>
+                cm.ChatId == updatedMember.ChatId &&
+                cm.MemberId == updatedMember.MemberId);
+
+        if (existingMember == null)
+            throw new Exception("Chat member not found");
+
+        existingMember.PermissionLevel = updatedMember.PermissionLevel;
+
+        await context.SaveChangesAsync();
+
+        return existingMember;
+    }
+
     
     public async Task<bool> RemoveMemberFromChatAsync(Guid chatId, Guid memberId)
     {
-        var chat = await dbContext.Chats
-            .Find(c => c.Id == chatId)
-            .FirstOrDefaultAsync();
+        var member = await context.ChatMembers
+            .FirstOrDefaultAsync(cm => cm.ChatId == chatId && cm.MemberId == memberId);
 
-        var memberToRemove = chat?.Members.FirstOrDefault(m => m.MemberId == memberId);
-        if (memberToRemove == null)
-        {
+        if (member == null)
             return false;
-        }
 
-        chat!.Members.Remove(memberToRemove);
-
-        var result = await dbContext.Chats.ReplaceOneAsync(c => c.Id == chatId, chat);
-
-        return result.IsAcknowledged && result.ModifiedCount > 0;
+        context.ChatMembers.Remove(member);
+        await context.SaveChangesAsync();
+        return true;
     }
 }

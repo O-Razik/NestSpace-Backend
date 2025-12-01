@@ -1,4 +1,4 @@
-namespace ChatNotifyService.BLL.Dtos;
+namespace ChatNotifyService.BLL.Dtos.Send;
 
 public class MessageDtoShort
 {
@@ -23,7 +23,7 @@ public class MessageDtoShort
 
 public class MessageDto : MessageDtoShort
 {
-    public ChatMemberDtoShort Sender { get; set; } = null!;
+    public MemberDtoShort Sender { get; set; } = null!;
     
     public ICollection<MessageReadDto> Reads { get; set; } = new List<MessageReadDto>();
 }
