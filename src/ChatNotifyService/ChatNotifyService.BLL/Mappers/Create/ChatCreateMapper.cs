@@ -20,6 +20,7 @@ public class ChatCreateMapper(
             {
                 var member = chatMemberFactory.CreateEntity();
                 member.MemberId = memberDto.MemberId;
+                member.PermissionLevel = memberDto.PermissionLevel;
                 return member;
             }).ToList();
         return chat;

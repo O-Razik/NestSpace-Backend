@@ -30,12 +30,6 @@ public class ChatRepository(ChatNotifyDbContext context) : IChatRepository
     public async Task<IChat> CreateAsync(IChat chat)
     {
         var entity = (Chat)chat;
-        if (entity.Id == Guid.Empty)
-            entity.Id = Guid.NewGuid();
-
-        foreach (var member in entity.Members)
-            member.ChatId = entity.Id;
-
         context.Chats.Add(entity);
         await context.SaveChangesAsync();
         return entity;
