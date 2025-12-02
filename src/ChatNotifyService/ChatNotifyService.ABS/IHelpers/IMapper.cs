@@ -12,3 +12,8 @@ public interface IBigMapper<TSource, TDto, TShortDto> : IMapper<TSource, TDto>
     TShortDto ToShortDto(TSource source);
     TSource ToEntity(TShortDto dto);
 }
+
+public interface ICreateMapper<TSource, TDto>
+{
+    TSource ToEntity(Guid id, TDto dto);
+}

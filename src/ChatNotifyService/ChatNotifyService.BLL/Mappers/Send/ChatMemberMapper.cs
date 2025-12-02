@@ -1,49 +1,53 @@
 using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IHelpers;
-using ChatNotifyService.BLL.Dtos;
+using ChatNotifyService.BLL.Dtos.Send;
 
-namespace ChatNotifyService.BLL.Mappers;
+namespace ChatNotifyService.BLL.Mappers.Send;
 
 public class ChatMemberMapper(IEntityFactory<IChatMember> chatMemberFactory)
-    : IBigMapper<IChatMember, ChatMemberDto, ChatMemberDtoShort>
+    : IBigMapper<IChatMember, MemberDto, MemberDtoShort>
 {
-    public ChatMemberDto ToDto(IChatMember source)
+    public MemberDto ToDto(IChatMember source)
     {
         ArgumentNullException.ThrowIfNull(source, nameof(source));
-        return new ChatMemberDto
+        return new MemberDto
         {
             ChatId = source.ChatId,
             MemberId = source.MemberId,
+            PermissionLevel = source.PermissionLevel,
             JoinedAt = source.JoinedAt
         };
     }
 
-    public IChatMember ToEntity(ChatMemberDto dto)
+    public IChatMember ToEntity(MemberDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto, nameof(dto));
         var chatMember = chatMemberFactory.CreateEntity();
         chatMember.ChatId = dto.ChatId;
         chatMember.MemberId = dto.MemberId;
+        chatMember.PermissionLevel = dto.PermissionLevel;
         chatMember.JoinedAt = dto.JoinedAt;
         return chatMember;
     }
     
-    public ChatMemberDtoShort ToShortDto(IChatMember source)
+    public MemberDtoShort ToShortDto(IChatMember source)
     {
         ArgumentNullException.ThrowIfNull(source, nameof(source));
-        return new ChatMemberDtoShort
+        return new MemberDtoShort
         {
             MemberId = source.MemberId,
+            PermissionLevel = source.PermissionLevel,
             ChatId = source.ChatId
         };
     }
     
-    public IChatMember ToEntity(ChatMemberDtoShort dto)
+    public IChatMember ToEntity(MemberDtoShort dto)
     {
         ArgumentNullException.ThrowIfNull(dto, nameof(dto));
         var chatMember = chatMemberFactory.CreateEntity();
         chatMember.ChatId = dto.ChatId;
         chatMember.MemberId = dto.MemberId;
+        chatMember.PermissionLevel = dto.PermissionLevel;
         return chatMember;
     }
 }

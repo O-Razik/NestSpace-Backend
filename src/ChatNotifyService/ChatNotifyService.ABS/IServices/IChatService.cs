@@ -16,7 +16,7 @@ public interface IChatService
     
     Task<IEnumerable<IChatMember>> GetChatMembersAsync(Guid spaceId, Guid chatId);
     
-    Task<IChatMember> AddMemberToChatAsync(Guid chatId, Guid memberId);
+    Task<IChatMember> AddMemberToChatAsync(IChatMember chatMember);
     
     Task<bool> RemoveMemberFromChatAsync(Guid chatId, Guid memberId);
 }

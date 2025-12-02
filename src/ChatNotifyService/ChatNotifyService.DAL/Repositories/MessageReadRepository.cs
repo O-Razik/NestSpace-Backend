@@ -2,42 +2,41 @@ using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IRepositories;
 using ChatNotifyService.DAL.Data;
 using ChatNotifyService.DAL.Entities;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Repositories;
 
-public class MessageReadRepository(ChatNotifyDbContext dbContext) : IMessageReadRepository
+public class MessageReadRepository(ChatNotifyDbContext context) : IMessageReadRepository
 {
     public async Task<IEnumerable<IMessageRead>> GetAllAsync(Guid messageId)
     {
-        return await dbContext.MessageReads
-            .Find(read => read.MessageId == messageId)
+        return await context.MessageReads
+            .Where(r => r.MessageId == messageId)
+            .Include(r => r.Reader)
             .ToListAsync();
     }
 
     public async Task<IMessageRead?> GetByIdAsync(Guid messageId, Guid readerId)
     {
-        return await dbContext.MessageReads
-            .Find(read => read.MessageId == messageId && read.ReaderId == readerId)
-            .FirstOrDefaultAsync();
+        return await context.MessageReads
+            .Include(r => r.Reader)
+            .FirstOrDefaultAsync(r => r.MessageId == messageId && r.ReaderId == readerId);
     }
-    
+
     public async Task<bool> ExistsAsync(Guid messageId, Guid readerId)
     {
-        var count = await dbContext.MessageReads
-            .CountDocumentsAsync(read => read.MessageId == messageId && read.ReaderId == readerId);
-
-        return count > 0;
+        return await context.MessageReads
+            .AnyAsync(r => r.MessageId == messageId && r.ReaderId == readerId);
     }
 
     public async Task<IMessageRead> MarkAsReadAsync(Guid messageId, Guid readerId)
     {
-        if (await ExistsAsync(messageId, readerId))
-        {
-            return await GetByIdAsync(messageId, readerId) 
-                   ?? throw new InvalidOperationException("Message read entry exists but cannot be retrieved.");
-        }
-        
+        // If exists → return existing record
+        var existing = await GetByIdAsync(messageId, readerId);
+        if (existing != null)
+            return existing;
+
+        // Create new record
         var messageRead = new MessageRead
         {
             MessageId = messageId,
@@ -45,32 +44,35 @@ public class MessageReadRepository(ChatNotifyDbContext dbContext) : IMessageRead
             ReadAt = DateTime.UtcNow
         };
 
-        await dbContext.MessageReads.InsertOneAsync(messageRead);
+        context.MessageReads.Add(messageRead);
+        await context.SaveChangesAsync();
+
         return messageRead;
     }
-    
+
     public async Task<IEnumerable<IMessageRead>> MarkAsReadsAsync(IEnumerable<IMessage> messages, Guid readerId)
     {
-        var messageReads = new List<IMessageRead>();
+        var toInsert = new List<MessageRead>();
 
         foreach (var message in messages)
         {
-            if (await ExistsAsync(message.Id, readerId)) continue;
-            var messageRead = new MessageRead
+            var exists = await context.MessageReads
+                .AnyAsync(r => r.MessageId == message.Id && r.ReaderId == readerId);
+
+            if (exists) continue;
+
+            toInsert.Add(new MessageRead
             {
                 MessageId = message.Id,
                 ReaderId = readerId,
                 ReadAt = DateTime.UtcNow
-            };
-
-            messageReads.Add(messageRead);
+            });
         }
 
-        if (messageReads.Count != 0)
-        {
-            await dbContext.MessageReads.InsertManyAsync(messageReads.Cast<MessageRead>());
-        }
+        if (toInsert.Count <= 0) return toInsert;
+        context.MessageReads.AddRange(toInsert);
+        await context.SaveChangesAsync();
 
-        return messageReads;
+        return toInsert;
     }
 }
