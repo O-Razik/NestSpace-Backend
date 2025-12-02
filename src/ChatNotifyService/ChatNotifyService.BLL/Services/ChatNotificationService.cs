@@ -52,4 +52,10 @@ public class ChatNotificationService(IHubContext<ChatHub> hubContext) : IChatNot
         await hubContext.Clients.Group(chatId.ToString())
             .SendAsync("MemberRemoved", memberId);
     }
+
+    public async Task NotifyChatsDeletedBySpaceIdAsync(Guid spaceId)
+    {
+        await hubContext.Clients.All
+            .SendAsync("SpaceDeleted", spaceId);
+    }
 }

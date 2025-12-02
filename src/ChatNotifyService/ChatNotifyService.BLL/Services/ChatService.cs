@@ -78,6 +78,19 @@ public class ChatService(
         
         return deleted;
     }
+    
+    public async Task<bool> DeleteChatsBySpaceIdAsync(Guid spaceId)
+    {
+        if(spaceId == Guid.Empty)
+            throw new ArgumentException("SpaceId cannot be empty", nameof(spaceId));
+        
+        var deleted =  await chatRepository.DeleteBySpaceIdAsync(spaceId);
+        
+        if(deleted)
+            await notificationService.NotifyChatsDeletedBySpaceIdAsync(spaceId);
+        
+        return deleted;
+    }
 
     public async Task<IEnumerable<IChatMember>> GetChatMembersAsync(Guid spaceId, Guid chatId)
     {

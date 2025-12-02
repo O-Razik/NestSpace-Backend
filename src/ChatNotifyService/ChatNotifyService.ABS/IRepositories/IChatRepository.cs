@@ -13,4 +13,6 @@ public interface IChatRepository
     Task<IChat?> UpdateAsync(IChat updatedChat);
     
     Task<bool> DeleteAsync(IChat chat);
+    
+    Task<bool> DeleteBySpaceIdAsync(Guid spaceId);
 }

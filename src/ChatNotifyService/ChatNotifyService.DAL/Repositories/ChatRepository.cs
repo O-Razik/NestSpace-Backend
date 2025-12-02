@@ -64,4 +64,18 @@ public class ChatRepository(ChatNotifyDbContext context) : IChatRepository
         await context.SaveChangesAsync();
         return true;
     }
+    
+    public async Task<bool> DeleteBySpaceIdAsync(Guid spaceId)
+    {
+        var chats = await context.Chats
+            .Where(c => c.SpaceId == spaceId)
+            .ToListAsync();
+
+        if (chats.Count == 0)
+            return false;
+
+        context.Chats.RemoveRange(chats);
+        await context.SaveChangesAsync();
+        return true;
+    }
 }

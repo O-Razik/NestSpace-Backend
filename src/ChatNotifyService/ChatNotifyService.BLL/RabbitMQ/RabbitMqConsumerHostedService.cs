@@ -53,6 +53,24 @@ public class RabbitMqConsumerHostedService(
                 loggerScoped.LogInformation("Chat created: {ChatId}", evt.ChatId);
             }
         });
+        
+        _ = consumer.StartConsuming(new RabbitMqSubscription<DeleteSpaceEvent>
+        {
+            QueueName = "chat.space.deleted",
+            ExchangeName = "space.exchange",
+            RoutingKey = "space.deleted",
+            HandleEvent = async evt =>
+            {
+                using var scope = scopeFactory.CreateScope();
+                var chatService = scope.ServiceProvider.GetRequiredService<IChatService>();
+
+                logger.LogInformation("Received SpaceDeletedEvent: {SpaceId}", evt.SpaceId);
+
+                await chatService.DeleteChatsBySpaceIdAsync(evt.SpaceId);
+
+                logger.LogInformation("Deleted chats for space: {SpaceId}", evt.SpaceId);
+            }
+        });
 
         return Task.CompletedTask;
     }

@@ -85,6 +85,18 @@ public class SpaceService(
         var space = await spaceRepository.GetByIdAsync(spaceId) 
                     ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
 
+        var deleteEvent = new DeleteSpaceEvent
+        {
+            SpaceId = spaceId,
+            DeletedAt = DateTime.UtcNow
+        };
+
+        await eventPublisher.PublishAsync(
+            deleteEvent,
+            routingKey: "space.deleted",
+            exchangeName: "space.exchange"
+        );
+        
         return await spaceRepository.DeleteAsync(space);
     }
 

@@ -9,3 +9,10 @@ public class ChatCreateEvent
     
     public DateTime CreatedAt { get; set; } = DateTime.MinValue;
 }
+
+public class DeleteSpaceEvent
+{
+    public Guid SpaceId { get; set; } = Guid.Empty;
+    
+    public DateTime DeletedAt { get; set; } = DateTime.MinValue;
+}
