@@ -8,14 +8,15 @@ using EventScheduleService.BLL.Dto.Update;
 using EventScheduleService.BLL.Mappers.Create;
 using EventScheduleService.BLL.Mappers.Send;
 using EventScheduleService.BLL.Mappers.Update;
+using EventScheduleService.BLL.RabbitMQ;
+using EventScheduleService.BLL.RabbitMQ.Consumer;
+using EventScheduleService.BLL.RabbitMQ.Publisher;
 using EventScheduleService.BLL.Services;
 using EventScheduleService.DAL.Data;
 using EventScheduleService.DAL.Factories;
 using EventScheduleService.DAL.Models;
 using EventScheduleService.DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using Npgsql.NameTranslation;
 
 namespace EventScheduleService.API.Extensions;
 
@@ -85,6 +86,18 @@ public static class BuilderExtensions
         builder.Services.AddScoped<ICreateMapper<ISoloEvent, SoloEventUpdateDto>, SoloEventUpdateMapper>();
         builder.Services.AddScoped<ICreateMapper<IRegularEvent, RegularEventUpdateDto>, RegularEventUpdateMapper>();
 
+        return builder;
+    }
+    
+    public static WebApplicationBuilder AddRabbitMqServices(this WebApplicationBuilder builder)
+    {
+        builder.Services.Configure<RabbitSettings>(
+            builder.Configuration.GetSection("RabbitSettings"));
+
+        builder.Services.AddScoped<IEventPublisher, RabbitMqPublisher>();
+        builder.Services.AddSingleton<RabbitMqConsumer>();
+        builder.Services.AddHostedService<RabbitMqConsumerHostedService>();
+        
         return builder;
     }
 }

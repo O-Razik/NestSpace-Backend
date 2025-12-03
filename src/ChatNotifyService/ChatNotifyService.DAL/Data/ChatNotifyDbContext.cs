@@ -20,6 +20,7 @@ public class ChatNotifyDbContext : DbContext
     public DbSet<Message> Messages { get; set; } = null!;
     public DbSet<MessageRead> MessageReads { get; set; } = null!;
     public DbSet<ChatMember> ChatMembers { get; set; } = null!;
+    
     public DbSet<SpaceActivityLog> SpaceActivityLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

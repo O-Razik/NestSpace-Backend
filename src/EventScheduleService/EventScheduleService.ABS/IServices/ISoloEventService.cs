@@ -13,4 +13,6 @@ public interface ISoloEventService
     Task<ISoloEvent?> UpdateSoloEventAsync(ISoloEvent updatedSoloEvent);
     
     Task<bool> DeleteSoloEventAsync(Guid soloEventId);
+    
+    Task<bool> DeleteSoloEventsBySpaceIdAsync(Guid spaceId);
 }

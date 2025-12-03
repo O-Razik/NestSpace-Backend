@@ -3,6 +3,7 @@ using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.ABS.IServices;
 using UserSpaceService.BLL.Queues;
+using UserSpaceService.BLL.Queues.Events;
 
 namespace UserSpaceService.BLL.Services;
 
@@ -49,6 +50,21 @@ public class SpaceService(
             MemberId = creatorId,
             CreatedAt = DateTime.UtcNow
         };
+        
+        var logEvent = new SpaceActivityLogEvent
+        {
+            SpaceId = space.Id,
+            MemberId = creator.Id,
+            Type = "SpaceCreated",
+            Description = $"Space '{name}' created by user '{creator.Username}'.",
+            ActivityAt = DateTime.UtcNow
+        };
+        
+        await eventPublisher.PublishAsync(
+            logEvent,
+            routingKey: "space.activity.log",
+            exchangeName: "log.exchange"
+        );
 
         await eventPublisher.PublishAsync(
             chatEvent,
@@ -74,7 +90,31 @@ public class SpaceService(
         }
 
         space.Name = newName;
-        return await spaceRepository.UpdateAsync(space);
+        var result = await spaceRepository.UpdateAsync(space);
+
+        if (result != null)
+        {
+            var logEvent = new SpaceActivityLogEvent
+            {
+                SpaceId = space.Id,
+                MemberId = Guid.Empty, // System action
+                Type = "SpaceNameUpdated",
+                Description = $"Space name updated to '{newName}'.",
+                ActivityAt = DateTime.UtcNow
+            };
+            
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.exchange"
+            );
+
+            return space;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public async Task<bool> DeleteSpaceAsync(Guid spaceId)
@@ -85,6 +125,18 @@ public class SpaceService(
         var space = await spaceRepository.GetByIdAsync(spaceId) 
                     ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
 
+        var deleteEvent = new DeleteSpaceEvent
+        {
+            SpaceId = spaceId,
+            DeletedAt = DateTime.UtcNow
+        };
+
+        await eventPublisher.PublishAsync(
+            deleteEvent,
+            routingKey: "space.deleted",
+            exchangeName: "space.exchange"
+        );
+        
         return await spaceRepository.DeleteAsync(space);
     }
 
@@ -101,7 +153,24 @@ public class SpaceService(
             throw new InvalidOperationException($"A role with the name '{roleName}' already exists in this space.");
         }
         
-        return await spaceRoleRepository.CreateAsync(spaceId, roleName, permissions);
+        var result = await spaceRoleRepository.CreateAsync(spaceId, roleName, permissions);
+        
+        var logEvent = new SpaceActivityLogEvent
+        {
+            SpaceId = space.Id,
+            MemberId = Guid.Empty, // System action
+            Type = "SpaceRoleCreated",
+            Description = $"Role '{roleName}' created in space '{space.Name}'.",
+            ActivityAt = DateTime.UtcNow
+        };
+        
+        await eventPublisher.PublishAsync(
+            logEvent,
+            routingKey: "space.activity.log",
+            exchangeName: "log.exchange"
+        );
+        
+        return result;
     }
 
     public async Task<ISpaceRole?> UpdateSpaceRoleAsync(ISpaceRole spaceRole)
@@ -121,7 +190,31 @@ public class SpaceService(
         existingRole.Name = spaceRole.Name;
         existingRole.RolePermissions = spaceRole.RolePermissions;
         
-        return await spaceRoleRepository.UpdateAsync(existingRole);
+        var result = await spaceRoleRepository.UpdateAsync(existingRole);
+        
+        if (result != null)
+        {
+            var logEvent = new SpaceActivityLogEvent
+            {
+                SpaceId = existingRole.SpaceId,
+                MemberId = Guid.Empty, // System action
+                Type = "SpaceRoleUpdated",
+                Description = $"Role '{spaceRole.Name}' updated in space ID '{existingRole.SpaceId}'.",
+                ActivityAt = DateTime.UtcNow
+            };
+            
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.exchange"
+            );
+
+            return result;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public async Task<bool> DeleteSpaceRoleAsync(Guid spaceId, Guid roleId)
@@ -141,7 +234,25 @@ public class SpaceService(
             throw new KeyNotFoundException($"Role with ID {roleId} not found in space {spaceId}.");
         }
 
-        return await spaceRoleRepository.DeleteAsync(role);
+        var result = await spaceRoleRepository.DeleteAsync(role);
+
+        if (!result) return result;
+        var logEvent = new SpaceActivityLogEvent
+        {
+            SpaceId = space.Id,
+            MemberId = Guid.Empty, // System action
+            Type = "SpaceRoleDeleted",
+            Description = $"Role '{role.Name}' deleted from space '{space.Name}'.",
+            ActivityAt = DateTime.UtcNow
+        };
+            
+        await eventPublisher.PublishAsync(
+            logEvent,
+            routingKey: "space.activity.log",
+            exchangeName: "log.exchange"
+        );
+
+        return result;
     }
 
     public async Task<ISpaceMember> AddMemberToSpaceAsync(Guid spaceId, Guid userId, Guid roleId)
@@ -171,7 +282,24 @@ public class SpaceService(
         if (existingMember != null)
             throw new InvalidOperationException($"User with ID {userId} is already a member of space {spaceId}.");
 
-        return await spaceMemberRepository.CreateAsync(spaceId, userId, roleId);
+        var result = await spaceMemberRepository.CreateAsync(spaceId, userId, roleId);
+        
+        var logEvent = new SpaceActivityLogEvent
+        {
+            SpaceId = space.Id,
+            MemberId = user.Id,
+            Type = "MemberAdded",
+            Description = $"User '{user.Username}' added to space '{space.Name}' with role '{role.Name}'.",
+            ActivityAt = DateTime.UtcNow
+        };
+        
+        await eventPublisher.PublishAsync(
+            logEvent,
+            routingKey: "space.activity.log",
+            exchangeName: "log.exchange"
+        );
+        
+        return result;
     }
 
     public async Task<ISpaceMember?> UpdateSpaceMemberAsync(ISpaceMember spaceMember)
@@ -188,7 +316,31 @@ public class SpaceService(
         existingMember.RoleId = spaceMember.RoleId;
         existingMember.SpaceUsername = spaceMember.SpaceUsername;
 
-        return await spaceMemberRepository.UpdateAsync(existingMember);
+        var result = await spaceMemberRepository.UpdateAsync(existingMember);
+        
+        if (result != null)
+        {
+            var logEvent = new SpaceActivityLogEvent
+            {
+                SpaceId = existingMember.SpaceId,
+                MemberId = existingMember.UserId,
+                Type = "SpaceMemberUpdated",
+                Description = $"Member with User ID '{spaceMember.UserId}' updated in space ID '{existingMember.SpaceId}'.",
+                ActivityAt = DateTime.UtcNow
+            };
+            
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.exchange"
+            );
+
+            return result;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public async Task<bool> RemoveMemberFromSpaceAsync(Guid spaceId, Guid userId)
@@ -205,7 +357,25 @@ public class SpaceService(
         var member = await spaceMemberRepository.GetByIdAsync(space.Id, userId)
                         ?? throw new KeyNotFoundException($"Member with User ID {userId} not found in space {spaceId}.");
 
-        return await spaceMemberRepository.DeleteAsync(member);
+        var result= await spaceMemberRepository.DeleteAsync(member);
+        
+        if (!result) return result;
+        var logEvent = new SpaceActivityLogEvent
+        {
+            SpaceId = space.Id,
+            MemberId = member.UserId,
+            Type = "MemberRemoved",
+            Description = $"User with ID '{member.UserId}' removed from space '{space.Name}'.",
+            ActivityAt = DateTime.UtcNow
+        };
+        
+        await eventPublisher.PublishAsync(
+            logEvent,
+            routingKey: "space.activity.log",
+            exchangeName: "log.exchange"
+        );
+        
+        return result;
     }
 }
 

@@ -1,10 +1,9 @@
 using System.Text.Json;
-using ChatNotifyService.ABS.Helpers;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace ChatNotifyService.BLL.RabbitMQ;
+namespace EventScheduleService.BLL.RabbitMQ.Consumer;
 
 public class RabbitMqConsumer(IOptions<RabbitSettings> options) : IDisposable, IAsyncDisposable
 {

@@ -49,7 +49,7 @@ public static class Program
         
         builder.AddSqlDbContext();
         builder.AddModels();
-        builder.AddQueueServices();
+        builder.AddRabbitMqServices();
         builder.AddRepositories();
         builder.AddServices();
         builder.AddMappersAndFactories();

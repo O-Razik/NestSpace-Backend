@@ -2,13 +2,12 @@ using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IRepositories;
 using ChatNotifyService.ABS.IServices;
-using ChatNotifyService.BLL.Dtos;
 using ChatNotifyService.BLL.Dtos.Create;
 using ChatNotifyService.BLL.Dtos.Send;
-using ChatNotifyService.BLL.Mappers;
 using ChatNotifyService.BLL.Mappers.Create;
 using ChatNotifyService.BLL.Mappers.Send;
 using ChatNotifyService.BLL.RabbitMQ;
+using ChatNotifyService.BLL.RabbitMQ.Consumer;
 using ChatNotifyService.BLL.Services;
 using ChatNotifyService.DAL.Entities;
 using ChatNotifyService.DAL.Data;
@@ -36,7 +35,7 @@ public static class BuilderExtension
         return builder;
     }
     
-    public static WebApplicationBuilder AddQueues(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddRabbitMqServices(this WebApplicationBuilder builder)
     {
         builder.Services.Configure<RabbitSettings>(
         builder.Configuration.GetSection("RabbitSettings"));
@@ -53,6 +52,7 @@ public static class BuilderExtension
         builder.Services.AddScoped<IMessage, Message>();
         builder.Services.AddScoped<IChatMember, ChatMember>();
         builder.Services.AddScoped<IMessageRead, MessageRead>();
+        builder.Services.AddScoped<ISpaceActivityLog, SpaceActivityLog>();
         
         return builder;
     }
@@ -63,6 +63,7 @@ public static class BuilderExtension
         builder.Services.AddScoped<IChatMemberRepository, ChatMemberRepository>();
         builder.Services.AddScoped<IMessageRepository, MessageRepository>();
         builder.Services.AddScoped<IMessageReadRepository, MessageReadRepository>();
+        builder.Services.AddScoped<ISpaceActivityLogRepository, SpaceActivityLogRepository>();
         
         return builder;
     }
@@ -72,6 +73,7 @@ public static class BuilderExtension
         builder.Services.AddScoped<IChatService, ChatService>();
         builder.Services.AddScoped<IMessageService, MessageService>();
         builder.Services.AddScoped<IChatNotificationService, ChatNotificationService>();
+        builder.Services.AddScoped<ISpaceActivityLogService, SpaceActivityLogService>();
         
         return builder;
     }
@@ -82,6 +84,7 @@ public static class BuilderExtension
         builder.Services.AddTransient<IEntityFactory<IMessage>, MessageFactory>();
         builder.Services.AddTransient<IEntityFactory<IChatMember>, ChatMemberFactory>();
         builder.Services.AddTransient<IEntityFactory<IMessageRead>, MessageReadFactory>();
+        builder.Services.AddTransient<IEntityFactory<ISpaceActivityLog>, SpaceActivityLogFactory>();
         
         return builder;
     }
@@ -91,17 +94,18 @@ public static class BuilderExtension
         builder.Services.AddTransient<ChatMemberMapper>();
         builder.Services.AddTransient<MessageReadMapper>();
         builder.Services.AddTransient<ChatMapper>();
+        builder.Services.AddTransient<SpaceActivityLogMapper>();
         
         
         builder.Services.AddTransient<IBigMapper<IChat, ChatDto, ChatDtoShort>, ChatMapper>();
         builder.Services.AddTransient<IBigMapper<IMessage, MessageDto, MessageDtoShort>, MessageMapper>();
         builder.Services.AddTransient<IBigMapper<IChatMember, MemberDto, MemberDtoShort>, ChatMemberMapper>();
         builder.Services.AddTransient<IBigMapper<IMessageRead, MessageReadDto, MessageReadDtoShort>, MessageReadMapper>();
+        builder.Services.AddTransient<IMapper<ISpaceActivityLog, SpaceActivityLogDto>, SpaceActivityLogMapper>();
         
         builder.Services.AddTransient<ICreateMapper<IChat, ChatCreateDto>, ChatCreateMapper>();
         builder.Services.AddTransient<ICreateMapper<IMessage, MessageCreateDto>, MessageCreateMapper>();
         builder.Services.AddTransient<ICreateMapper<IChatMember, MemberCreateDto>, ChatMemberCreateMapper>();
-        
         return builder;
     }
 }

@@ -1,15 +1,12 @@
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
+using EventScheduleService.ABS.IHelpers;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using UserSpaceService.ABS.IHelpers;
 
-namespace UserSpaceService.BLL.Queues;
+namespace EventScheduleService.BLL.RabbitMQ.Publisher;
 
-public class RabbitMqPublisher(
-    IOptions<RabbitSettings> rabbitSettings,
-    ILogger<RabbitMqPublisher> logger) : IEventPublisher
+public class RabbitMqPublisher(IOptions<RabbitSettings> rabbitSettings) : IEventPublisher
 {
     private IConnection? _connection;
     private IChannel? _channel;
@@ -24,12 +21,6 @@ public class RabbitMqPublisher(
         }
 
         var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(createdEvent));
-        
-        logger.LogInformation(
-            "Publishing event to Exchange: {Exchange}, RoutingKey: {RoutingKey}", 
-            exchangeName, 
-            routingKey
-        );
 
         await _channel.ExchangeDeclareAsync(exchange: exchangeName, type: ExchangeType.Topic, durable: true);
 
@@ -60,9 +51,7 @@ public class RabbitMqPublisher(
         _connection = await factory.CreateConnectionAsync(); 
         _channel = await _connection.CreateChannelAsync();
         
-        await _channel.ExchangeDeclareAsync(exchange: "chat.exchange", type: ExchangeType.Topic, durable: true);
-        await _channel.ExchangeDeclareAsync(exchange: "space.exchange", type: ExchangeType.Topic, durable: true);
+        await _channel.ExchangeDeclareAsync(exchange: "event.exchange", type: ExchangeType.Topic, durable: true);
         await _channel.ExchangeDeclareAsync(exchange: "log.exchange", type: ExchangeType.Topic, durable: true);
-
     }
 }

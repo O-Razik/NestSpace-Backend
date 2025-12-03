@@ -13,4 +13,6 @@ public interface IEventCategoryRepository
     Task<IEventCategory?> UpdateAsync(IEventCategory updatedEvent);
     
     Task<bool> DeleteAsync(Guid eventId);
+    
+    Task<bool> DeleteBySpaceIdAsync(Guid spaceId);
 }

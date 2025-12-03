@@ -13,4 +13,6 @@ public interface IEventTagRepository
     Task<IEventTag?> UpdateAsync(IEventTag updatedTag);
     
     Task<bool> DeleteAsync(Guid markerId);
+    
+    Task<bool> DeleteBySpaceIdAsync(Guid spaceId);
 }

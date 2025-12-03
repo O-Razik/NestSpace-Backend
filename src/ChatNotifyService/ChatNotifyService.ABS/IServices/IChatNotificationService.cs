@@ -19,4 +19,6 @@ public interface IChatNotificationService
     Task NotifyMemberAddedAsync(Guid chatId, IChatMember member);
     
     Task NotifyMemberRemovedAsync(Guid chatId, Guid memberId);
+    
+    Task NotifyChatsDeletedBySpaceIdAsync(Guid spaceId);
 }

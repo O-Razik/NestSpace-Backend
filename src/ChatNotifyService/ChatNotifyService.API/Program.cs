@@ -30,7 +30,7 @@ public static class Program
         builder.Services.AddAuthorization();
         
         builder.AddSqlDbContext()
-            .AddQueues()
+            .AddRabbitMqServices()
             .AddEntities()
             .AddRepositories()
             .AddServices()

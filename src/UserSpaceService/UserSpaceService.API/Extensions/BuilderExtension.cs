@@ -72,7 +72,7 @@ public static class BuilderExtension
         builder.Services.AddScoped<IMapper<IExternalLogin, ExternalLoginDto>, ExternalLoginMapper>(); 
     }
     
-    public static WebApplicationBuilder AddQueueServices(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddRabbitMqServices(this WebApplicationBuilder builder)
     {
         builder.Services.Configure<RabbitSettings>(
             builder.Configuration.GetSection("RabbitSettings"));

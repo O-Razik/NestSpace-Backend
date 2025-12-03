@@ -34,7 +34,8 @@ public class Program
             .AddModels()
             .AddRepositories()
             .AddServices()
-            .AddMappersAndFactories();
+            .AddMappersAndFactories()
+            .AddRabbitMqServices();
         
         builder.Services
             .AddAuthorization()

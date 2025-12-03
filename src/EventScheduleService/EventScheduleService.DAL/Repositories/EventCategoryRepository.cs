@@ -55,4 +55,18 @@ public class EventCategoryRepository(EventScheduleDbContext context) : IEventCat
         await context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> DeleteBySpaceIdAsync(Guid spaceId)
+    {
+        var eventCategories = await context.EventCategories
+            .Where(ec => ec.SpaceId == spaceId)
+            .ToListAsync();
+        if (eventCategories.Count == 0)
+        {
+            return false;
+        }
+        context.EventCategories.RemoveRange(eventCategories);
+        await context.SaveChangesAsync();
+        return true;
+    }
 }
