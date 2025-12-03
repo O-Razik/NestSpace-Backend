@@ -1,11 +1,14 @@
+using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.IModels;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.ABS.IServices;
+using EventScheduleService.BLL.RabbitMQ.Events;
 
 namespace EventScheduleService.BLL.Services;
 
 public class RegularEventService(
-    IRegularEventRepository regularEventRepository
+    IRegularEventRepository regularEventRepository,
+    IEventPublisher eventPublisher
 ) : IRegularEventService
 {
     public async Task<IEnumerable<IRegularEvent>> GetRegularEventsBySpaceAsync(Guid spaceId)
@@ -22,7 +25,23 @@ public class RegularEventService(
     {
         try
         {
-            return await regularEventRepository.AddAsync(newRegularEvent);
+            var result = await regularEventRepository.AddAsync(newRegularEvent);
+            
+            var logEvent = new SpaceActivityLogEvent()
+            {
+                SpaceId = newRegularEvent.SpaceId,
+                Type = "RegularEventCreated",
+                Description = $"Regular event '{newRegularEvent.Title}' created.",
+                ActivityAt = DateTime.UtcNow
+            };
+            
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.activity"
+            );
+            
+            return result;
         }
         catch (Exception e)
         {
@@ -35,7 +54,24 @@ public class RegularEventService(
     {
         try
         {
-            return await regularEventRepository.UpdateAsync(updatedRegularEvent);
+            var result = await regularEventRepository.UpdateAsync(updatedRegularEvent);
+
+            if (result == null) return result;
+            var logEvent = new SpaceActivityLogEvent()
+            {
+                SpaceId = updatedRegularEvent.SpaceId,
+                Type = "RegularEventUpdated",
+                Description = $"Regular event '{updatedRegularEvent.Title}' updated.",
+                ActivityAt = DateTime.UtcNow
+            };
+                
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.activity"
+            );
+
+            return result;
         }
         catch (Exception e)
         {
@@ -48,7 +84,23 @@ public class RegularEventService(
     {
         try
         {
-            return await regularEventRepository.DeleteAsync(regularEventId);
+            var result = await regularEventRepository.DeleteAsync(regularEventId);
+
+            var logEvent = new SpaceActivityLogEvent()
+            {
+                SpaceId = Guid.Empty, // Ideally, fetch the SpaceId before deletion for accurate logging
+                Type = "RegularEventDeleted",
+                Description = $"Regular event with ID '{regularEventId}' deleted.",
+                ActivityAt = DateTime.UtcNow
+            };
+            
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.activity"
+            );
+            
+            return result;
         }
         catch (Exception e)
         {

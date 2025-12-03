@@ -61,5 +61,8 @@ public class RabbitMqPublisher(
         _channel = await _connection.CreateChannelAsync();
         
         await _channel.ExchangeDeclareAsync(exchange: "chat.exchange", type: ExchangeType.Topic, durable: true);
+        await _channel.ExchangeDeclareAsync(exchange: "space.exchange", type: ExchangeType.Topic, durable: true);
+        await _channel.ExchangeDeclareAsync(exchange: "log.exchange", type: ExchangeType.Topic, durable: true);
+
     }
 }

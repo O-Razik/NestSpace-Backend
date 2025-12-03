@@ -52,5 +52,6 @@ public class RabbitMqPublisher(IOptions<RabbitSettings> rabbitSettings) : IEvent
         _channel = await _connection.CreateChannelAsync();
         
         await _channel.ExchangeDeclareAsync(exchange: "event.exchange", type: ExchangeType.Topic, durable: true);
+        await _channel.ExchangeDeclareAsync(exchange: "log.exchange", type: ExchangeType.Topic, durable: true);
     }
 }

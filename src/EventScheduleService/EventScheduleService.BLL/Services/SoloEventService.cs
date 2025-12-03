@@ -1,11 +1,14 @@
+using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.IModels;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.ABS.IServices;
+using EventScheduleService.BLL.RabbitMQ.Events;
 
 namespace EventScheduleService.BLL.Services;
 
 public class SoloEventService(
-    ISoloEventRepository soloEventRepository
+    ISoloEventRepository soloEventRepository,
+    IEventPublisher eventPublisher
 ) : ISoloEventService
 {
     public async Task<IEnumerable<ISoloEvent>> GetSoloEventsBySpaceAsync(Guid spaceId)
@@ -22,7 +25,23 @@ public class SoloEventService(
     {
         try
         {
-            return await soloEventRepository.AddAsync(newSoloEvent);
+            var result = await soloEventRepository.AddAsync(newSoloEvent);
+            
+            var logEvent = new SpaceActivityLogEvent()
+            {
+                SpaceId = newSoloEvent.SpaceId,
+                Type = "SoloEventCreated",
+                Description = $"Solo event '{newSoloEvent.Title}' created.",
+                ActivityAt = DateTime.UtcNow
+            };
+            
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.exchange"
+            );
+            
+            return result;
         }
         catch (Exception e)
         {
@@ -35,7 +54,24 @@ public class SoloEventService(
     {
         try
         {
-            return await soloEventRepository.UpdateAsync(updatedSoloEvent);
+            var result = await soloEventRepository.UpdateAsync(updatedSoloEvent);
+            
+            if (result == null) return result;
+            var logEvent = new SpaceActivityLogEvent()
+            {
+                SpaceId = updatedSoloEvent.SpaceId,
+                Type = "SoloEventUpdated",
+                Description = $"Solo event '{updatedSoloEvent.Title}' updated.",
+                ActivityAt = DateTime.UtcNow
+            };
+            
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.exchange"
+            );
+            
+            return result;
         }
         catch (Exception e)
         {
@@ -48,7 +84,24 @@ public class SoloEventService(
     {
         try
         {
-            return await soloEventRepository.DeleteAsync(soloEventId);
+            var result = await soloEventRepository.DeleteAsync(soloEventId);
+
+            var logEvent = new SpaceActivityLogEvent()
+            {
+                SpaceId = Guid.Empty, // You might want to fetch the actual SpaceId before deletion
+                MemberId = Guid.Empty,
+                Type = "SoloEventDeleted",
+                Description = $"Solo event with ID '{soloEventId}' deleted.",
+                ActivityAt = DateTime.UtcNow
+            };
+            
+            await eventPublisher.PublishAsync(
+                logEvent,
+                routingKey: "space.activity.log",
+                exchangeName: "log.exchange"
+            );
+            
+            return result;
         }
         catch (Exception e)
         {

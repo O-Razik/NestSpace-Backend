@@ -1,12 +1,16 @@
 using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IRepositories;
 using ChatNotifyService.ABS.IServices;
+using ChatNotifyService.BLL.Dtos.Send;
 
 namespace ChatNotifyService.BLL.Services;
 
 public class ChatService(
     IChatRepository chatRepository,
     IChatMemberRepository memberRepository,
+    ISpaceActivityLogRepository activityLogRepository,
+    IMapper<ISpaceActivityLog , SpaceActivityLogDto> activityLogMapper,
     IChatNotificationService notificationService) : IChatService
 {
     public async Task<IEnumerable<IChat>> GetAllChatsAsync(Guid spaceId, Guid memberId)
@@ -37,6 +41,16 @@ public class ChatService(
             throw new ArgumentNullException(nameof(chat), "Chat cannot be null");
         
         var created = await chatRepository.CreateAsync(chat);
+
+        var logEntry = new SpaceActivityLogDto()
+        {
+            SpaceId = created.SpaceId,
+            Type = "ChatCreated",
+            Description = $"Chat '{created.Name}' created.",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await activityLogRepository.CreateActivityLogAsync(activityLogMapper.ToEntity(logEntry));
         
         await notificationService.NotifyChatUpdatedAsync(created);
         
@@ -52,10 +66,19 @@ public class ChatService(
             throw new ArgumentException("ChatId cannot be empty", nameof(updatedChat));
         
         var updated = await chatRepository.UpdateAsync(updatedChat);
-        
-        if(updated != null)
-            await notificationService.NotifyChatUpdatedAsync(updated);
-        
+
+        if (updated == null) return updated;
+        await notificationService.NotifyChatUpdatedAsync(updated);
+        var logEntry = new SpaceActivityLogDto()
+        {
+            SpaceId = updated.SpaceId,
+            Type = "ChatUpdated",
+            Description = $"Chat '{updated.Name}' updated.",
+            CreatedAt = DateTime.UtcNow
+        };
+            
+        await activityLogRepository.CreateActivityLogAsync(activityLogMapper.ToEntity(logEntry));
+
         return updated;
     }
 
@@ -72,10 +95,21 @@ public class ChatService(
             throw new InvalidOperationException("Chat not found or member does not have access to delete the chat");
         
         var deleted = await chatRepository.DeleteAsync(chat);
+
+        if (!deleted) return deleted;
+        await notificationService.NotifyChatDeletedAsync(chatId);
         
-        if(deleted)
-            await notificationService.NotifyChatDeletedAsync(chatId);
+        var logEntry = new SpaceActivityLogDto()
+        {
+            SpaceId = chat.SpaceId,
+            MemberId = memberId,
+            Type = "ChatDeleted",
+            Description = $"Chat '{chat.Name}' deleted.",
+            CreatedAt = DateTime.UtcNow
+        };
         
+        await activityLogRepository.CreateActivityLogAsync(activityLogMapper.ToEntity(logEntry));
+
         return deleted;
     }
     
