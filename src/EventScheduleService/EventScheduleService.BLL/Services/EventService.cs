@@ -84,6 +84,19 @@ public class EventService(
         }
     }
 
+    public async Task<bool> DeleteCategoryBySpaceIdAsync(Guid spaceId)
+    {
+        try
+        {
+            return await categoryRepository.DeleteBySpaceIdAsync(spaceId);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<IEventTag>> GetTagsBySpaceAsync(Guid spaceId)
     {
         try
@@ -156,6 +169,19 @@ public class EventService(
         {
             Console.WriteLine(e);
             throw new Exception("An error occurred while deleting the event tag.", e);
+        }
+    }
+
+    public async Task<bool> DeleteTagBySpaceIdAsync(Guid spaceId)
+    {
+        try
+        {
+            return await tagRepository.DeleteBySpaceIdAsync(spaceId);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
     }
 }

@@ -13,4 +13,6 @@ public interface IRegularEventService
     Task<IRegularEvent?> UpdateRegularEventAsync(IRegularEvent updatedRegularEvent);
     
     Task<bool> DeleteRegularEventAsync(Guid regularEventId);
+    
+    Task<bool> DeleteRegularEventsBySpaceIdAsync(Guid spaceId);
 }

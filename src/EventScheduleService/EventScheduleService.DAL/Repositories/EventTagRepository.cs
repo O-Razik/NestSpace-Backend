@@ -60,4 +60,19 @@ public class EventTagRepository(EventScheduleDbContext context) : IEventTagRepos
         await context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> DeleteBySpaceIdAsync(Guid spaceId)
+    {
+        var tags = await context.EventTags
+            .Where(m => m.SpaceId == spaceId)
+            .ToListAsync();
+        if (tags.Count == 0)
+        {
+            return false;
+        }
+
+        context.EventTags.RemoveRange(tags);
+        await context.SaveChangesAsync();
+        return true;
+    }
 }

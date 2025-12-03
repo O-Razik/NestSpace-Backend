@@ -14,6 +14,8 @@ public interface IEventService
     
     Task<bool> DeleteCategoryAsync(Guid eventId);
     
+    Task<bool> DeleteCategoryBySpaceIdAsync(Guid spaceId);
+    
     Task<IEnumerable<IEventTag>> GetTagsBySpaceAsync(Guid spaceId);
     
     Task<IEventTag?> GetTagByIdAsync(Guid markerId);
@@ -23,4 +25,6 @@ public interface IEventService
     Task<IEventTag?> UpdateTagAsync(IEventTag updatedTag);
     
     Task<bool> DeleteTagAsync(Guid markerId);
+    
+    Task<bool> DeleteTagBySpaceIdAsync(Guid spaceId);
 }

@@ -3,6 +3,7 @@ using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.ABS.IServices;
 using UserSpaceService.BLL.Queues;
+using UserSpaceService.BLL.Queues.Events;
 
 namespace UserSpaceService.BLL.Services;
 

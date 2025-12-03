@@ -98,4 +98,18 @@ public class SoloEventRepository(EventScheduleDbContext context) : ISoloEventRep
         await context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> DeleteBySpaceIdAsync(Guid spaceId)
+    {
+        var soloEvents = await context.SoloEvents
+            .Where(se => se.SpaceId == spaceId)
+            .ToListAsync();
+        if (soloEvents.Count == 0)
+        {
+            return false;
+        }
+        context.SoloEvents.RemoveRange(soloEvents);
+        await context.SaveChangesAsync();
+        return true;
+    }
 }

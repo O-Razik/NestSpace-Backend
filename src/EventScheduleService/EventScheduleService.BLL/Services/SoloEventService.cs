@@ -56,4 +56,17 @@ public class SoloEventService(
             throw;
         }
     }
+
+    public async Task<bool> DeleteSoloEventsBySpaceIdAsync(Guid spaceId)
+    {
+        try
+        {
+            return await soloEventRepository.DeleteBySpaceIdAsync(spaceId);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
 }

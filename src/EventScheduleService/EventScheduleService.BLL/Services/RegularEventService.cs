@@ -56,4 +56,17 @@ public class RegularEventService(
             throw;
         }
     }
+
+    public async Task<bool> DeleteRegularEventsBySpaceIdAsync(Guid spaceId)
+    {
+        try
+        {
+            return await regularEventRepository.DeleteBySpaceIdAsync(spaceId);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
 }

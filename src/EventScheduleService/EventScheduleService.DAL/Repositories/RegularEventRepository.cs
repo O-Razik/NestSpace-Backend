@@ -98,4 +98,18 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
         await context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> DeleteBySpaceIdAsync(Guid spaceId)
+    {
+        var regularEvents = await context.RegularEvents
+            .Where(re => re.SpaceId == spaceId)
+            .ToListAsync();
+        if (regularEvents.Count == 0)
+        {
+            return false;
+        }
+        context.RegularEvents.RemoveRange(regularEvents);
+        await context.SaveChangesAsync();
+        return true;
+    }
 }
