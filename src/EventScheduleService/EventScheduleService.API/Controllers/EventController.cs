@@ -263,7 +263,7 @@ public class EventController(
     }
     
     /// <summary>
-    /// Deletes a event tag by its ID.
+    /// Deletes an event tag by its ID.
     /// </summary>
     /// <param name="tagId"></param>
     /// <returns></returns>

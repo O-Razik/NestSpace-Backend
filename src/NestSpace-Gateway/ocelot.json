@@ -35,6 +35,42 @@
       ],
       "UpstreamPathTemplate": "/space/{spaceId}/chat/{chatId}/messages/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/activity-logs",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 7027 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/activity_logs",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/event/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 7167 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/events/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/regularevent/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 7167 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/regular_events/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/soloevent/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 7167 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/solo_events/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     }
   ],
   "GlobalConfiguration": {

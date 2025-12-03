@@ -17,7 +17,7 @@ namespace EventScheduleService.API.Controllers;
 /// <param name="createMapper"></param>
 /// <param name="updateMapper"></param>
 [Authorize]
-[Route("api/Space/{spaceId:guid}/[controller]")]
+[Route("api/space/{spaceId:guid}/[controller]")]
 [ApiController]
 public class SoloEventController(
     ISoloEventService soloEventService,
