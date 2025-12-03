@@ -1,4 +1,4 @@
-namespace UserSpaceService.BLL.Queues;
+namespace UserSpaceService.BLL.Queues.Events;
 
 public class ChatCreateEvent
 {

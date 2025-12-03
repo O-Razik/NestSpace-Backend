@@ -1,13 +1,12 @@
+using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IServices;
-using ChatNotifyService.BLL.Dtos;
 using ChatNotifyService.BLL.Dtos.Send;
-using ChatNotifyService.BLL.Mappers;
 using ChatNotifyService.BLL.Mappers.Send;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace ChatNotifyService.BLL.RabbitMQ;
+namespace ChatNotifyService.BLL.RabbitMQ.Consumer;
 
 public class RabbitMqConsumerHostedService(
     ChatMapper chatMapper,
@@ -43,6 +42,7 @@ public class RabbitMqConsumerHostedService(
                         {
                             MemberId = evt.MemberId,
                             ChatId = evt.ChatId,
+                            PermissionLevel = PermissionLevel.Admin,
                             JoinedAt = evt.CreatedAt
                         }
                     }

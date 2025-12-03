@@ -14,8 +14,6 @@ using EventScheduleService.DAL.Factories;
 using EventScheduleService.DAL.Models;
 using EventScheduleService.DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using Npgsql.NameTranslation;
 
 namespace EventScheduleService.API.Extensions;
 

@@ -1,4 +1,4 @@
-namespace ChatNotifyService.BLL.RabbitMQ;
+namespace EventScheduleService.BLL.RabbitMQ.Consumer;
 
 public class RabbitMqSubscription<TEvent> where TEvent : class
 {

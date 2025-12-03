@@ -1,4 +1,4 @@
-namespace UserSpaceService.BLL.Queues;
+namespace EventScheduleService.BLL.RabbitMQ;
 
 public class RabbitSettings
 {
