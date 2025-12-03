@@ -1,12 +1,15 @@
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using UserSpaceService.ABS.IHelpers;
 
 namespace UserSpaceService.BLL.Queues;
 
-public class RabbitMqPublisher(IOptions<RabbitSettings> rabbitSettings) : IEventPublisher
+public class RabbitMqPublisher(
+    IOptions<RabbitSettings> rabbitSettings,
+    ILogger<RabbitMqPublisher> logger) : IEventPublisher
 {
     private IConnection? _connection;
     private IChannel? _channel;
@@ -21,6 +24,12 @@ public class RabbitMqPublisher(IOptions<RabbitSettings> rabbitSettings) : IEvent
         }
 
         var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(createdEvent));
+        
+        logger.LogInformation(
+            "Publishing event to Exchange: {Exchange}, RoutingKey: {RoutingKey}", 
+            exchangeName, 
+            routingKey
+        );
 
         await _channel.ExchangeDeclareAsync(exchange: exchangeName, type: ExchangeType.Topic, durable: true);
 

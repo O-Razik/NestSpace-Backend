@@ -35,7 +35,7 @@ public static class BuilderExtension
         return builder;
     }
     
-    public static WebApplicationBuilder AddQueues(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddRabbitMqServices(this WebApplicationBuilder builder)
     {
         builder.Services.Configure<RabbitSettings>(
         builder.Configuration.GetSection("RabbitSettings"));
