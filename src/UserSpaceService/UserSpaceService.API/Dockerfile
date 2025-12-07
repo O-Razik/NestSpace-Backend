@@ -7,6 +7,9 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["src/UserSpaceService/UserSpaceService.ABS/UserSpaceService.ABS.csproj", "src/UserSpaceService/UserSpaceService.ABS/"]
+COPY ["src/UserSpaceService/UserSpaceService.DAL/UserSpaceService.DAL.csproj", "src/UserSpaceService/UserSpaceService.DAL/"]
+COPY ["src/UserSpaceService/UserSpaceService.BLL/UserSpaceService.BLL.csproj", "src/UserSpaceService/UserSpaceService.BLL/"]
 COPY ["src/UserSpaceService/UserSpaceService.API/UserSpaceService.API.csproj", "src/UserSpaceService/UserSpaceService.API/"]
 RUN dotnet restore "src/UserSpaceService/UserSpaceService.API/UserSpaceService.API.csproj"
 COPY . .

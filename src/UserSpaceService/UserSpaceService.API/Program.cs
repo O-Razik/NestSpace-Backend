@@ -1,9 +1,11 @@
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using UserSpaceService.API.Extensions;
+using UserSpaceService.DAL.Data;
 
 namespace UserSpaceService.API;
 
@@ -53,6 +55,7 @@ public static class Program
         builder.AddRepositories();
         builder.AddServices();
         builder.AddMappersAndFactories();
+        builder.AddSerilog();
         
         builder.Services.AddAuthorization();
         
@@ -89,6 +92,12 @@ public static class Program
         {
             app.UseSwagger();
             app.UseSwaggerUI();
+        }
+        
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<UserSpaceDbContext>();
+            db.Database.Migrate();
         }
 
         app.UseHttpsRedirection();

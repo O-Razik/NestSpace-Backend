@@ -1,0 +1,79 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/user/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "userspace", "Port": 8080 }
+      ],
+      "UpstreamPathTemplate": "/users/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "userspace", "Port": 8080 }
+      ],
+      "UpstreamPathTemplate": "/spaces/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/chat/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "chatnotify", "Port": 8080 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/chats/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/chat/{chatId}/messages/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "chatnotify", "Port": 8080 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/chat/{chatId}/messages/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/activity-logs",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "chatnotify", "Port": 8080 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/activity_logs",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/event/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "eventschedule", "Port": 8080 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/events/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/regularevent/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "eventschedule", "Port": 8080 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/regular_events/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/space/{spaceId}/soloevent/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "eventschedule", "Port": 8080 }
+      ],
+      "UpstreamPathTemplate": "/space/{spaceId}/solo_events/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:8000"
+  }
+}

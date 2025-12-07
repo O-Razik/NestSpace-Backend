@@ -56,13 +56,11 @@ public class MessageController(
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="spaceId"></param>
     /// <param name="chatId"></param>
     /// <param name="count"></param>
     /// <returns></returns>
     [HttpGet("recent")]
     public async Task<ActionResult<IEnumerable<MessageDtoShort>>> GetRecentMessages(
-        [FromRoute] Guid spaceId,
         [FromRoute] Guid chatId,
         [FromQuery] int count = 20)
     {
@@ -87,14 +85,10 @@ public class MessageController(
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <param name="chatId"></param>
     /// <param name="messageId"></param>
     /// <returns></returns>
     [HttpGet("{messageId:guid}")]
     public async Task<ActionResult<MessageDto>> GetMessageById(
-        [FromRoute] Guid spaceId,
-        [FromRoute] Guid chatId,
         [FromRoute] Guid messageId)
     {
         var message = await messageService.GetMessageByIdAsync(messageId);
@@ -124,14 +118,12 @@ public class MessageController(
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="spaceId"></param>
     /// <param name="chatId"></param>
     /// <param name="messageId"></param>
     /// <param name="updateDto"></param>
     /// <returns></returns>
     [HttpPut("{messageId:guid}")]
     public async Task<ActionResult<MessageDto>> EditMessage(
-        [FromRoute] Guid spaceId,
         [FromRoute] Guid chatId,
         [FromRoute] Guid messageId,
         [FromBody] MessageDto updateDto)
@@ -148,14 +140,10 @@ public class MessageController(
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <param name="chatId"></param>
     /// <param name="messageId"></param>
     /// <returns></returns>
     [HttpPost("{messageId:guid}/read")]
     public async Task<IActionResult> MarkMessageAsRead(
-        [FromRoute] Guid spaceId,
-        [FromRoute] Guid chatId,
         [FromRoute] Guid messageId)
     {
         var userId = GetCurrentUserId();

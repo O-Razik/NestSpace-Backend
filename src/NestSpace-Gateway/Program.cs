@@ -20,8 +20,8 @@ public class Program
                     .AllowAnyMethod();
             });
         });
-        
-        builder.AddOcelot();
+
+        builder.AddOcelot().AddSerilog();
 
         var app = builder.Build();
 

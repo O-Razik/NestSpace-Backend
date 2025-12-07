@@ -14,6 +14,12 @@ using ChatNotifyService.DAL.Data;
 using ChatNotifyService.DAL.Factories;
 using ChatNotifyService.DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using Serilog;
+using Serilog.Formatting.Json;
 
 namespace ChatNotifyService.API.Extensions;
 
@@ -38,7 +44,7 @@ public static class BuilderExtension
     public static WebApplicationBuilder AddRabbitMqServices(this WebApplicationBuilder builder)
     {
         builder.Services.Configure<RabbitSettings>(
-        builder.Configuration.GetSection("RabbitSettings"));
+            builder.Configuration.GetSection("RabbitSettings"));
          
         builder.Services.AddSingleton<RabbitMqConsumer>();
         builder.Services.AddHostedService<RabbitMqConsumerHostedService>();
@@ -108,4 +114,45 @@ public static class BuilderExtension
         builder.Services.AddTransient<ICreateMapper<IChatMember, MemberCreateDto>, ChatMemberCreateMapper>();
         return builder;
     }
+    
+    /*
+    public static WebApplicationBuilder AddSerilog(this WebApplicationBuilder builder)
+    {
+        Log.Logger = new LoggerConfiguration()
+            .Enrich.FromLogContext()
+            .Enrich.WithThreadId()
+            .Enrich.WithEnvironmentName()
+            .WriteTo.Console()
+            .WriteTo.RabbitMQ((clientConfiguration, sinkConfiguration) =>
+            {
+                clientConfiguration.Username = "guest";
+                clientConfiguration.Password = "guest";
+                clientConfiguration.VHost = "/";
+                clientConfiguration.Hostnames.Add("localhost");
+                clientConfiguration.Exchange = "logs_exchange";
+                clientConfiguration.ExchangeType = "direct";
+                sinkConfiguration.TextFormatter = new JsonFormatter();
+            })
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
+        
+        return builder;
+    }
+    */
+    
+    public static WebApplicationBuilder AddSerilog(this WebApplicationBuilder builder)
+    {
+        builder.Host.UseSerilog((context, services, configuration) => configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .Enrich.WithThreadId()
+            .Enrich.WithEnvironmentName()
+            .Enrich.WithProperty("Application", "ChatNotifyService")
+        );
+        
+        return builder;
+    }
+
 }

@@ -1,7 +1,9 @@
 using System.Reflection;
 using System.Text;
 using EventScheduleService.API.Extensions;
+using EventScheduleService.DAL.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -27,15 +29,15 @@ public class Program
                     ValidAudience = builder.Configuration["Jwt:Audience"]
                 };
             });
-        builder.Services.AddEndpointsApiExplorer();
-        
+
         builder
             .AddSqlDbContext()
             .AddModels()
             .AddRepositories()
             .AddServices()
             .AddMappersAndFactories()
-            .AddRabbitMqServices();
+            .AddRabbitMqServices()
+            .AddSerilog();
         
         builder.Services
             .AddAuthorization()
@@ -80,6 +82,12 @@ public class Program
         {
             app.UseSwagger();
             app.UseSwaggerUI();
+        }
+        
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EventScheduleDbContext>();
+            db.Database.Migrate();
         }
 
         app.UseHttpsRedirection();

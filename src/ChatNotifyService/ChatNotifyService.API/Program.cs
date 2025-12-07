@@ -1,7 +1,9 @@
 using System.Reflection;
 using System.Text;
 using ChatNotifyService.API.Extensions;
+using ChatNotifyService.DAL.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -9,7 +11,7 @@ namespace ChatNotifyService.API;
 
 public static class Program
 {
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -28,14 +30,16 @@ public static class Program
                 };
             });
         builder.Services.AddAuthorization();
-        
+
         builder.AddSqlDbContext()
             .AddRabbitMqServices()
             .AddEntities()
             .AddRepositories()
             .AddServices()
             .AddFactories()
-            .AddMappers();
+            .AddMappers()
+            .AddSerilog();
+        
         builder.Services.AddSignalR();
 
         builder.Services.AddEndpointsApiExplorer();
@@ -79,12 +83,18 @@ public static class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+        
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ChatNotifyDbContext>();
+            db.Database.Migrate();
+        }
 
         app.UseHttpsRedirection();
         app.UseAuthorization();
         
         app.MapControllers();
 
-        await app.RunAsync();
+        app.Run();
     }
 }

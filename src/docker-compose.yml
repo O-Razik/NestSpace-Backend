@@ -1,0 +1,158 @@
+version: '3.9'
+
+services:
+  
+  gateway:
+    build:
+      context: ..
+      dockerfile: src/NestSpace-Gateway/Dockerfile
+    container_name: gateway
+    ports:
+      - "8000:8080"
+    depends_on:
+      - userspace
+      - eventschedule
+      - chatnotify
+      - serilog-seq
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker"
+    networks:
+      - nestspace
+  
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345678
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nestspace
+  
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nestspace
+  
+  userspace:
+    build:
+      context: ..
+      dockerfile: src/UserSpaceService/UserSpaceService.API/Dockerfile
+    container_name: userspace
+    ports:
+      - "8001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker"
+      ConnectionStrings__DefaultConnection: "User Id=postgres;Password=12345678;Server=postgres;Port=5432;Database=UserSpace;"
+      Jwt__Key: "DevelopmentKey_ChangeThisForProduction!123"
+      Jwt__Issuer: "http://gateway:8080"
+      Jwt__Audience: "http://userspace:8080"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      serilog-seq:
+        condition: service_started
+    networks:
+      - nestspace
+
+  eventschedule:
+    build:
+      context: ..
+      dockerfile: src/EventScheduleService/EventScheduleService.API/Dockerfile
+    container_name: eventschedule
+    ports:
+      - "8002:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker"
+      ConnectionStrings__DefaultConnection: "User Id=postgres;Password=12345678;Server=postgres;Port=5432;Database=EventSchedule;"
+      Jwt__Key: "DevelopmentKey_ChangeThisForProduction!123"
+      Jwt__Issuer: "http://gateway:8080"
+      Jwt__Audience: "http://userspace:8080"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      serilog-seq:
+        condition: service_started
+    networks:
+      - nestspace
+  
+  chatnotify:
+    build:
+      context: ..
+      dockerfile: src/ChatNotifyService/ChatNotifyService.API/Dockerfile
+    container_name: chatnotify
+    ports:
+      - "8003:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker"
+      ConnectionStrings__DefaultConnection: "User Id=postgres;Password=12345678;Server=postgres;Port=5432;Database=ChatNotify;"
+      Jwt__Key: "DevelopmentKey_ChangeThisForProduction!123"
+      Jwt__Issuer: "http://gateway:8080"
+      Jwt__Audience: "http://userspace:8080"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__Port: "5672"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      serilog-seq:
+        condition: service_started
+    networks:
+      - nestspace
+        
+  serilog-seq:
+    image: datalust/seq:latest
+    container_name: serilog-seq
+    ports:
+      - "8081:80"
+      - "5341:5341"
+    volumes:
+      - seq_data:/data
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    networks:
+      - nestspace
+
+networks:
+  nestspace:
+    driver: bridge
+
+volumes:
+  pgdata:
+  rabbitmq_data:
+  seq_data:
