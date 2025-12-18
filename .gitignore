@@ -6,3 +6,4 @@ riderModule.iml
 .idea/
 
 **/appsettings.Docker.json
+**/appsettings.Development.json

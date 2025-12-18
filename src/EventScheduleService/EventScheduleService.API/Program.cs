@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using EventScheduleService.API.Extensions;
@@ -14,6 +15,9 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
+        var serviceName = builder.Environment.ApplicationName;
+        var otlpEndpoint = builder.Configuration["OTEL_SERVICE_NAME"] ?? "not-configured";
 
         builder.Services.AddControllers();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -37,7 +41,8 @@ public class Program
             .AddServices()
             .AddMappersAndFactories()
             .AddRabbitMqServices()
-            .AddSerilog();
+            .AddSerilog()
+            .AddOpenTelemetry();
         
         builder.Services
             .AddAuthorization()
@@ -96,6 +101,20 @@ public class Program
         app.UseAuthorization();
         
         app.MapControllers();
+
+        app.MapGet("/health", () =>
+        {
+            using var healthActivity = new ActivitySource("HealthCheck").StartActivity("HealthCheck");
+            healthActivity?.SetTag("health.status", "healthy");
+
+            return Results.Ok(new
+            {
+                status = "healthy",
+                service = serviceName,
+                timestamp = DateTime.UtcNow,
+                otlpEndpoint = otlpEndpoint
+            });
+        }).WithName("HealthCheck").WithOpenApi();
 
         app.Run();
     }

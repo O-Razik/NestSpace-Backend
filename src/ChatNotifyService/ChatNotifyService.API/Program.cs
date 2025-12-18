@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using ChatNotifyService.API.Extensions;
@@ -14,6 +15,9 @@ public static class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
+        var serviceName = builder.Environment.ApplicationName;
+        var otlpEndpoint = builder.Configuration["OTEL_SERVICE_NAME"] ?? "not-configured";
 
         builder.Services.AddControllers();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -38,7 +42,8 @@ public static class Program
             .AddServices()
             .AddFactories()
             .AddMappers()
-            .AddSerilog();
+            .AddSerilog()
+            .AddOpenTelemetry();
         
         builder.Services.AddSignalR();
 
@@ -84,16 +89,30 @@ public static class Program
             app.UseSwaggerUI();
         }
         
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<ChatNotifyDbContext>();
-            db.Database.Migrate();
-        }
+        // using (var scope = app.Services.CreateScope())
+        // {
+        // var db = scope.ServiceProvider.GetRequiredService<ChatNotifyDbContext>();
+        // db.Database.Migrate();
+        // }
 
         app.UseHttpsRedirection();
         app.UseAuthorization();
         
         app.MapControllers();
+        
+        app.MapGet("/health", () =>
+        {
+            using var healthActivity = new ActivitySource("HealthCheck").StartActivity("HealthCheck");
+            healthActivity?.SetTag("health.status", "healthy");
+
+            return Results.Ok(new
+            {
+                status = "healthy",
+                service = serviceName,
+                timestamp = DateTime.UtcNow,
+                otlpEndpoint = otlpEndpoint
+            });
+        }).WithName("HealthCheck").WithOpenApi();
 
         app.Run();
     }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,6 +15,8 @@ public static class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        var serviceName = builder.Environment.ApplicationName;
+        var otlpEndpoint = builder.Configuration["OTEL_SERVICE_NAME"] ?? "not-configured";
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
@@ -56,6 +59,7 @@ public static class Program
         builder.AddServices();
         builder.AddMappersAndFactories();
         builder.AddSerilog();
+        builder.AddOpenTelemetry();
         
         builder.Services.AddAuthorization();
         
@@ -94,11 +98,11 @@ public static class Program
             app.UseSwaggerUI();
         }
         
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<UserSpaceDbContext>();
-            db.Database.Migrate();
-        }
+//        using (var scope = app.Services.CreateScope())
+//        { 
+//            var db = scope.ServiceProvider.GetRequiredService<UserSpaceDbContext>(); 
+//            db.Database.Migrate();
+//        }
 
         app.UseHttpsRedirection();
 
@@ -106,6 +110,20 @@ public static class Program
         app.UseAuthorization();
         
         app.MapControllers();
+        
+        app.MapGet("/health", () =>
+        {
+            using var healthActivity = new ActivitySource("HealthCheck").StartActivity("HealthCheck");
+            healthActivity?.SetTag("health.status", "healthy");
+
+            return Results.Ok(new
+            {
+                status = "healthy",
+                service = serviceName,
+                timestamp = DateTime.UtcNow,
+                otlpEndpoint = otlpEndpoint
+            });
+        }).WithName("HealthCheck").WithOpenApi();
 
         app.Run();
     }

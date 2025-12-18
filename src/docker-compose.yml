@@ -1,6 +1,18 @@
 version: '3.9'
 
 services:
+  aspire-dashboard:
+   image: mcr.microsoft.com/dotnet/aspire-dashboard:9.0
+   container_name: aspire-dashboard
+   ports:
+     - "18888:18888"
+     - "18889:18889"
+   environment:
+    - ASPNETCORE_URLS=http://+:18888
+    - DOTNET_DASHBOARD_OTLP_ENDPOINT_URL=http://+:18889
+    - DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+   networks:
+    - nestspace
   
   gateway:
     build:
@@ -14,11 +26,14 @@ services:
       - eventschedule
       - chatnotify
       - serilog-seq
+      - aspire-dashboard
     environment:
       ASPNETCORE_ENVIRONMENT: "Docker"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18888"
+      OTEL_SERVICE_NAME: "NestSpace-Gateway"
     networks:
       - nestspace
-  
+
   postgres:
     image: postgres:15
     container_name: postgres
@@ -36,7 +51,7 @@ services:
       retries: 5
     networks:
       - nestspace
-  
+
   rabbitmq:
     image: rabbitmq:management
     container_name: rabbitmq
@@ -52,7 +67,7 @@ services:
       retries: 5
     networks:
       - nestspace
-  
+
   userspace:
     build:
       context: ..
@@ -70,12 +85,16 @@ services:
       RabbitMQ__Port: "5672"
       RabbitMQ__UserName: "guest"
       RabbitMQ__Password: "guest"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_SERVICE_NAME: "UserSpaceService"
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
       serilog-seq:
+        condition: service_started
+      aspire-dashboard:
         condition: service_started
     networks:
       - nestspace
@@ -97,6 +116,8 @@ services:
       RabbitMQ__Port: "5672"
       RabbitMQ__UserName: "guest"
       RabbitMQ__Password: "guest"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_SERVICE_NAME: "EventScheduleService"
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,9 +125,11 @@ services:
         condition: service_healthy
       serilog-seq:
         condition: service_started
+      aspire-dashboard:
+        condition: service_started
     networks:
       - nestspace
-  
+
   chatnotify:
     build:
       context: ..
@@ -124,6 +147,8 @@ services:
       RabbitMQ__Port: "5672"
       RabbitMQ__UserName: "guest"
       RabbitMQ__Password: "guest"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_SERVICE_NAME: "ChatNotifyService"
     depends_on:
       postgres:
         condition: service_healthy
@@ -131,9 +156,11 @@ services:
         condition: service_healthy
       serilog-seq:
         condition: service_started
+      aspire-dashboard:
+        condition: service_started
     networks:
       - nestspace
-        
+
   serilog-seq:
     image: datalust/seq:latest
     container_name: serilog-seq

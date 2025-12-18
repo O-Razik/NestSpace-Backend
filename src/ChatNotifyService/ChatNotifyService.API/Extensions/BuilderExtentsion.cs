@@ -154,5 +154,74 @@ public static class BuilderExtension
         
         return builder;
     }
+    
+        public static WebApplicationBuilder AddOpenTelemetry(this WebApplicationBuilder builder)
+    {
+        var serviceName = builder.Configuration["OTEL_SERVICE_NAME"] ?? "EventScheduleService";
+        var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
 
+        builder.Services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource
+                .AddService(serviceName: serviceName, serviceVersion: "1.0.0")
+                .AddAttributes(new Dictionary<string, object>
+                {
+                    ["deployment.environment"] = builder.Environment.EnvironmentName,
+                    ["service.namespace"] = "NestSpace"
+                }))
+            .WithMetrics(metrics => metrics
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddRuntimeInstrumentation()
+                .AddProcessInstrumentation()
+                .AddOtlpExporter(options =>
+                {
+                    if (!string.IsNullOrEmpty(otlpEndpoint))
+                    {
+                        options.Endpoint = new Uri(otlpEndpoint);
+                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    }
+                }))
+            .WithTracing(tracing => tracing
+                .AddAspNetCoreInstrumentation(options =>
+                {
+                    options.RecordException = true;
+                    options.Filter = (httpContext) => 
+                    {
+                        return !httpContext.Request.Path.Value?.Contains("/health") ?? true;
+                    };
+                })
+                .AddHttpClientInstrumentation(options =>
+                {
+                    options.RecordException = true;
+                })
+                .AddEntityFrameworkCoreInstrumentation()
+                .AddSource("ChatNotifyService.*")
+                .AddSource("RabbitMQ.*")
+                .SetSampler(new AlwaysOnSampler())
+                .AddOtlpExporter(options =>
+                {
+                    if (!string.IsNullOrEmpty(otlpEndpoint))
+                    {
+                        options.Endpoint = new Uri(otlpEndpoint);
+                        options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                    }
+                }));
+
+        builder.Logging.AddOpenTelemetry(logging =>
+        {
+            logging.IncludeScopes = true;
+            logging.IncludeFormattedMessage = true;
+            
+            logging.AddOtlpExporter(options =>
+            {
+                if (!string.IsNullOrEmpty(otlpEndpoint))
+                {
+                    options.Endpoint = new Uri(otlpEndpoint);
+                    options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+                }
+            });
+        });
+        
+        return builder;
+    }
 }
