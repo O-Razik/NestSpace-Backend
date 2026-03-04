@@ -2,7 +2,7 @@ using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 
-namespace UserSpaceService.ABS.Mappers;
+namespace UserSpaceService.BLL.Mappers;
 
 public class SpaceMapper(
     IEntityFactory<ISpace> entityFactory,
@@ -18,7 +18,7 @@ public class SpaceMapper(
         space.Name = dto.Name;
         space.Members = dto.Members
             .Select(spaceMemberMapper.ToEntity)
-            .ToList();;
+            .ToList();
         space.Roles = dto.Roles.Select(roleMapper.ToEntity).ToList();
         return space;
     }

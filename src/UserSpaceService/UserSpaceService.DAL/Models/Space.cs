@@ -14,9 +14,9 @@ public sealed class Space : ISpace
     [MaxLength(255)]
     public string Name { get; set; } = string.Empty;
     
-    public ICollection<SpaceMember> Members { get; set; } = new List<SpaceMember>();
+    public ICollection<SpaceMember> Members { get; private set; } = new List<SpaceMember>();
     
-    public ICollection<SpaceRole> Roles { get; set; } = new List<SpaceRole>();
+    public ICollection<SpaceRole> Roles { get; private set; } = new List<SpaceRole>();
 
     ICollection<ISpaceMember> ISpace.Members
     {

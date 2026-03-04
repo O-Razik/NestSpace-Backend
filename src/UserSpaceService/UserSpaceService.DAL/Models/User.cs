@@ -34,9 +34,9 @@ public sealed class User : IUser
     [MaxLength(255)]
     public string SecurityStamp { get; set; } = string.Empty;
     
-    public ICollection<ExternalLogin> ExternalLogins { get; set; } = new List<ExternalLogin>();
+    public ICollection<ExternalLogin> ExternalLogins { get; set; } = [];
 
-    public ICollection<SpaceMember> SpaceMemberships { get; set; } = new List<SpaceMember>();
+    public ICollection<SpaceMember> SpaceMemberships { get; set; } = [];
     
     ICollection<IExternalLogin> IUser.ExternalLogins
     {

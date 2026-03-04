@@ -1,3 +1,4 @@
+using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IModels;
 
@@ -9,19 +10,19 @@ public interface ISpaceService
     
     Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId);
     
-    Task<ISpace> GetSpaceByIdAsync(Guid spaceId);
+    Task<ISpace?> GetSpaceByIdAsync(Guid spaceId);
     
-    Task<ISpace> CreateSpaceAsync(Guid creatorId, string name, List<Guid> memberIds);
+    Task<ISpace> CreateSpaceAsync(CreateSpaceDto createSpaceDto);
     
-    Task<ISpace?> UpdateSpaceNameAsync(Guid spaceId, string newName);
+    Task<ISpace?> UpdateSpaceNameAsync(Guid spaceId, string newName, Guid memberId);
     
     Task<bool> DeleteSpaceAsync(Guid spaceId);
     
-    Task<ISpaceRole> CreateSpaceRoleAsync(Guid spaceId, string roleName, Permission permissions);
+    Task<ISpaceRole> CreateSpaceRoleAsync(Guid spaceId, string roleName, Permission permissions, Guid memberId);
     
-    Task<ISpaceRole?> UpdateSpaceRoleAsync(ISpaceRole spaceRole);
+    Task<ISpaceRole?> UpdateSpaceRoleAsync(ISpaceRole spaceRole, Guid memberId);
     
-    Task<bool> DeleteSpaceRoleAsync(Guid spaceId, Guid roleId);
+    Task<bool> DeleteSpaceRoleAsync(Guid spaceId, Guid roleId, Guid memberId);
     
     Task<ISpaceMember> AddMemberToSpaceAsync(Guid spaceId, Guid userId, Guid roleId);
     

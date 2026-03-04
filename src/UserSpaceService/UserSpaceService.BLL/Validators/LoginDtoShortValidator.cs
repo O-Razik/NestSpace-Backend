@@ -3,16 +3,18 @@ using UserSpaceService.ABS.DTOs;
 
 namespace UserSpaceService.BLL.Validators;
 
-public class LoginDtoShortValidator : AbstractValidator<LoginDtoShort>
+public class LoginDtoShortValidator : AbstractValidator<LoginDto>
 {
     public LoginDtoShortValidator()
     {
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
             .EmailAddress().WithMessage("Email is invalid.")
-            .MaximumLength(256);
+            .MaximumLength(MaxEmailLength);
 
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Password is required.");
     }
+    
+    private const int MaxEmailLength = 256;
 }

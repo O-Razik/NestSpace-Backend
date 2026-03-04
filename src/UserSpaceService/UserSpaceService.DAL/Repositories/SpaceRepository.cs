@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using Microsoft.EntityFrameworkCore;
 using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IModels;
@@ -74,7 +73,7 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
             .ToListAsync();
     }
 
-    public async Task<ISpace> CreateAsync(Guid creatorId, string name, List<Guid> memberIds)
+    public async Task<ISpace> CreateAsync(Guid creatorId, string name, IList<Guid> memberIds)
     {
         var ownerRoleId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
@@ -126,13 +125,12 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
 
     public async Task<ISpace?> UpdateAsync(ISpace updatedSpace)
     {
-        var space = (Space)updatedSpace;
-        var existingSpace = await context.Spaces.FindAsync(space.Id);
+        var existingSpace = await context.Spaces.FindAsync(updatedSpace.Id);
         if (existingSpace == null)
         {
             return null;
         }
-        context.Entry(existingSpace).CurrentValues.SetValues(space);
+        context.Entry(existingSpace).CurrentValues.SetValues(updatedSpace);
         await context.SaveChangesAsync();
         return existingSpace;
     }

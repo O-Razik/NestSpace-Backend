@@ -1,13 +1,8 @@
 using System.Diagnostics;
-using System.Reflection;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.API.Extensions;
-using FluentValidation;
 using UserSpaceService.API.Filters;
+using UserSpaceService.API.Middleware;
 
 namespace UserSpaceService.API;
 
@@ -24,38 +19,10 @@ public static class Program
             options.Filters.Add<FluentValidationFilter>();
         });
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(c =>
-        {
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
-                Name = "Authorization",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.Http,
-                Scheme = "bearer",
-                BearerFormat = "JWT"
-            });
-            
-            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-            c.IncludeXmlComments(xmlPath);
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    []
-                }
-            });
-        });
+        builder.Services.AddSwaggerWithJwtAuth();
         
+
+        builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         builder.AddSqlDbContext()
             .AddModels()
             .AddRabbitMqServices()
@@ -67,30 +34,7 @@ public static class Program
             .AddOpenTelemetry();
         
         builder.Services.AddAuthorization();
-        
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"]
-                };
-            })
-            .AddGoogle(options =>
-            {
-                options.ClientId = builder.Configuration["AuthExternal:Google:ClientId"]!;
-                options.ClientSecret = builder.Configuration["AuthExternal:Google:ClientSecret"]!;
-            })
-            .AddMicrosoftAccount(options =>
-            {
-                options.ClientId = builder.Configuration["AuthExternal:Microsoft:ClientId"]!;
-                options.ClientSecret = builder.Configuration["AuthExternal:Microsoft:ClientSecret"]!;
-            });
+        builder.Services.AddAllAuthentication(builder.Configuration);
         builder.Services.AddHttpContextAccessor();
 
         
@@ -102,21 +46,16 @@ public static class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-        
-//        using (var scope = app.Services.CreateScope())
-//        { 
-//            var db = scope.ServiceProvider.GetRequiredService<UserSpaceDbContext>(); 
-//            db.Database.Migrate();
-//        }
 
         app.UseHttpsRedirection();
+        app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
         app.UseAuthentication();
         app.UseAuthorization();
         
         app.MapControllers();
         
-        app.MapGet("/health", () =>
+        app.MapGet("/health", (IDateTimeProvider dateTimeProvider) =>
         {
             using var healthActivity = new ActivitySource("HealthCheck").StartActivity("HealthCheck");
             healthActivity?.SetTag("health.status", "healthy");
@@ -125,8 +64,8 @@ public static class Program
             {
                 status = "healthy",
                 service = serviceName,
-                timestamp = DateTime.UtcNow,
-                otlpEndpoint = otlpEndpoint
+                timestamp = dateTimeProvider.UtcNow,
+                otlpEndpoint
             });
         }).WithName("HealthCheck").WithOpenApi();
 

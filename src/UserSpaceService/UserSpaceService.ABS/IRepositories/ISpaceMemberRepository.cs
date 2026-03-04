@@ -10,5 +10,5 @@ public interface ISpaceMemberRepository
     
     Task<ISpaceMember?> UpdateAsync(ISpaceMember spaceMember);
     
-    Task<bool> DeleteAsync(ISpaceMember spaceMember);
+    Task<bool> DeleteAsync(Guid spaceId, Guid userId);
 }

@@ -1,8 +1,5 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
+using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
@@ -14,109 +11,88 @@ namespace UserSpaceService.BLL.Services;
 public class UserService(
     IUserRepository repository,
     IConfiguration configuration,
-    PasswordService passwordService)
+    PasswordService passwordService,
+    ITokenService tokenService)
     : IUserService
 {
 
-    public async Task<string> RegisterAsync(string username, string email, string password)
+    public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
     {
-        if (string.IsNullOrEmpty(username))
-        {
-            throw new ArgumentException("Username cannot be null or empty.", nameof(username));
-        }
-        
-        if (string.IsNullOrEmpty(email))
-        {
-            throw new ArgumentException("Email cannot be null or empty.", nameof(email));
-        }
-        
-        if (string.IsNullOrEmpty(password))
-        {
-            throw new ArgumentException("Password cannot be null or empty.", nameof(password));
-        }
-        
-        var passwordHash = passwordService.HashPassword(password);
-        var user = await repository.CreateAsync(username, email, passwordHash);
-        
-        if (user == null)
-        {
-            throw new Exception("User registration failed.");
-        }
-        
-        return GenerateJwtTokenAsync(user, TimeSpan.FromDays(7));
+        var passwordHash = passwordService.HashPassword(registerDto.Password);
+        var user = await repository.CreateAsync(registerDto.Username, registerDto.Email, passwordHash);
+        return await GenerateAuthResponseAsync(user);
     }
 
-    public async Task<string> RegisterByExternalProviderAsync(Provider provider, string providerUserId, string email)
+    public async Task<AuthResponseDto> RegisterByExternalProviderAsync(Provider provider, string providerUserId, string email)
     {
-        
-        if (string.IsNullOrEmpty(providerUserId))
-        {
-            throw new ArgumentException("Provider user ID cannot be null or empty.", nameof(providerUserId));
-        }
-        
-        if (string.IsNullOrEmpty(email))
-        {
-            throw new ArgumentException("Email cannot be null or empty.", nameof(email));
-        }
+        Guard.AgainstNullOrEmpty(providerUserId, "Provider user ID cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(email, "Email cannot be null or empty.");
         
         var baseUsername = GetUsernameFromEmail(email);
-        var uniqueUsername = await EnsureUniqueUsername(baseUsername);
+        var uniqueUsername = await EnsureUniqueUsernameAsync(baseUsername);
         var user = await repository.CreateAsync(uniqueUsername, email, provider, providerUserId);
         
-        return GenerateJwtTokenAsync(user, TimeSpan.FromDays(7));
+        return await GenerateAuthResponseAsync(user);
     }
 
-    public async Task<string?> LoginAsync(string email, string password)
+    public async Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
     {
-        if (string.IsNullOrEmpty(email))
-        {
-            throw new ArgumentException("Email cannot be null or empty.", nameof(email));
-        }
+        var user = await repository.GetByEmailAsync(loginDto.Email);
         
-        if (string.IsNullOrEmpty(password))
-        {
-            throw new ArgumentException("Password cannot be null or empty.", nameof(password));
-        }
-
-        var user = await repository.GetByEmailAsync(email);
         if (user == null)
         {
-            return null; // User not found
+            throw new UnauthorizedAccessException("Invalid email or password.");
         }
 
-        var valid = passwordService.VerifyPassword(password, user.PasswordHash);
-        return !valid ? null : GenerateJwtTokenAsync(user, TimeSpan.FromDays(7));
+        var valid = passwordService.VerifyPassword(loginDto.Password, user.PasswordHash);
+        if (!valid)
+        {
+            throw new UnauthorizedAccessException("Invalid email or password.");
+        }
+
+        return await GenerateAuthResponseAsync(user);
     }
 
-    public async Task<string?> LoginByExternalProviderAsync(Provider provider, string providerUserId)
+    public async Task<AuthResponseDto?> LoginByExternalProviderAsync(Provider provider, string providerUserId)
     {
-        if (string.IsNullOrEmpty(providerUserId))
+        Guard.AgainstNullOrEmpty(providerUserId, "Provider user ID cannot be null or empty.");
+        var user = await repository.GetByExternalLoginAsync(provider, providerUserId);
+        return user == null ?  null : await GenerateAuthResponseAsync(user);
+    }
+    
+    public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken)
+    {
+        Guard.AgainstNullOrEmpty(refreshToken, "Refresh token cannot be null or empty.");
+        var token = await tokenService.GetRefreshTokenAsync(refreshToken);
+
+        if (token is not { IsActive: true })
         {
-            throw new ArgumentException("Provider user ID cannot be null or empty.", nameof(providerUserId));
+            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
         }
 
-        var user = await repository.GetByExternalLoginAsync(provider, providerUserId);
-        return user == null ? null : GenerateJwtTokenAsync(user, TimeSpan.FromDays(7));
+        var newRefreshTokenValue = tokenService.GenerateRefreshToken();
+        await tokenService.RevokeRefreshTokenAsync(refreshToken, newRefreshTokenValue);
+
+        return await GenerateAuthResponseAsync(token.User);
+    }
+    
+    public async Task LogoutAsync(string refreshToken)
+    {
+        Guard.AgainstNullOrEmpty(refreshToken, "Refresh token cannot be null or empty.");
+        await tokenService.RevokeRefreshTokenAsync(refreshToken);
     }
 
     public async Task<IUser?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId)
     {
-        if (userId == Guid.Empty)
-        {
-            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
-        }
-        if (string.IsNullOrEmpty(providerUserId))
-        {
-            throw new ArgumentException("Provider user ID cannot be null or empty.", nameof(providerUserId));
-        }
+        Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
+        Guard.AgainstNullOrEmpty(providerUserId, "Provider user ID cannot be null or empty.");
 
         var user = await repository.GetByIdAsync(userId);
         if (user == null)
         {
-            return null;
+            throw new InvalidOperationException("User not found.");
         }
 
-        // Prevent duplicate external login
         if (user.ExternalLogins.Any(el => el.Provider == provider && el.ProviderKey == providerUserId))
         {
             return user;
@@ -134,101 +110,68 @@ public class UserService(
 
     public async Task<IUser?> GetUserByIdAsync(Guid userId)
     {
-        if (userId == Guid.Empty) 
-        {
-            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
-        }
-        
+        Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
         return await repository.GetByIdAsync(userId);
     }
     
     public async Task<IUser?> GetUserByUsernameAsync(string username)
     {
-        if (string.IsNullOrEmpty(username))
-        {
-            throw new ArgumentException("Username cannot be null or empty.", nameof(username));
-        }
-        
+        Guard.AgainstNullOrEmpty(username, "Username cannot be null or empty.");
         return await repository.GetByUsernameAsync(username);
     }
     
     public async Task<IUser?> GetUserByEmailAsync(string email)
     {
-        if (string.IsNullOrEmpty(email))
-        {
-            throw new ArgumentException("Email cannot be null or empty.", nameof(email));
-        }
-        
+        Guard.AgainstNullOrEmpty(email, "Email cannot be null or empty.");
         return await repository.GetByEmailAsync(email);
     }
 
     public async Task<IUser?> UpdateUserAsync(IUser user)
     {
-        if (user == null)
-        {
-            throw new ArgumentNullException(nameof(user), "User cannot be null.");
-        }
-
-        if (user.Id == Guid.Empty)
-        {
-            throw new ArgumentException("User ID cannot be empty.", nameof(user));
-        }
-
+        Guard.AgainstNull(user, "User cannot be null.");
+        Guard.AgainstNullOrEmpty(user.Username, "Username cannot be null or empty.");
         return await repository.UpdateAsync(user);
     }
 
     public async Task<bool> DeleteUserAsync(Guid userId)
-    {        
-        if (userId == Guid.Empty)
-        {
-            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
-        }
-        
+    {
+        Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
+        await tokenService.RevokeAllUserTokensAsync(userId);
         return await repository.DeleteAsync(userId);
     }
-
-    public string GenerateJwtTokenAsync(IUser user, TimeSpan expiration)
+    
+    private async Task<AuthResponseDto> GenerateAuthResponseAsync(IUser user)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = configuration["Jwt:Key"];
-        if (string.IsNullOrEmpty(key))
-        {
-            throw new ArgumentNullException(nameof(key), "JWT key is not configured.");
-        }
-        
-        var keyBytes = Encoding.UTF8.GetBytes(key);
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity([
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-            ]),
-            Expires = DateTime.UtcNow.Add(expiration),
-            Issuer = configuration["Jwt:Issuer"],
-            Audience = configuration["Jwt:Audience"],
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(keyBytes),
-                SecurityAlgorithms.HmacSha256Signature)
-        };
+        Guard.AgainstNull(user, "User cannot be null.");
+        var accessToken = tokenService.GenerateAccessToken(user);
+        var refreshToken = tokenService.GenerateRefreshToken();
+        await tokenService.SaveRefreshTokenAsync(user.Id, refreshToken);
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+        return new AuthResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            TokenType = "Bearer",
+            ExpiresIn = 900,
+            User = new UserDtoShort
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email
+            }
+        };
     }
     
     private static string GetUsernameFromEmail(string email)
     {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            throw new ArgumentException("Email cannot be empty", nameof(email));
-        }
-
+        Guard.AgainstNullOrEmpty(email, "Email cannot be null or empty.");
         var atIndex = email.IndexOf('@');
         return atIndex <= 0 ? email : email[..atIndex];
     }
     
-    private async Task<string> EnsureUniqueUsername(string baseUsername)
+    private async Task<string> EnsureUniqueUsernameAsync(string baseUsername)
     {
+        Guard.AgainstNullOrEmpty(baseUsername, "Username cannot be null or empty.");
         var username = baseUsername;
         while (await repository.GetByUsernameAsync(username) != null)
         {

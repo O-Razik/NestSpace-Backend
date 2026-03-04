@@ -4,6 +4,16 @@ using UserSpaceService.ABS.IModels;
 
 namespace UserSpaceService.BLL.Helpers;
 
+/// <summary>
+/// Service for hashing and verifying user passwords using ASP.NET Core Identity's PasswordHasher.
+/// </summary>
+/// <param name="userFactory">Factory for creating IUser instances required by PasswordHasher.</param>
+/// <param name="passwordHasher">The PasswordHasher instance for hashing and verifying passwords.</param>
+/// <remarks>
+/// This service abstracts the password hashing logic and allows for easy integration with the IUser model.
+/// It uses the PasswordHasher from ASP.NET Core Identity, which implements a secure hashing algorithm (
+/// PBKDF2) and includes salting and multiple iterations to protect against brute-force attacks.
+/// </remarks>
 public class PasswordService(
     IEntityFactory<IUser> userFactory,
     PasswordHasher<IUser> passwordHasher)

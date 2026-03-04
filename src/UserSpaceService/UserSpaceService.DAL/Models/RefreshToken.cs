@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 
 namespace UserSpaceService.DAL.Models;
 
-public sealed class RefreshToken : IRefreshToken
+public sealed class RefreshToken(IDateTimeProvider dateTimeProvider)
+    : IRefreshToken
 {
     [Key]
     [Column("refresh_token_id")]
@@ -21,10 +23,10 @@ public sealed class RefreshToken : IRefreshToken
     public DateTime ExpiresAt { get; set; }
     
     [Column("created_at")]
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
     
     [Column("revoked_at")]
-    public DateTime? RevokedAt { get; set; }
+    public DateTimeOffset? RevokedAt { get; set; }
     
     [Column("replaced_by_token")]
     [MaxLength(500)]
@@ -40,5 +42,5 @@ public sealed class RefreshToken : IRefreshToken
     }
     
     [NotMapped]
-    public bool IsActive => RevokedAt == null && ExpiresAt > DateTime.UtcNow;
+    public bool IsActive => RevokedAt == null && ExpiresAt > dateTimeProvider.UtcNow;
 }

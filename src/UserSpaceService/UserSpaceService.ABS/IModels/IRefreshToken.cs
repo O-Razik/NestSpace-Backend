@@ -10,9 +10,9 @@ public interface IRefreshToken
     
     DateTime ExpiresAt { get; set; }
     
-    DateTime CreatedAt { get; set; }
+    DateTimeOffset CreatedAt { get; set; }
     
-    DateTime? RevokedAt { get; set; }
+    DateTimeOffset? RevokedAt { get; set; }
     
     string? ReplacedByToken { get; set; }
     

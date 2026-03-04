@@ -23,7 +23,7 @@ public sealed class SpaceRole : ISpaceRole
     [ForeignKey("SpaceId")]
     public Space Space { get; set; } = null!;
     
-    public ICollection<SpaceMember> Members { get; set; } = new List<SpaceMember>();
+    public ICollection<SpaceMember> Members { get; private set; } = new List<SpaceMember>();
 
     ISpace ISpaceRole.Space
     {

@@ -14,7 +14,7 @@ public interface ISpaceRepository
     
     Task<ISpace?> GetByIdAsync(Guid spaceId);
     
-    Task<ISpace> CreateAsync(Guid creatorId, string name, List<Guid> memberIds);
+    Task<ISpace> CreateAsync(Guid creatorId, string name, IList<Guid> memberIds);
     
     Task<ISpace?> UpdateAsync(ISpace updatedSpace);
     

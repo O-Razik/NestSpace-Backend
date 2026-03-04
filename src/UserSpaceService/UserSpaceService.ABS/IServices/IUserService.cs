@@ -1,3 +1,4 @@
+using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IModels;
 
@@ -5,13 +6,17 @@ namespace UserSpaceService.ABS.IServices;
 
 public interface IUserService
 {
-    Task<string> RegisterAsync(string username, string email, string password);
-
-    Task<string> RegisterByExternalProviderAsync(Provider provider, string providerUserId, string email);
-
-    Task<string?> LoginAsync(string email, string password);
-
-    Task<string?> LoginByExternalProviderAsync(Provider provider, string providerUserId);
+    Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
+    
+    Task<AuthResponseDto> RegisterByExternalProviderAsync(Provider provider, string providerUserId, string email);
+    
+    Task<AuthResponseDto?> LoginAsync(LoginDto loginDto);
+    
+    Task<AuthResponseDto?> LoginByExternalProviderAsync(Provider provider, string providerUserId);
+    
+    Task<AuthResponseDto> RefreshTokenAsync(string refreshToken);
+    
+    Task LogoutAsync(string refreshToken);
 
     Task<IUser?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId);
 
@@ -26,6 +31,4 @@ public interface IUserService
     Task<IUser?> UpdateUserAsync(IUser user);
 
     Task<bool> DeleteUserAsync(Guid userId);
-
-    string GenerateJwtToken(IUser user, TimeSpan expiration);
 }

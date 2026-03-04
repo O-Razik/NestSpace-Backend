@@ -10,5 +10,5 @@ public class SpaceActivityLogEvent
     
     public string Description { get; set; } = null!;
     
-    public DateTime ActivityAt { get; set; }
+    public DateTimeOffset ActivityAt { get; set; }
 }

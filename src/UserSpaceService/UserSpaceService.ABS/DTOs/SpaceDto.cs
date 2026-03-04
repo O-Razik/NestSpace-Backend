@@ -2,14 +2,14 @@ namespace UserSpaceService.ABS.DTOs;
 
 public class SpaceDtoShort
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
     
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
 }
 
 public class SpaceDto : SpaceDtoShort
 {
-    public ICollection<SpaceMemberDto> Members { get; set; } = new List<SpaceMemberDto>();
+    public ICollection<SpaceMemberDto> Members { get; set; } = [];
     
-    public ICollection<SpaceRoleDto> Roles { get; set; } = new List<SpaceRoleDto>();
+    public ICollection<SpaceRoleDto> Roles { get; set; } = [];
 }

@@ -10,15 +10,15 @@ namespace UserSpaceService.DAL.Repositories;
 
 public class UserRepository(UserSpaceDbContext context) : IUserRepository
 {
-    public async Task<IUser?> GetByIdAsync(Guid id)
+    public async Task<IUser?> GetByIdAsync(Guid userId)
     {
-        if (id == Guid.Empty)
+        if (userId == Guid.Empty)
         {
             return null;
         }
         
         var user = await context.Users
-            .FirstOrDefaultAsync(u => u.Id == id);
+            .FirstOrDefaultAsync(u => u.Id == userId);
         
         return user;
     }
@@ -78,11 +78,6 @@ public class UserRepository(UserSpaceDbContext context) : IUserRepository
     {
         var normalizedEmail = email.Trim().ToUpperInvariant();
         var normalizedUsername = username.Trim().ToUpperInvariant();
-
-        if (string.IsNullOrWhiteSpace(normalizedEmail) || string.IsNullOrWhiteSpace(normalizedUsername))
-        {
-            throw new ArgumentException("Username and email are required.");
-        }
 
         if (await context.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail))
         {
@@ -170,15 +165,14 @@ public class UserRepository(UserSpaceDbContext context) : IUserRepository
         return existingUser;
     }
 
-    public async Task<IUser?> UpdateAsync(IUser entity)
+    public async Task<IUser?> UpdateAsync(IUser updatedUser)
     {
-        var user = (User)entity;
-        var existingUser = await context.Users.FindAsync(user.Id);
+        var existingUser = await context.Users.FindAsync(updatedUser.Id);
         if (existingUser == null)
         {
             return null;
         }
-        context.Entry(existingUser).CurrentValues.SetValues(user);
+        context.Entry(existingUser).CurrentValues.SetValues(updatedUser);
         await context.SaveChangesAsync();
         return existingUser;
     }

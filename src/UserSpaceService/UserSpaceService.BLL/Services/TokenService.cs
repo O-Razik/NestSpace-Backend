@@ -4,24 +4,26 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.ABS.IServices;
+using UserSpaceService.BLL.Helpers;
 
 namespace UserSpaceService.BLL.Services;
 
 public class TokenService(
     IRefreshTokenRepository refreshTokenRepository,
-    IConfiguration configuration) : ITokenService
+    IConfiguration configuration,
+    IDateTimeProvider dateTimeProvider
+        ) : ITokenService
 {
     public string GenerateAccessToken(IUser user)
     {
+        Guard.AgainstNull(user);
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = configuration["Jwt:Key"];
-        if (string.IsNullOrEmpty(key))
-        {
-            throw new ArgumentNullException(nameof(key), "JWT key is not configured.");
-        }
+        Guard.AgainstNullOrWhiteSpace(key);
         
         var keyBytes = Encoding.UTF8.GetBytes(key);
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -32,7 +34,7 @@ public class TokenService(
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             ]),
-            Expires = DateTime.UtcNow.AddMinutes(15), // 15 хвилин!
+            Expires = dateTimeProvider.UtcNow.DateTime.AddMinutes(15),
             Issuer = configuration["Jwt:Issuer"],
             Audience = configuration["Jwt:Audience"],
             SigningCredentials = new SigningCredentials(
@@ -54,7 +56,7 @@ public class TokenService(
 
     public async Task<IRefreshToken> SaveRefreshTokenAsync(Guid userId, string token)
     {
-        var expiresAt = DateTime.UtcNow.AddDays(7); // 7 днів
+        var expiresAt = dateTimeProvider.UtcNow.DateTime.AddDays(7); // 7 днів
         return await refreshTokenRepository.CreateAsync(userId, token, expiresAt);
     }
 

@@ -4,5 +4,5 @@ public class DeleteSpaceEvent
 {
     public Guid SpaceId { get; set; }
     
-    public DateTime DeletedAt { get; set; }
+    public DateTimeOffset DeletedAt { get; set; }
 }

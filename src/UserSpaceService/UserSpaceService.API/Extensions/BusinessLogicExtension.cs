@@ -5,7 +5,7 @@ using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IServices;
 using UserSpaceService.ABS.Mappers;
-using UserSpaceService.BLL.DTOs;
+using UserSpaceService.API.Helpers;
 using UserSpaceService.BLL.Helpers;
 using UserSpaceService.BLL.Mappers;
 using UserSpaceService.BLL.Services;
@@ -23,7 +23,9 @@ public static class BusinessLogicExtension
         builder.Services.AddScoped<ISpaceService, SpaceService>();
         
         builder.Services.AddScoped<IPasswordHasher<IUser>, PasswordHasher<IUser>>();
+        builder.Services.AddScoped<PasswordHasher<IUser>>();
         builder.Services.AddScoped<PasswordService>();
+        builder.Services.AddScoped<IGetCurrentUser, GetCurrentUser>();
         builder.Services.AddScoped<GoogleTokenValidator>();
         builder.Services.AddScoped<MicrosoftTokenValidator>();
         builder.Services.AddScoped<ExternalTokenValidatorFactory>();
@@ -54,7 +56,7 @@ public static class BusinessLogicExtension
     public static WebApplicationBuilder AddValidation(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<IValidator<LoginDto>, LoginDtoShortValidator>();
-        builder.Services.AddScoped<IValidator<RegisterDtoShort>, RegisterDtoShortValidator>();
+        builder.Services.AddScoped<IValidator<RegisterDto>, RegisterDtoShortValidator>();
         builder.Services.AddScoped<IValidator<AddSpaceMemberDto>, AddSpaceMemberDtoValidator>();
         builder.Services.AddScoped<IValidator<CreateSpaceDto>, CreateSpaceDtoValidator>();
         builder.Services.AddScoped<IValidator<SpaceRoleDtoShort>, SpaceRoleDtoShortValidator>();

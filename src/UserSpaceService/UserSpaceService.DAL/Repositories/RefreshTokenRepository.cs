@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.DAL.Data;
@@ -6,17 +7,20 @@ using UserSpaceService.DAL.Models;
 
 namespace UserSpaceService.DAL.Repositories;
 
-public class RefreshTokenRepository(UserSpaceDbContext context) : IRefreshTokenRepository
+public class RefreshTokenRepository(
+    UserSpaceDbContext context,
+    IDateTimeProvider dateTimeProvider
+    ) : IRefreshTokenRepository
 {
     public async Task<IRefreshToken> CreateAsync(Guid userId, string token, DateTime expiresAt)
     {
-        var refreshToken = new RefreshToken
+        var refreshToken = new RefreshToken(dateTimeProvider)
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             Token = token,
             ExpiresAt = expiresAt,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = dateTimeProvider.UtcNow
         };
 
         context.RefreshTokens.Add(refreshToken);
@@ -35,7 +39,7 @@ public class RefreshTokenRepository(UserSpaceDbContext context) : IRefreshTokenR
     public async Task<IEnumerable<IRefreshToken>> GetActiveByUserIdAsync(Guid userId)
     {
         return await context.RefreshTokens
-            .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow)
+            .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > dateTimeProvider.UtcNow)
             .ToListAsync();
     }
 
@@ -46,7 +50,7 @@ public class RefreshTokenRepository(UserSpaceDbContext context) : IRefreshTokenR
 
         if (refreshToken != null)
         {
-            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.RevokedAt = dateTimeProvider.UtcNow;
             refreshToken.ReplacedByToken = replacedByToken;
             await context.SaveChangesAsync();
         }
@@ -60,7 +64,7 @@ public class RefreshTokenRepository(UserSpaceDbContext context) : IRefreshTokenR
 
         foreach (var token in tokens)
         {
-            token.RevokedAt = DateTime.UtcNow;
+            token.RevokedAt = dateTimeProvider.UtcNow;
         }
 
         await context.SaveChangesAsync();

@@ -44,9 +44,13 @@ public class SpaceMemberRepository(UserSpaceDbContext context) : ISpaceMemberRep
         return await this.GetByIdAsync(existingSpaceMember.Id, existingSpaceMember.UserId);
     }
 
-    public async Task<bool> DeleteAsync(ISpaceMember spaceMember)
+    public async Task<bool> DeleteAsync(Guid spaceId, Guid userId)
     {
-        context.SpaceMembers.Remove((SpaceMember)spaceMember);
+        var existingSpaceMember = await context.SpaceMembers.FindAsync(spaceId, userId);
+        if (existingSpaceMember == null)        {
+            return false;
+        }
+        context.SpaceMembers.Remove(existingSpaceMember);
         await context.SaveChangesAsync();
         return true;
     }

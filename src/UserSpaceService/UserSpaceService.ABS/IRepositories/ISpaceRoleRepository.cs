@@ -12,5 +12,5 @@ public interface ISpaceRoleRepository
     
     Task<ISpaceRole?> UpdateAsync(ISpaceRole updatedRole);
     
-    Task<bool> DeleteAsync(ISpaceRole role);
+    Task<bool> DeleteAsync(Guid roleId);
 }
