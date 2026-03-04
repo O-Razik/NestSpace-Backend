@@ -27,5 +27,5 @@ public interface IUserService
 
     Task<bool> DeleteUserAsync(Guid userId);
 
-    string GenerateJwtTokenAsync(IUser user, TimeSpan expiration);
+    string GenerateJwtToken(IUser user, TimeSpan expiration);
 }

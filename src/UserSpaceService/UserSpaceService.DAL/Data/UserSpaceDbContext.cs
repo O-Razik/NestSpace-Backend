@@ -19,6 +19,8 @@ public class UserSpaceDbContext : DbContext
     public DbSet<SpaceRole> SpaceRoles { get; set; } = null!;
     public DbSet<SpaceMember> SpaceMembers { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    
     public DbSet<Space> Spaces { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
