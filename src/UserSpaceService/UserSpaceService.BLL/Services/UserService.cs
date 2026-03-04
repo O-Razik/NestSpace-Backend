@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.ABS.IServices;
@@ -101,21 +102,34 @@ public class UserService(
     public async Task<IUser?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId)
     {
         if (userId == Guid.Empty)
+        {
             throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
         if (string.IsNullOrEmpty(providerUserId))
+        {
             throw new ArgumentException("Provider user ID cannot be null or empty.", nameof(providerUserId));
+        }
 
         var user = await repository.GetByIdAsync(userId);
         if (user == null)
+        {
             return null;
+        }
 
         // Prevent duplicate external login
         if (user.ExternalLogins.Any(el => el.Provider == provider && el.ProviderKey == providerUserId))
+        {
             return user;
+        }
         
         await repository.AddExternalLoginAsync(user, provider, providerUserId);
         
         return user;
+    }
+
+    public async Task<PagedResult<IUser>> SearchUsersAsync(UserFilter filter)
+    {
+        return await repository.SearchAsync(filter);
     }
 
     public async Task<IUser?> GetUserByIdAsync(Guid userId)
@@ -164,13 +178,13 @@ public class UserService(
     }
 
     public async Task<bool> DeleteUserAsync(Guid userId)
-    {
-        var user = await this.GetUserByIdAsync(userId);
-        if (user == null)
+    {        
+        if (userId == Guid.Empty)
         {
-            throw new KeyNotFoundException($"User with ID {userId} not found.");
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
         }
-        return await repository.DeleteAsync(user);
+        
+        return await repository.DeleteAsync(userId);
     }
 
     public string GenerateJwtTokenAsync(IUser user, TimeSpan expiration)

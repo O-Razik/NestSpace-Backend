@@ -1,10 +1,11 @@
+using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IModels;
 
 namespace UserSpaceService.ABS.IRepositories;
 
 public interface IUserRepository
 {
-    Task<IEnumerable<IUser>> GetAllAsync();
+    Task<PagedResult<IUser>> SearchAsync(UserFilter filter);
     
     Task<IUser?> GetByIdAsync(Guid userId);
     
@@ -22,5 +23,5 @@ public interface IUserRepository
     
     Task<IUser?> UpdateAsync(IUser updatedUser);
     
-    Task<bool> DeleteAsync(IUser user);
+    Task<bool> DeleteAsync(Guid userId);
 }

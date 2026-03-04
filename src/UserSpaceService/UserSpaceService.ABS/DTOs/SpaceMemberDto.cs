@@ -1,4 +1,4 @@
-namespace UserSpaceService.BLL.DTOs;
+namespace UserSpaceService.ABS.DTOs;
 
 public class SpaceMemberDtoShort
 {

@@ -1,8 +1,8 @@
+using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
-using UserSpaceService.BLL.DTOs;
 
-namespace UserSpaceService.BLL.Mappers;
+namespace UserSpaceService.ABS.Mappers;
 
 public class UserMapper(
     IEntityFactory<IUser> entityFactory,

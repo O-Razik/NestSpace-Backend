@@ -1,3 +1,4 @@
+using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
@@ -15,6 +16,11 @@ public class SpaceService(
     IEventPublisher eventPublisher)
     : ISpaceService
 {
+    public async Task<PagedResult<ISpace>> SearchSpacesAsync(SpaceFilter filter)
+    {
+        return await spaceRepository.SearchAsync(filter);
+    }
+
     public async Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId)
     {
         var user = await userRepository.GetByIdAsync(userId) 
@@ -30,25 +36,38 @@ public class SpaceService(
         return space;
     }
 
-    public async Task<ISpace> CreateSpaceAsync(Guid creatorId, string name)
+    public async Task<ISpace> CreateSpaceAsync(Guid creatorId, string name, List<Guid> memberIds)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Space name cannot be null or empty.", nameof(name));
+        }
 
-        if ((await spaceRepository.GetAllAsync()).Any(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+        if (await spaceRepository.SearchByNameAsync(name) != null)
+        {
             throw new InvalidOperationException($"A space with the name '{name}' already exists.");
+        }
 
         var creator = await userRepository.GetByIdAsync(creatorId)
                       ?? throw new InvalidOperationException("Creator user ID is not available.");
+        
+        foreach (var memberId in memberIds)
+        {
+            var member = await userRepository.GetByIdAsync(memberId);
+            if (member == null)
+            {
+                throw new KeyNotFoundException($"Member with ID {memberId} not found.");
+            }
+        }
 
-        var space = await spaceRepository.CreateAsync(creator.Id, name);
+        var space = await spaceRepository.CreateAsync(creator.Id, name, memberIds);
         
         var chatEvent = new ChatCreateEvent
         {
             SpaceId = space.Id,
             ChatId = Guid.NewGuid(),
             MemberId = creatorId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         
         var logEvent = new SpaceActivityLogEvent
@@ -78,13 +97,14 @@ public class SpaceService(
     public async Task<ISpace?> UpdateSpaceNameAsync(Guid spaceId, string newName)
     {
         if (string.IsNullOrWhiteSpace(newName))
+        {
             throw new ArgumentException("New space name cannot be null or empty.", nameof(newName));
+        }
 
         var space = await spaceRepository.GetByIdAsync(spaceId) 
                     ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
 
-        if ((await spaceRepository.GetAllAsync()).Any(s =>
-                s.Name.Equals(newName, StringComparison.OrdinalIgnoreCase) && s.Id != spaceId))
+        if ((await spaceRepository.SearchByNameAsync(newName)) != null)
         {
             throw new InvalidOperationException($"A space with the name '{newName}' already exists.");
         }
@@ -120,24 +140,28 @@ public class SpaceService(
     public async Task<bool> DeleteSpaceAsync(Guid spaceId)
     {
         if (spaceId == Guid.Empty)
-            throw new ArgumentException("Space ID cannot be empty.", nameof(spaceId));
-
-        var space = await spaceRepository.GetByIdAsync(spaceId) 
-                    ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
-
-        var deleteEvent = new DeleteSpaceEvent
         {
-            SpaceId = spaceId,
-            DeletedAt = DateTime.UtcNow
-        };
+            throw new ArgumentException("Space ID cannot be empty.", nameof(spaceId));
+        }
 
-        await eventPublisher.PublishAsync(
-            deleteEvent,
-            routingKey: "space.deleted",
-            exchangeName: "space.exchange"
-        );
+        var result = await spaceRepository.DeleteAsync(spaceId);
+
+        if (result)
+        {
+            var deleteEvent = new DeleteSpaceEvent
+            {
+                SpaceId = spaceId,
+                DeletedAt = DateTime.UtcNow
+            };
+
+            await eventPublisher.PublishAsync(
+                deleteEvent,
+                routingKey: "space.deleted",
+                exchangeName: "space.exchange"
+            );
+        }
         
-        return await spaceRepository.DeleteAsync(space);
+        return result;
     }
 
     public async Task<ISpaceRole> CreateSpaceRoleAsync(Guid spaceId, string roleName, Permission permissions)
@@ -346,10 +370,14 @@ public class SpaceService(
     public async Task<bool> RemoveMemberFromSpaceAsync(Guid spaceId, Guid userId)
     {
         if (spaceId == Guid.Empty)
+        {
             throw new ArgumentException("Space ID cannot be empty.", nameof(spaceId));
+        }
 
         if (userId == Guid.Empty)
+        {
             throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
 
         var space = await spaceRepository.GetByIdAsync(spaceId)
                         ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
@@ -359,14 +387,18 @@ public class SpaceService(
 
         var result= await spaceMemberRepository.DeleteAsync(member);
         
-        if (!result) return result;
+        if (!result)
+        {
+            return result;
+        }
+        
         var logEvent = new SpaceActivityLogEvent
         {
             SpaceId = space.Id,
             MemberId = member.UserId,
             Type = "MemberRemoved",
             Description = $"User with ID '{member.UserId}' removed from space '{space.Name}'.",
-            ActivityAt = DateTime.UtcNow
+            ActivityAt = DateTime.UtcNow,
         };
         
         await eventPublisher.PublishAsync(

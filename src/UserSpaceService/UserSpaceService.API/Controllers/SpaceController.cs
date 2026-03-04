@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IServices;
-using UserSpaceService.BLL.DTOs;
 
 namespace UserSpaceService.API.Controllers;
 
@@ -45,7 +45,9 @@ public class SpaceController(
         {
             var userIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
+            {
                 throw new InvalidOperationException("User ID claim not found in JWT token.");
+            }
             
             var result = await spaceService.GetAllSpacesOfUserAsync(new Guid(userIdClaim));
             return Ok(result.Select(spaceShortDtoMapper.ToDto));
@@ -53,7 +55,7 @@ public class SpaceController(
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return StatusCode(500);
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
     
@@ -66,7 +68,7 @@ public class SpaceController(
     [HttpGet("{spaceId:guid}")]
     [ProducesResponseType(typeof(SpaceDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<SpaceDto>> GetSpaceByIdAsync(Guid spaceId)
+    public async Task<ActionResult<SpaceDto>> GetSpaceByIdAsync([FromRoute] Guid spaceId)
     {
         try
         {
@@ -79,25 +81,27 @@ public class SpaceController(
             return NotFound();
         }
     }
-    
+
     /// <summary>
     /// Creates a new space with the specified name.
     /// </summary>
-    /// <param name="name"></param>
+    /// <param name="createSpaceDto"> Object containing the name and member IDs for the new space. </param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    [HttpPost("create/{name}")]
+    [HttpPost("create")]
     [ProducesResponseType(typeof(SpaceDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceDto>> CreateSpaceAsync(string name)
+    public async Task<ActionResult<SpaceDto>> CreateSpaceAsync([FromBody] CreateSpaceDto createSpaceDto)
     {
         try
         {
             var creatorIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (creatorIdClaim == null)
+            {
                 throw new InvalidOperationException("User ID claim not found in JWT token.");
+            }
             
-            var result = await spaceService.CreateSpaceAsync(new Guid(creatorIdClaim), name);
+            var result = await spaceService.CreateSpaceAsync(new Guid(creatorIdClaim), createSpaceDto.Name, createSpaceDto.MemberIds);
             return Created((string?)null, spaceDtoMapper.ToDto(result));
         }
         catch (Exception e)
@@ -110,14 +114,15 @@ public class SpaceController(
     /// <summary>
     /// Updates the name of a space by its ID.
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <param name="updatedSpace"></param>
+    /// <param name="spaceId"> ID of the space to be updated. </param>
+    /// <param name="updatedSpace"> Information about the updated space. </param>
     /// <returns></returns>
     [HttpPut("{spaceId:guid}/update")]
     [ProducesResponseType(typeof(SpaceDtoShort), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceDtoShort>> UpdateSpaceNameAsync(Guid spaceId, [FromBody] SpaceDtoShort updatedSpace)
+    public async Task<ActionResult<SpaceDtoShort>> UpdateSpaceNameAsync(
+        [FromRoute] Guid spaceId, [FromBody] SpaceDtoShort updatedSpace)
     {
         try
         {
@@ -139,7 +144,7 @@ public class SpaceController(
     /// <summary>
     /// Deletes a space by its ID.
     /// </summary>
-    /// <param name="spaceId"></param>
+    /// <param name="spaceId"> ID of the space to be deleted. </param>
     /// <returns></returns>
     [HttpDelete("{spaceId:guid}/delete")]
     [ProducesResponseType(typeof(bool), StatusCodes.Status204NoContent)]
@@ -170,7 +175,8 @@ public class SpaceController(
     [HttpPost("{spaceId:guid}/role/create")]
     [ProducesResponseType(typeof(SpaceRoleDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceRoleDto>> CreateSpaceRoleAsync(Guid spaceId, [FromBody] SpaceRoleDtoShort role)
+    public async Task<ActionResult<SpaceRoleDto>> CreateSpaceRoleAsync(
+        [FromRoute] Guid spaceId, [FromBody] SpaceRoleDtoShort role)
     {
         try
         {
@@ -219,7 +225,8 @@ public class SpaceController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult> DeleteSpaceRoleAsync(Guid spaceId, Guid roleId)
+    public async Task<ActionResult> DeleteSpaceRoleAsync(
+        [FromRoute] Guid spaceId, [FromRoute] Guid roleId)
     {
         try
         {
@@ -244,7 +251,7 @@ public class SpaceController(
     [HttpPost("{spaceId:guid}/member/add")]
     [ProducesResponseType(typeof(SpaceMemberDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceMemberDto>> AddMemberToSpaceAsync(Guid spaceId, [FromBody] AddSpaceMemberDto member)
+    public async Task<ActionResult<SpaceMemberDto>> AddMemberToSpaceAsync([FromRoute] Guid spaceId, [FromBody] AddSpaceMemberDto member)
     {
         try
         {

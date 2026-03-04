@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IServices;
-using UserSpaceService.BLL.DTOs;
 using UserSpaceService.BLL.Helpers;
 
 namespace UserSpaceService.API.Controllers;
@@ -12,7 +12,10 @@ namespace UserSpaceService.API.Controllers;
 /// <summary>
 /// Controller for managing user accounts, including registration, login, and external authentication.
 /// </summary>
-/// <param name="service"></param>
+/// <param name="service"> User service for handling user operations. </param>
+/// <param name="httpContextAccessor"> HTTP context accessor for accessing request context. </param>
+/// <param name="userMapper"> Mapper for converting between IUser and UserDto. </param>
+/// <param name="userShortMapper"> Mapper for converting between IUser and UserDtoShort. </param>
 [Route("api/[controller]")]
 [ApiController]
 public class UserController(
@@ -24,7 +27,7 @@ public class UserController(
     /// <summary>
     /// Retrieves a user by their ID.
     /// </summary>
-    /// <param name="userId"></param>
+    /// <param name="userId"> User ID to retrieve. </param>
     /// <returns></returns>
     [Authorize]
     [HttpGet("{userId:guid}")]
@@ -61,7 +64,7 @@ public class UserController(
     /// <summary>
     /// Searches for a user by their email address.
     /// </summary>
-    /// <param name="email"></param>
+    /// <param name="email"> Email address of the user to search for. </param>
     /// <returns></returns>
     [Authorize]
     [HttpGet("search/by-email/{email}")]
@@ -92,7 +95,7 @@ public class UserController(
     /// <summary>
     /// Searches for a user by their username.
     /// </summary>
-    /// <param name="username"></param>
+    /// <param name="username"> Username of the user to search for. </param>
     /// <returns></returns>
     [Authorize]
     [HttpGet("search/by-username/{username}")]
@@ -157,24 +160,18 @@ public class UserController(
     /// <summary>
     /// Registers a new user with the provided username, email, and password.
     /// </summary>
-    /// <param name="registerDto"></param>
+    /// <param name="registerDto"> Object containing registration details. </param>
     /// <returns></returns>
     [AllowAnonymous]
     [HttpPost("register")]
     [ProducesResponseType(typeof(string), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<string>> RegisterAsync(
         [FromBody] RegisterDtoShort registerDto)
     {
         try
         {
-            if (string.IsNullOrEmpty(registerDto.Username) ||
-                string.IsNullOrEmpty(registerDto.Email) || 
-                string.IsNullOrEmpty(registerDto.Password))
-            {
-                return BadRequest("Invalid registration data.");
-            }
-            
             var jwt = await service.RegisterAsync(
                 registerDto.Username,
                 registerDto.Email,
@@ -184,14 +181,14 @@ public class UserController(
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return StatusCode(500, "An error occurred during registration.");
+            return StatusCode(500, e.Message);
         }
     }
 
     /// <summary>
     /// Logs in a user with the provided email and password, returning a JWT token if successful.
     /// </summary>
-    /// <param name="loginDto"></param>
+    /// <param name="loginDto"> Object containing login details. </param>
     /// <returns></returns>
     [AllowAnonymous]
     [HttpPost("login")]
@@ -201,9 +198,6 @@ public class UserController(
     {
         try
         {
-            if (string.IsNullOrEmpty(loginDto.Email) || string.IsNullOrEmpty(loginDto.Password))
-                return BadRequest("Email and password cannot be empty.");
-            
             var jwt = await service.LoginAsync(loginDto.Email, loginDto.Password);
             if (jwt == null)
                 return Unauthorized("Invalid email or password.");
@@ -220,8 +214,8 @@ public class UserController(
     /// <summary>
     /// Registers a new user using an external provider's token.
     /// </summary>
-    /// <param name="factory"></param>
-    /// <param name="externalLoginDto"></param>
+    /// <param name="factory"> Object to create external token validators. </param>
+    /// <param name="externalLoginDto"> Object containing external login details. </param>
     /// <returns></returns>
     [AllowAnonymous]
     [HttpPost("register/external")]
@@ -229,7 +223,8 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<string>> RegisterByExternalProviderAsync(
-        [FromServices] ExternalTokenValidatorFactory factory, [FromBody] ExternalLoginDtoShort externalLoginDto)
+        [FromServices] ExternalTokenValidatorFactory factory,
+        [FromBody] ExternalLoginDtoShort externalLoginDto)
     {
         try
         {
@@ -252,8 +247,8 @@ public class UserController(
     /// <summary>
     /// Logs in a user using an external provider's token, returning a JWT token if successful.
     /// </summary>
-    /// <param name="factory"></param>
-    /// <param name="externalLoginDto"></param>
+    /// <param name="factory"> Object to create external token validators. </param>
+    /// <param name="externalLoginDto"> Object containing external login details. </param>
     /// <returns></returns>
     [AllowAnonymous]
     [HttpPost("login/external")]
@@ -261,7 +256,8 @@ public class UserController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<string>> LoginByExternalProviderAsync(
-        [FromServices] ExternalTokenValidatorFactory factory, [FromBody] ExternalLoginDtoShort externalLoginDto)
+        [FromServices] ExternalTokenValidatorFactory factory,
+        [FromBody] ExternalLoginDtoShort externalLoginDto)
     {
         try
         {
@@ -291,15 +287,16 @@ public class UserController(
     /// <summary>
     /// Adds an external login to an existing user account.
     /// </summary>
-    /// <param name="userId"></param>
-    /// <param name="externalLoginDto"></param>
+    /// <param name="userId"> ID of the user to add the external login to. </param>
+    /// <param name="externalLoginDto"> Object containing external login details. </param>
     /// <returns></returns>
     [Authorize]
     [HttpPost("{userId}/external-login/add")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<UserDto>> AddExternalLoginAsync(Guid userId, [FromBody] ExternalLoginDtoShort externalLoginDto)
+    public async Task<ActionResult<UserDto>> AddExternalLoginAsync(Guid userId,
+        [FromBody] ExternalLoginDtoShort externalLoginDto)
     {
         try
         {
@@ -319,7 +316,7 @@ public class UserController(
     /// <summary>
     /// Updates an existing user with the provided user data.
     /// </summary>
-    /// <param name="user"></param>
+    /// <param name="user"> Updated user data. </param>
     /// <returns></returns>
     [Authorize]
     [HttpPut("{userId}/update")]
@@ -350,7 +347,7 @@ public class UserController(
     /// <summary>
     /// Deletes a user by their ID.
     /// </summary>
-    /// <param name="userId"></param>
+    /// <param name="userId"> User ID to delete. </param>
     /// <returns></returns>
     [Authorize]
     [HttpDelete("{userId:guid}/delete")]

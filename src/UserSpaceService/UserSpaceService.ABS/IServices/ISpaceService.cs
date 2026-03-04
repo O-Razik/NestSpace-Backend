@@ -1,14 +1,17 @@
+using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IModels;
 
 namespace UserSpaceService.ABS.IServices;
 
 public interface ISpaceService
 {
+    Task<PagedResult<ISpace>> SearchSpacesAsync(SpaceFilter filter);
+    
     Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId);
     
     Task<ISpace> GetSpaceByIdAsync(Guid spaceId);
     
-    Task<ISpace> CreateSpaceAsync(Guid creatorId, string name);
+    Task<ISpace> CreateSpaceAsync(Guid creatorId, string name, List<Guid> memberIds);
     
     Task<ISpace?> UpdateSpaceNameAsync(Guid spaceId, string newName);
     

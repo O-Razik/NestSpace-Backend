@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using UserSpaceService.API.Extensions;
-using UserSpaceService.DAL.Data;
+using FluentValidation;
+using UserSpaceService.API.Filters;
 
 namespace UserSpaceService.API;
 
@@ -18,7 +19,10 @@ public static class Program
         var serviceName = builder.Environment.ApplicationName;
         var otlpEndpoint = builder.Configuration["OTEL_SERVICE_NAME"] ?? "not-configured";
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers(options =>
+        {
+            options.Filters.Add<FluentValidationFilter>();
+        });
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
@@ -52,14 +56,15 @@ public static class Program
             });
         });
         
-        builder.AddSqlDbContext();
-        builder.AddModels();
-        builder.AddRabbitMqServices();
-        builder.AddRepositories();
-        builder.AddServices();
-        builder.AddMappersAndFactories();
-        builder.AddSerilog();
-        builder.AddOpenTelemetry();
+        builder.AddSqlDbContext()
+            .AddModels()
+            .AddRabbitMqServices()
+            .AddRepositories()
+            .AddServices()
+            .AddMappersAndFactories()
+            .AddValidation()
+            .AddSerilog()
+            .AddOpenTelemetry();
         
         builder.Services.AddAuthorization();
         

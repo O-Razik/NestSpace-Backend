@@ -1,7 +1,6 @@
 using UserSpaceService.ABS.IModels;
 
-namespace UserSpaceService.BLL.DTOs;
-
+namespace UserSpaceService.ABS.DTOs;
 
 public class SpaceRoleDto : SpaceRoleDtoShort
 {
