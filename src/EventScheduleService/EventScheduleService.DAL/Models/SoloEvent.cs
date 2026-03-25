@@ -36,12 +36,12 @@ public class SoloEvent : ISoloEvent
     [ForeignKey("CategoryId")]
     public EventCategory Category { get; set; } = null!;
 
-    public ICollection<EventTag> Tags { get; set; } = null!;
+    public ICollection<EventTag> Tags { get; set; } = new List<EventTag>();
 
     IEventCategory ISoloEvent.Category
     {
         get => Category;
-        set => Category = (value as EventCategory)!;
+        set => Category = ((EventCategory)value)!;
     }
 
     ICollection<IEventTag> ISoloEvent.Tags

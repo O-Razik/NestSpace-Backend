@@ -19,10 +19,12 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Formatting.Json;
 
 namespace ChatNotifyService.API.Extensions;
 
+/// <summary>
+/// Extension methods for configuring services in the WebApplicationBuilder.
+/// </summary>
 public static class BuilderExtension
 {
     public static WebApplicationBuilder AddSqlDbContext(this WebApplicationBuilder builder)
@@ -115,32 +117,6 @@ public static class BuilderExtension
         return builder;
     }
     
-    /*
-    public static WebApplicationBuilder AddSerilog(this WebApplicationBuilder builder)
-    {
-        Log.Logger = new LoggerConfiguration()
-            .Enrich.FromLogContext()
-            .Enrich.WithThreadId()
-            .Enrich.WithEnvironmentName()
-            .WriteTo.Console()
-            .WriteTo.RabbitMQ((clientConfiguration, sinkConfiguration) =>
-            {
-                clientConfiguration.Username = "guest";
-                clientConfiguration.Password = "guest";
-                clientConfiguration.VHost = "/";
-                clientConfiguration.Hostnames.Add("localhost");
-                clientConfiguration.Exchange = "logs_exchange";
-                clientConfiguration.ExchangeType = "direct";
-                sinkConfiguration.TextFormatter = new JsonFormatter();
-            })
-            .CreateLogger();
-
-        builder.Host.UseSerilog();
-        
-        return builder;
-    }
-    */
-    
     public static WebApplicationBuilder AddSerilog(this WebApplicationBuilder builder)
     {
         builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -185,10 +161,7 @@ public static class BuilderExtension
                 .AddAspNetCoreInstrumentation(options =>
                 {
                     options.RecordException = true;
-                    options.Filter = (httpContext) => 
-                    {
-                        return !httpContext.Request.Path.Value?.Contains("/health") ?? true;
-                    };
+                    options.Filter = (httpContext) => !httpContext.Request.Path.Value?.Contains("/health") ?? true;
                 })
                 .AddHttpClientInstrumentation(options =>
                 {

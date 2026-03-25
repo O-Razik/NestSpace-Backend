@@ -21,9 +21,9 @@ public class EventTag : IEventTag
     [MaxLength(255)]
     public string Color { get; set; } = string.Empty;
     
-    public ICollection<SoloEvent> SoloEvents { get; set; } = null!;
+    public ICollection<SoloEvent> SoloEvents { get; set; } = new List<SoloEvent>();
 
-    public ICollection<RegularEvent> RegularEvents { get; set; } = null!;
+    public ICollection<RegularEvent> RegularEvents { get; set; } = new List<RegularEvent>();
 
     ICollection<ISoloEvent> IEventTag.SoloEvents
     {

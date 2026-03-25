@@ -1,15 +1,16 @@
+using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.IModels;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.ABS.IServices;
-using EventScheduleService.BLL.RabbitMQ.Events;
+using EventScheduleService.BLL.RabbitMQ;
 
 namespace EventScheduleService.BLL.Services;
 
 public class RegularEventService(
     IRegularEventRepository regularEventRepository,
-    IEventPublisher eventPublisher
-) : IRegularEventService
+    SpaceLogPublish logPublish,
+    IEntityMapper<IRegularEvent, CreateRegularEventDto> createMapper) : IRegularEventService
 {
     public async Task<IEnumerable<IRegularEvent>> GetRegularEventsBySpaceAsync(Guid spaceId)
     {
@@ -21,104 +22,53 @@ public class RegularEventService(
         return await regularEventRepository.GetByIdAsync(regularEventId);
     }
 
-    public async Task<IRegularEvent> CreateRegularEventAsync(IRegularEvent newRegularEvent)
+    public async Task<IRegularEvent> CreateRegularEventAsync(CreateRegularEventDto newRegularEvent)
     {
-        try
-        {
-            var result = await regularEventRepository.AddAsync(newRegularEvent);
+        var result = await regularEventRepository
+            .AddAsync(createMapper.ToEntity(newRegularEvent));
+          
+        await logPublish.PublishSpaceActivityLogAsync(
+            newRegularEvent.SpaceId, Guid.Empty, // MemberId can be added if available
+            "RegularEventCreated", 
+            $"Regular event '{newRegularEvent.Title}' created."
+        );
             
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = newRegularEvent.SpaceId,
-                Type = "RegularEventCreated",
-                Description = $"Regular event '{newRegularEvent.Title}' created.",
-                ActivityAt = DateTime.UtcNow
-            };
-            
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.activity"
-            );
-            
-            return result;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        return result;
     }
 
     public async Task<IRegularEvent?> UpdateRegularEventAsync(IRegularEvent updatedRegularEvent)
     {
-        try
-        {
-            var result = await regularEventRepository.UpdateAsync(updatedRegularEvent);
+        var result = await regularEventRepository.UpdateAsync(updatedRegularEvent);
 
-            if (result == null) return result;
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = updatedRegularEvent.SpaceId,
-                Type = "RegularEventUpdated",
-                Description = $"Regular event '{updatedRegularEvent.Title}' updated.",
-                ActivityAt = DateTime.UtcNow
-            };
-                
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.activity"
+        if (result != null)
+        {
+            await logPublish.PublishSpaceActivityLogAsync(
+                updatedRegularEvent.SpaceId, Guid.Empty, // MemberId can be added if available
+                "RegularEventUpdated",
+                $"Regular event '{updatedRegularEvent.Title}' updated."
             );
-
-            return result;
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        return result;
     }
 
     public async Task<bool> DeleteRegularEventAsync(Guid regularEventId)
     {
-        try
-        {
-            var result = await regularEventRepository.DeleteAsync(regularEventId);
+        var result = await regularEventRepository.DeleteAsync(regularEventId);
 
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = Guid.Empty, // Ideally, fetch the SpaceId before deletion for accurate logging
-                Type = "RegularEventDeleted",
-                Description = $"Regular event with ID '{regularEventId}' deleted.",
-                ActivityAt = DateTime.UtcNow
-            };
-            
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.activity"
-            );
-            
-            return result;
-        }
-        catch (Exception e)
+        if (result)
         {
-            Console.WriteLine(e);
-            throw;
+            await logPublish.PublishSpaceActivityLogAsync(
+                Guid.Empty, Guid.Empty, // SpaceId and MemberId can be added if available
+                "RegularEventDeleted",
+                $"Regular event with ID '{regularEventId}' deleted."
+            );
         }
+            
+        return result;
     }
 
     public async Task<bool> DeleteRegularEventsBySpaceIdAsync(Guid spaceId)
     {
-        try
-        {
-            return await regularEventRepository.DeleteBySpaceIdAsync(spaceId);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        return await regularEventRepository.DeleteBySpaceIdAsync(spaceId);
     }
 }

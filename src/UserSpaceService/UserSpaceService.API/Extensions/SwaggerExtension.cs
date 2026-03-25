@@ -47,7 +47,7 @@ public static class SwaggerExtensions
                             Id = "Bearer"
                         }
                     },
-                    Array.Empty<string>()
+                    []
                 }
             });
 
@@ -66,7 +66,7 @@ public static class SwaggerExtensions
     /// <summary>
     /// Configures Swagger UI middleware
     /// </summary>
-    public static IApplicationBuilder UseSwaggerWithUI(this IApplicationBuilder app)
+    public static IApplicationBuilder UseSwaggerWithUi(this IApplicationBuilder app)
     {
         app.UseSwagger();
         app.UseSwaggerUI(c =>

@@ -8,10 +8,10 @@ namespace EventScheduleService.DAL.Repositories;
 
 public class EventTagRepository(EventScheduleDbContext context) : IEventTagRepository
 {
-    public async Task<IEventTag?> GetByIdAsync(Guid id)
+    public async Task<IEventTag?> GetByIdAsync(Guid tagId)
     {
         return await context.EventTags
-            .FirstOrDefaultAsync(m => m.Id == id);
+            .FirstOrDefaultAsync(m => m.Id == tagId);
     }
 
     public async Task<IEnumerable<IEventTag>> GetAllAsync()
@@ -26,17 +26,30 @@ public class EventTagRepository(EventScheduleDbContext context) : IEventTagRepos
             .ToListAsync();
     }
 
-    public async Task<IEventTag> AddAsync(IEventTag entity)
+    public async Task<IEventTag> AddAsync(Guid spaceId, string title, string color)
     {
-        var tag = (EventTag)entity;
+        var tag = new EventTag
+        {
+            Id = Guid.NewGuid(),
+            SpaceId = spaceId,
+            Title = title,
+            Color = color
+        };
         context.EventTags.Add(tag);
         await context.SaveChangesAsync();
         return tag;
     }
 
-    public async Task<IEventTag?> UpdateAsync(IEventTag entity)
+    public async Task<IEventTag?> UpdateAsync(IEventTag updatedTag)
     {
-        var tag = (EventTag)entity;
+        var tag = new EventTag
+        {
+            Id = updatedTag.Id,
+            SpaceId = updatedTag.SpaceId,
+            Title = updatedTag.Title,
+            Color = updatedTag.Color
+        };
+        
         var existingMarker = await context.EventTags.FindAsync(tag.Id);
         if (existingMarker == null)
         {
@@ -48,9 +61,9 @@ public class EventTagRepository(EventScheduleDbContext context) : IEventTagRepos
         return existingMarker;
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid tagId)
     {
-        var tag = await context.EventTags.FindAsync(id);
+        var tag = await context.EventTags.FindAsync(tagId);
         if (tag == null)
         {
             return false;

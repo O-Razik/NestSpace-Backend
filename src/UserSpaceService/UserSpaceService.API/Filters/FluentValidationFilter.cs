@@ -14,24 +14,31 @@ public sealed class FluentValidationFilter : IAsyncActionFilter
 
         foreach (var argument in context.ActionArguments.Values)
         {
-            if (argument is null) continue;
+            if (argument is null)
+            {
+                continue;
+            }
 
             var validator = context.HttpContext.RequestServices
                 .GetService(typeof(IValidator<>).MakeGenericType(argument.GetType())) as IValidator;
 
-            if (validator is null) continue;
+            if (validator is null)
+            {
+                continue;
+            }
 
             var result = await validator.ValidateAsync(
                 new ValidationContext<object>(argument));
 
-            if (!result.IsValid)
+            if (result.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    errors.TryAdd(error.PropertyName, []);
-                    errors[error.PropertyName] =
-                        errors[error.PropertyName].Append(error.ErrorMessage).ToArray();
-                }
+                continue;
+            }
+            foreach (var error in result.Errors)
+            {
+                errors.TryAdd(error.PropertyName, []);
+                errors[error.PropertyName] =
+                    errors[error.PropertyName].Append(error.ErrorMessage).ToArray();
             }
         }
 

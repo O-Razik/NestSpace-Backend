@@ -1,3 +1,4 @@
+using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IModels;
 
 namespace EventScheduleService.ABS.IServices;
@@ -8,7 +9,7 @@ public interface ISoloEventService
     
     Task<ISoloEvent?> GetSoloEventByIdAsync(Guid soloEventId);
     
-    Task<ISoloEvent> CreateSoloEventAsync(ISoloEvent newSoloEvent);
+    Task<ISoloEvent> CreateSoloEventAsync(CreateSoloEventDto newSoloEvent);
     
     Task<ISoloEvent?> UpdateSoloEventAsync(ISoloEvent updatedSoloEvent);
     

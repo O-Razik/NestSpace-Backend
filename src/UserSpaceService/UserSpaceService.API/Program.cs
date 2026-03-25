@@ -43,8 +43,7 @@ public static class Program
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerWithUi();
         }
 
         app.UseHttpsRedirection();

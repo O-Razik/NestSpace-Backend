@@ -40,7 +40,7 @@ public class RegularEvent : IRegularEvent
     [ForeignKey("CategoryId")]
     public EventCategory Category { get; set; } = null!;
     
-    public ICollection<EventTag> Tags { get; set; } = null!;
+    public ICollection<EventTag> Tags { get; set; } = new List<EventTag>();
 
     IEventCategory IRegularEvent.Category
     {

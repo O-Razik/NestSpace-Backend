@@ -8,7 +8,7 @@ public interface IEventCategoryRepository
     
     Task<IEventCategory?> GetByIdAsync(Guid eventId);
     
-    Task<IEventCategory> AddAsync(IEventCategory newEvent);
+    Task<IEventCategory> AddAsync(Guid spaceId, string title, string description);
     
     Task<IEventCategory?> UpdateAsync(IEventCategory updatedEvent);
     

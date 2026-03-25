@@ -1,299 +1,136 @@
-using EventScheduleService.ABS.IHelpers;
+using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IModels;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.ABS.IServices;
-using EventScheduleService.BLL.RabbitMQ.Events;
+using EventScheduleService.BLL.Helpers;
+using EventScheduleService.BLL.RabbitMQ;
 
 namespace EventScheduleService.BLL.Services;
 
 public class EventService(
     IEventCategoryRepository categoryRepository,
     IEventTagRepository tagRepository,
-    IEventPublisher eventPublisher
+    SpaceLogPublish logPublish
     ) : IEventService
 {
     public async Task<IEnumerable<IEventCategory>> GetCategoriesBySpaceAsync(Guid spaceId)
     {
-        try
-        {
-            return await categoryRepository.GetBySpaceAsync(spaceId);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while retrieving event categories for the space.", e);
-        }
+        return await categoryRepository.GetBySpaceAsync(spaceId);
     }
 
     public async Task<IEventCategory?> GetCategoryByIdAsync(Guid eventId)
     {
-        try
-        {
-            return await categoryRepository.GetByIdAsync(eventId);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while retrieving the event category.", e);
-        }
+        return await categoryRepository.GetByIdAsync(eventId);
     }
 
-    public async Task<IEventCategory> CreateCategoryAsync(IEventCategory newEvent)
+    public async Task<IEventCategory> CreateCategoryAsync(CreateCategoryDto newCategory)
     {
-        if (newEvent == null)
-        {
-            throw new ArgumentNullException(nameof(newEvent), "Event category cannot be null.");
-        }
+        Guard.AgainstNull(newCategory);
 
-        try
-        {
-            var result = await categoryRepository.AddAsync(newEvent);
+        var result = await categoryRepository
+            .AddAsync(newCategory.SpaceId, newCategory.Title, newCategory.Description);
 
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = newEvent.SpaceId,
-                Type = "EventCategoryCreated",
-                Description = $"Event category '{newEvent.Title}' created.",
-                ActivityAt = DateTime.UtcNow
-            };
-
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.exchange"
-            );
+        await logPublish.PublishSpaceActivityLogAsync(
+            newCategory.SpaceId, Guid.Empty, // MemberId can be added if available
+            "EventCategoryCreated", 
+            $"Event category '{newCategory.Title}' created.");
             
-            return result;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while creating the event category.", e);
-        }
+        return result;
     }
 
-    public async Task<IEventCategory?> UpdateCategoryAsync(IEventCategory updatedEvent)
+    public async Task<IEventCategory?> UpdateCategoryAsync(IEventCategory updatedCategory)
     {
-        if (updatedEvent == null)
+        Guard.AgainstNull(updatedCategory);
+        var result = await categoryRepository.UpdateAsync(updatedCategory);
+            
+        if (result != null)
         {
-            throw new ArgumentNullException(nameof(updatedEvent), "Event category cannot be null.");
+            await logPublish.PublishSpaceActivityLogAsync(
+                updatedCategory.SpaceId, Guid.Empty, // MemberId can be added if available
+                "EventCategoryUpdated", 
+                $"Event category '{updatedCategory.Title}' updated.");
         }
-
-        try
-        {
-            var result = await categoryRepository.UpdateAsync(updatedEvent);
             
-            if (result == null)
-            {
-                return null;
-            }
-            
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = updatedEvent.SpaceId,
-                Type = "EventCategoryUpdated",
-                Description = $"Event category '{updatedEvent.Title}' updated.",
-                ActivityAt = DateTime.UtcNow
-            };
-            
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.exchange"
-            );
-            
-            return result;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while updating the event category.", e);
-        }
+        return result;
     }
 
     public async Task<bool> DeleteCategoryAsync(Guid eventId)
     {
-        try
-        {
-            var result = await categoryRepository.DeleteAsync(eventId);
+        var result = await categoryRepository.DeleteAsync(eventId);
 
-            if (!result) return result;
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = Guid.Empty, // Ideally, fetch the SpaceId associated with the eventId before deletion
-                Type = "EventCategoryDeleted",
-                Description = $"Event category with ID '{eventId}' deleted.",
-                ActivityAt = DateTime.UtcNow
-            };
-                
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.exchange"
-            );
-
-            return result;
-        }
-        catch (Exception e)
+        if (result)
         {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while deleting the event category.", e);
+            await logPublish.PublishSpaceActivityLogAsync(
+                Guid.Empty, Guid.Empty, // SpaceId and MemberId can be added if available
+                "EventCategoryDeleted",
+                $"Event category with ID '{eventId}' deleted.");
         }
+
+        return result;
     }
 
     public async Task<bool> DeleteCategoryBySpaceIdAsync(Guid spaceId)
     {
-        try
-        {
-            return await categoryRepository.DeleteBySpaceIdAsync(spaceId);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        return await categoryRepository.DeleteBySpaceIdAsync(spaceId);
     }
 
     public async Task<IEnumerable<IEventTag>> GetTagsBySpaceAsync(Guid spaceId)
     {
-        try
-        {
-            return await tagRepository.GetBySpaceAsync(spaceId);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while retrieving event tags for the space.", e);
-        }
+        return await tagRepository.GetBySpaceAsync(spaceId);
     }
 
     public async Task<IEventTag?> GetTagByIdAsync(Guid markerId)
     {
-        try
-        {
-            return await tagRepository.GetByIdAsync(markerId);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while retrieving the event tag.", e);
-        }
+        return await tagRepository.GetByIdAsync(markerId);
     }
 
-    public async Task<IEventTag> CreateTagAsync(IEventTag newTag)
+    public async Task<IEventTag> CreateTagAsync(CreateTagDto newTag)
     {
-        if (newTag == null)
-        {
-            throw new ArgumentNullException(nameof(newTag), "Event tag cannot be null.");
-        }
-
-        try
-        {
-            var result = await tagRepository.AddAsync(newTag);
-
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = newTag.SpaceId,
-                Type = "EventTagCreated",
-                Description = $"Event tag '{newTag.Title}' created.",
-                ActivityAt = DateTime.UtcNow
-            };
+        Guard.AgainstNull(newTag);
+        var result = await tagRepository
+            .AddAsync(newTag.SpaceId, newTag.Title, newTag.Color);
             
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.exchange"
-            );
+        await logPublish.PublishSpaceActivityLogAsync(
+            newTag.SpaceId, Guid.Empty, // MemberId can be added if available
+            "EventTagCreated", 
+            $"Event tag '{newTag.Title}' created.");
             
-            return result;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while creating the event tag.", e);
-        }
+        return result;
     }
 
     public async Task<IEventTag?> UpdateTagAsync(IEventTag updatedTag)
     {
-        if (updatedTag == null)
+        Guard.AgainstNull(updatedTag);
+        
+        var result = await tagRepository.UpdateAsync(updatedTag);
+            
+        if (result != null)
         {
-            throw new ArgumentNullException(nameof(updatedTag), "Event tag cannot be null.");
+            await logPublish.PublishSpaceActivityLogAsync(
+                updatedTag.SpaceId, Guid.Empty, // MemberId can be added if available
+                "EventTagUpdated", 
+                $"Event tag '{updatedTag.Title}' updated.");
         }
-
-        try
-        {
-            var result = await tagRepository.UpdateAsync(updatedTag);
             
-            if (result == null)
-            {
-                return null;
-            }
-            
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = updatedTag.SpaceId,
-                Type = "EventTagUpdated",
-                Description = $"Event tag '{updatedTag.Title}' updated.",
-                ActivityAt = DateTime.UtcNow
-            };
-            
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.exchange"
-            );
-            
-            return result;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while updating the event tag.", e);
-        }
+        return result;
     }
 
-    public async Task<bool> DeleteTagAsync(Guid markerId)
+    public async Task<bool> DeleteTagAsync(Guid tagId)
     {
-        try
+        var result = await tagRepository.DeleteAsync(tagId);
+            
+        if (result)
         {
-            var result = await tagRepository.DeleteAsync(markerId);
-            
-            if (!result) return result;
-            
-            var logEvent = new SpaceActivityLogEvent()
-            {
-                SpaceId = Guid.Empty, // Ideally, fetch the SpaceId associated with the markerId before deletion
-                Type = "EventTagDeleted",
-                Description = $"Event tag with ID '{markerId}' deleted.",
-                ActivityAt = DateTime.UtcNow
-            };
-            
-            await eventPublisher.PublishAsync(
-                logEvent,
-                routingKey: "space.activity.log",
-                exchangeName: "log.exchange"
-            );
-            
-            return result;
+            await logPublish.PublishSpaceActivityLogAsync(
+                Guid.Empty, Guid.Empty, // SpaceId and MemberId can be added if available
+                "EventTagDeleted", 
+                $"Event tag with ID '{tagId}' deleted.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new Exception("An error occurred while deleting the event tag.", e);
-        }
+        return result;
     }
 
     public async Task<bool> DeleteTagBySpaceIdAsync(Guid spaceId)
     {
-        try
-        {
-            return await tagRepository.DeleteBySpaceIdAsync(spaceId);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        return await tagRepository.DeleteBySpaceIdAsync(spaceId);
     }
 }

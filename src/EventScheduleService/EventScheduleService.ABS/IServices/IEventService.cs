@@ -1,3 +1,4 @@
+using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IModels;
 
 namespace EventScheduleService.ABS.IServices;
@@ -8,9 +9,9 @@ public interface IEventService
     
     Task<IEventCategory?> GetCategoryByIdAsync(Guid eventId);
     
-    Task<IEventCategory> CreateCategoryAsync(IEventCategory newEvent);
+    Task<IEventCategory> CreateCategoryAsync(CreateCategoryDto newCategory);
     
-    Task<IEventCategory?> UpdateCategoryAsync(IEventCategory updatedEvent);
+    Task<IEventCategory?> UpdateCategoryAsync(IEventCategory updatedCategory);
     
     Task<bool> DeleteCategoryAsync(Guid eventId);
     
@@ -20,11 +21,11 @@ public interface IEventService
     
     Task<IEventTag?> GetTagByIdAsync(Guid markerId);
     
-    Task<IEventTag> CreateTagAsync(IEventTag newTag);
+    Task<IEventTag> CreateTagAsync(CreateTagDto newTag);
     
     Task<IEventTag?> UpdateTagAsync(IEventTag updatedTag);
     
-    Task<bool> DeleteTagAsync(Guid markerId);
+    Task<bool> DeleteTagAsync(Guid tagId);
     
     Task<bool> DeleteTagBySpaceIdAsync(Guid spaceId);
 }

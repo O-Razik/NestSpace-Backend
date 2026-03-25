@@ -23,23 +23,38 @@ public class EventCategoryRepository(EventScheduleDbContext context) : IEventCat
             .FirstOrDefaultAsync(ec => ec.Id == eventId);
     }
 
-    public async Task<IEventCategory> AddAsync(IEventCategory newEvent)
+    public async Task<IEventCategory> AddAsync(Guid spaceId, string title, string description)
     {
-        var eventCategoryEntity = (EventCategory)newEvent;
+        var eventCategoryEntity = new EventCategory
+        {
+            Id = Guid.NewGuid(),
+            SpaceId = spaceId,
+            Title = title,
+            Description = description
+        };
         context.EventCategories.Add(eventCategoryEntity);
         await context.SaveChangesAsync();
-        return (await this.GetByIdAsync(eventCategoryEntity.Id))!;
+        return eventCategoryEntity;
     }
 
     public async Task<IEventCategory?> UpdateAsync(IEventCategory updatedEvent)
     {
-        var eventCategoryEntity = (EventCategory)updatedEvent;
+        var eventCategoryEntity = new EventCategory
+        {
+            Id = updatedEvent.Id,
+            SpaceId = updatedEvent.SpaceId,
+            Title = updatedEvent.Title,
+            Description = updatedEvent.Description
+        };
+        
         var existingEventCategory = await context.EventCategories.FindAsync(eventCategoryEntity.Id);
         if (existingEventCategory == null)
         {
             return null;
         }
-        context.Entry(existingEventCategory).CurrentValues.SetValues(eventCategoryEntity);
+        
+        context.Entry(existingEventCategory)
+            .CurrentValues.SetValues(eventCategoryEntity);
         await context.SaveChangesAsync();
         return existingEventCategory;
     }
