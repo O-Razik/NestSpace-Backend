@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using UserSpaceService.ABS.IModels;
 
-namespace UserSpaceService.DAL.Models;
+namespace UserSpaceService.ABS.Models;
 
-public sealed class SpaceMember : ISpaceMember
+public sealed class SpaceMember
 {
     [Key]
     [Column("space_member_id")]
@@ -31,22 +30,4 @@ public sealed class SpaceMember : ISpaceMember
 
     [ForeignKey("RoleId")]
     public SpaceRole Role { get; set; } = null!;
-
-    ISpaceRole ISpaceMember.Role
-    {
-        get => Role;
-        set => Role = (SpaceRole)value;
-    }
-
-    ISpace ISpaceMember.Space
-    {
-        get => Space;
-        set => Space = (Space)value;
-    }
-    
-    IUser ISpaceMember.User
-    {
-        get => User;
-        set => User = (User)value;
-    }
 }

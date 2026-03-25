@@ -1,12 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
 
-namespace UserSpaceService.DAL.Models;
+namespace UserSpaceService.ABS.Models;
 
 public sealed class RefreshToken(IDateTimeProvider dateTimeProvider)
-    : IRefreshToken
 {
     [Key]
     [Column("refresh_token_id")]
@@ -34,12 +32,6 @@ public sealed class RefreshToken(IDateTimeProvider dateTimeProvider)
     
     [ForeignKey("UserId")]
     public User User { get; set; } = null!;
-    
-    IUser IRefreshToken.User
-    {
-        get => User;
-        set => User = (User)value;
-    }
     
     [NotMapped]
     public bool IsActive => RevokedAt == null && ExpiresAt > dateTimeProvider.UtcNow;

@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using UserSpaceService.ABS.IModels;
 
-namespace UserSpaceService.DAL.Models;
+namespace UserSpaceService.ABS.Models;
 
-public sealed class User : IUser
+public sealed class User
 {
     [Key]
     [Column("user_id")]
@@ -37,16 +36,4 @@ public sealed class User : IUser
     public ICollection<ExternalLogin> ExternalLogins { get; set; } = [];
 
     public ICollection<SpaceMember> SpaceMemberships { get; set; } = [];
-    
-    ICollection<IExternalLogin> IUser.ExternalLogins
-    {
-        get => ExternalLogins.Cast<IExternalLogin>().ToList();
-        set => ExternalLogins = value.Cast<ExternalLogin>().ToList();
-    }
-
-    ICollection<ISpaceMember> IUser.SpaceMemberships
-    {
-        get => SpaceMemberships.Cast<ISpaceMember>().ToList();
-        set => SpaceMemberships = value.Cast<SpaceMember>().ToList();
-    }
 }

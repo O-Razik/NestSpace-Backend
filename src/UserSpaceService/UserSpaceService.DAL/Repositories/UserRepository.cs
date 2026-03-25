@@ -1,16 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using UserSpaceService.ABS.Filters;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.DAL.Data;
-using UserSpaceService.DAL.Models;
 
 namespace UserSpaceService.DAL.Repositories;
 
 public class UserRepository(UserSpaceDbContext context) : IUserRepository
 {
-    public async Task<IUser?> GetByIdAsync(Guid userId)
+    public async Task<User?> GetByIdAsync(Guid userId)
     {
         if (userId == Guid.Empty)
         {
@@ -23,25 +22,25 @@ public class UserRepository(UserSpaceDbContext context) : IUserRepository
         return user;
     }
     
-    public async Task<IUser?> GetByUsernameAsync(string username)
+    public async Task<User?> GetByUsernameAsync(string username)
     {
         return await context.Users
             .FirstOrDefaultAsync(u => u.Username == username);
     }
     
-    public async Task<IUser?> GetByEmailAsync(string email)
+    public async Task<User?> GetByEmailAsync(string email)
     {
         return await context.Users
             .FirstOrDefaultAsync(u => u.Email == email);
     }
     
-    public async Task<IUser?> GetByExternalLoginAsync(Provider provider, string providerUserId)
+    public async Task<User?> GetByExternalLoginAsync(Provider provider, string providerUserId)
     {
         return await context.Users
             .FirstOrDefaultAsync(u => u.ExternalLogins.Any(el => el.Provider == provider && el.ProviderKey == providerUserId));
     }
 
-    public async Task<PagedResult<IUser>> SearchAsync(UserFilter filter)
+    public async Task<PagedResult<User>> SearchAsync(UserFilter filter)
     {
         var query = context.Users.AsQueryable();
 
@@ -64,7 +63,7 @@ public class UserRepository(UserSpaceDbContext context) : IUserRepository
             .Take(filter.PageSize)
             .ToListAsync();
 
-        return new PagedResult<IUser>
+        return new PagedResult<User>
         {
             Items = users,
             PageNumber = filter.PageNumber,
@@ -74,7 +73,7 @@ public class UserRepository(UserSpaceDbContext context) : IUserRepository
     }
 
 
-    public async Task<IUser> CreateAsync(string username, string email, string passwordHash)
+    public async Task<User> CreateAsync(string username, string email, string passwordHash)
     {
         var normalizedEmail = email.Trim().ToUpperInvariant();
         var normalizedUsername = username.Trim().ToUpperInvariant();
@@ -114,7 +113,7 @@ public class UserRepository(UserSpaceDbContext context) : IUserRepository
         return user;
     }
     
-    public async Task<IUser> CreateAsync(string username, string email, Provider provider, string providerUserId)
+    public async Task<User> CreateAsync(string username, string email, Provider provider, string providerUserId)
     {
         var user = new User
         {
@@ -139,7 +138,7 @@ public class UserRepository(UserSpaceDbContext context) : IUserRepository
         return user;
     }
     
-    public async Task<IUser> AddExternalLoginAsync(IUser user, Provider provider, string providerUserId)
+    public async Task<User> AddExternalLoginAsync(User user, Provider provider, string providerUserId)
     {
         var existingUser = await context.Users
             .Include(u => u.ExternalLogins)
@@ -165,7 +164,7 @@ public class UserRepository(UserSpaceDbContext context) : IUserRepository
         return existingUser;
     }
 
-    public async Task<IUser?> UpdateAsync(IUser updatedUser)
+    public async Task<User?> UpdateAsync(User updatedUser)
     {
         var existingUser = await context.Users.FindAsync(updatedUser.Id);
         if (existingUser == null)

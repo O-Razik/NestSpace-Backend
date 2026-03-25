@@ -1,6 +1,6 @@
 using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.Filters;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.ABS.IServices;
 
@@ -18,17 +18,17 @@ public interface IUserService
     
     Task LogoutAsync(string refreshToken);
 
-    Task<IUser?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId);
+    Task<User?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId);
 
-    Task<PagedResult<IUser>> SearchUsersAsync(UserFilter filter);
+    Task<PagedResult<User>> SearchUsersAsync(UserFilter filter);
 
-    Task<IUser?> GetUserByIdAsync(Guid userId);
+    Task<User?> GetUserByIdAsync(Guid userId);
 
-    Task<IUser?> GetUserByUsernameAsync(string username);
+    Task<User?> GetUserByUsernameAsync(string username);
 
-    Task<IUser?> GetUserByEmailAsync(string email);
+    Task<User?> GetUserByEmailAsync(string email);
 
-    Task<IUser?> UpdateUserAsync(IUser user);
+    Task<User?> UpdateUserAsync(User user);
 
     Task<bool> DeleteUserAsync(Guid userId);
 }

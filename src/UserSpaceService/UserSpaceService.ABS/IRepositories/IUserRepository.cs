@@ -1,27 +1,27 @@
 using UserSpaceService.ABS.Filters;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.ABS.IRepositories;
 
 public interface IUserRepository
 {
-    Task<PagedResult<IUser>> SearchAsync(UserFilter filter);
+    Task<PagedResult<User>> SearchAsync(UserFilter filter);
     
-    Task<IUser?> GetByIdAsync(Guid userId);
+    Task<User?> GetByIdAsync(Guid userId);
     
-    Task<IUser?> GetByUsernameAsync(string username);
+    Task<User?> GetByUsernameAsync(string username);
     
-    Task<IUser?> GetByEmailAsync(string email);
+    Task<User?> GetByEmailAsync(string email);
     
-    Task<IUser?> GetByExternalLoginAsync(Provider provider, string providerUserId);
+    Task<User?> GetByExternalLoginAsync(Provider provider, string providerUserId);
     
-    Task<IUser> CreateAsync(string username, string email, string passwordHash);
+    Task<User> CreateAsync(string username, string email, string passwordHash);
 
-    Task<IUser> CreateAsync(string username, string email, Provider provider, string providerUserId);
+    Task<User> CreateAsync(string username, string email, Provider provider, string providerUserId);
 
-    Task<IUser> AddExternalLoginAsync(IUser user, Provider provider, string providerUserId);
+    Task<User> AddExternalLoginAsync(User user, Provider provider, string providerUserId);
     
-    Task<IUser?> UpdateAsync(IUser updatedUser);
+    Task<User?> UpdateAsync(User updatedUser);
     
     Task<bool> DeleteAsync(Guid userId);
 }

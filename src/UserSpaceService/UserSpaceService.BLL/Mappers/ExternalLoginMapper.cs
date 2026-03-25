@@ -1,14 +1,15 @@
 using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 
-namespace UserSpaceService.ABS.Mappers;
+namespace UserSpaceService.BLL.Mappers;
 
-public class ExternalLoginMapper(IEntityFactory<IExternalLogin> entityFactory)
-    : IMapper<IExternalLogin, ExternalLoginDto>
+public class ExternalLoginMapper
+    : IMapper<ExternalLogin, ExternalLoginDto>
 {
-    public ExternalLoginDto ToDto(IExternalLogin source)
+    public ExternalLoginDto ToDto(ExternalLogin source)
     {
+        ArgumentNullException.ThrowIfNull(source);
         return new ExternalLoginDto
         {
             Id = source.Id,
@@ -18,14 +19,15 @@ public class ExternalLoginMapper(IEntityFactory<IExternalLogin> entityFactory)
         };
     }
 
-    public IExternalLogin ToEntity(ExternalLoginDto dto)
+    public ExternalLogin ToEntity(ExternalLoginDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var externalLogin = entityFactory.CreateEntity();
-        externalLogin.Id = dto.Id;
-        externalLogin.UserId = dto.UserId;
-        externalLogin.Provider = dto.Provider;
-        externalLogin.ProviderKey = dto.ProviderKey;
-        return externalLogin;
+        return new ExternalLogin
+        {
+            Id = dto.Id,
+            UserId = dto.UserId,
+            Provider = dto.Provider,
+            ProviderKey = dto.ProviderKey,
+        };
     }
 }

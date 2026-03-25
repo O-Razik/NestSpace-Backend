@@ -1,25 +1,24 @@
 using Microsoft.EntityFrameworkCore;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.DAL.Data;
-using UserSpaceService.DAL.Models;
 
 namespace UserSpaceService.DAL.Repositories;
 
 public class SpaceRoleRepository(UserSpaceDbContext context) : ISpaceRoleRepository
 {
-    public async Task<ISpaceRole?> GetByIdAsync(Guid roleId)
+    public async Task<SpaceRole?> GetByIdAsync(Guid roleId)
     {
         return await context.SpaceRoles
             .FirstOrDefaultAsync(r => r.Id == roleId);
     }
 
-    public async Task<IEnumerable<ISpaceRole>> GetBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<SpaceRole>> GetBySpaceAsync(Guid spaceId)
     {
         return await context.SpaceRoles.Where(sr => sr.SpaceId == spaceId).ToListAsync();
     }
 
-    public async Task<ISpaceRole> CreateAsync(Guid spaceId, string roleName, Permission permissions)
+    public async Task<SpaceRole> CreateAsync(Guid spaceId, string roleName, Permission permissions)
     {
         var role = new SpaceRole
         {
@@ -33,7 +32,7 @@ public class SpaceRoleRepository(UserSpaceDbContext context) : ISpaceRoleReposit
         return role;
     }
 
-    public async Task<ISpaceRole?> UpdateAsync(ISpaceRole updatedRole)
+    public async Task<SpaceRole?> UpdateAsync(SpaceRole updatedRole)
     {
         var existingRole = await context.SpaceRoles.FindAsync(updatedRole.Id);
         if (existingRole == null)

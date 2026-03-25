@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using UserSpaceService.ABS.IModels;
 
-namespace UserSpaceService.DAL.Models;
+namespace UserSpaceService.ABS.Models;
 
-public sealed class SpaceRole : ISpaceRole
+public sealed class SpaceRole
 {
     [Key]
     [Column("role_id")]
@@ -24,16 +23,21 @@ public sealed class SpaceRole : ISpaceRole
     public Space Space { get; set; } = null!;
     
     public ICollection<SpaceMember> Members { get; private set; } = new List<SpaceMember>();
+}
 
-    ISpace ISpaceRole.Space
-    {
-        get => Space;
-        set => Space = (Space)value;
-    }
-
-    ICollection<ISpaceMember> ISpaceRole.Members
-    {
-        get => Members.Cast<ISpaceMember>().ToList();
-        set => Members = value.Cast<SpaceMember>().ToList();
-    }
+[Flags]
+public enum Permission : long
+{
+    None = 0,
+    SendMessage = 1 << 0, // Chat
+    ManageNotes = 1 << 1,
+    ManageTasks = 1 << 2,
+    ManageEvents = 1 << 3,
+    ManageSoloEvents = 1 << 4,
+    ManageRegularEvents = 1 << 5,
+    ManageTags = 1 << 6,
+    ManageMembers = 1 << 7,
+    ManageSpace = 1 << 8,
+    DeleteSpace = 1 << 9,
+    All = ~0L
 }
