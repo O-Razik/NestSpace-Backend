@@ -1,9 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.DAL.Data;
-using UserSpaceService.DAL.Models;
 
 namespace UserSpaceService.DAL.Repositories;
 
@@ -12,7 +11,7 @@ public class RefreshTokenRepository(
     IDateTimeProvider dateTimeProvider
     ) : IRefreshTokenRepository
 {
-    public async Task<IRefreshToken> CreateAsync(Guid userId, string token, DateTime expiresAt)
+    public async Task<RefreshToken> CreateAsync(Guid userId, string token, DateTime expiresAt)
     {
         var refreshToken = new RefreshToken(dateTimeProvider)
         {
@@ -29,14 +28,14 @@ public class RefreshTokenRepository(
         return refreshToken;
     }
 
-    public async Task<IRefreshToken?> GetByTokenAsync(string token)
+    public async Task<RefreshToken?> GetByTokenAsync(string token)
     {
         return await context.RefreshTokens
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == token);
     }
 
-    public async Task<IEnumerable<IRefreshToken>> GetActiveByUserIdAsync(Guid userId)
+    public async Task<IEnumerable<RefreshToken>> GetActiveByUserIdAsync(Guid userId)
     {
         return await context.RefreshTokens
             .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > dateTimeProvider.UtcNow)

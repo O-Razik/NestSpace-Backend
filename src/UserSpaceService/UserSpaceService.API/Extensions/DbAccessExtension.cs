@@ -1,8 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.DAL.Data;
-using UserSpaceService.DAL.Models;
 using UserSpaceService.DAL.Repositories;
 
 namespace UserSpaceService.API.Extensions;
@@ -19,12 +18,12 @@ public static class DbAccessExtension
     
     public static WebApplicationBuilder AddModels(this WebApplicationBuilder builder)
     {
-        builder.Services.AddScoped<IExternalLogin, ExternalLogin>();
-        builder.Services.AddScoped<ISpaceRole, SpaceRole>();
-        builder.Services.AddScoped<IUser, User>();
-        builder.Services.AddScoped<IRefreshToken, RefreshToken>();
-        builder.Services.AddScoped<ISpaceMember, SpaceMember>();
-        builder.Services.AddScoped<ISpace, Space>();
+        builder.Services.AddScoped<ExternalLogin>();
+        builder.Services.AddScoped<SpaceRole>();
+        builder.Services.AddScoped<User>();
+        builder.Services.AddScoped<RefreshToken>();
+        builder.Services.AddScoped<SpaceMember>();
+        builder.Services.AddScoped<Space>();
         
         return builder;
     }

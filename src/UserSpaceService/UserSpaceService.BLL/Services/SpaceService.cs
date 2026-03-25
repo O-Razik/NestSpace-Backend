@@ -1,7 +1,7 @@
 using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.ABS.IServices;
 using UserSpaceService.BLL.Helpers;
@@ -20,12 +20,12 @@ public class SpaceService(
 {
     private const string RoutingKeyPrefix = "space";
 
-    public async Task<PagedResult<ISpace>> SearchSpacesAsync(SpaceFilter filter)
+    public async Task<PagedResult<Space>> SearchSpacesAsync(SpaceFilter filter)
     {
         return await spaceRepository.SearchAsync(filter);
     }
 
-    public async Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId)
+    public async Task<IEnumerable<Space>> GetAllSpacesOfUserAsync(Guid userId)
     {
         var user = await userRepository.GetByIdAsync(userId) 
                     ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
@@ -33,13 +33,13 @@ public class SpaceService(
         return await spaceRepository.GetAllSpacesOfUserAsync(user.Id);
     }
 
-    public async Task<ISpace?> GetSpaceByIdAsync(Guid spaceId)
+    public async Task<Space?> GetSpaceByIdAsync(Guid spaceId)
     {
         var space = await spaceRepository.GetByIdAsync(spaceId);
         return space;
     }
 
-    public async Task<ISpace> CreateSpaceAsync(CreateSpaceDto createSpaceDto)
+    public async Task<Space> CreateSpaceAsync(CreateSpaceDto createSpaceDto)
     {
         if (await spaceRepository.SearchByNameAsync(createSpaceDto.Name) != null)
         {
@@ -82,7 +82,7 @@ public class SpaceService(
         return space;
     }
 
-    public async Task<ISpace?> UpdateSpaceNameAsync(Guid spaceId, string newName, Guid memberId)
+    public async Task<Space?> UpdateSpaceNameAsync(Guid spaceId, string newName, Guid memberId)
     {
         Guard.AgainstNullOrWhiteSpace(newName, "New space name cannot be null or empty.");
         var space = await spaceRepository.GetByIdAsync(spaceId) 
@@ -130,7 +130,7 @@ public class SpaceService(
         return result;
     }
 
-    public async Task<ISpaceRole> CreateSpaceRoleAsync(
+    public async Task<SpaceRole> CreateSpaceRoleAsync(
         Guid spaceId, string roleName,
         Permission permissions, Guid memberId)
     {
@@ -163,7 +163,7 @@ public class SpaceService(
         return result;
     }
 
-    public async Task<ISpaceRole?> UpdateSpaceRoleAsync(ISpaceRole spaceRole, Guid memberId)
+    public async Task<SpaceRole?> UpdateSpaceRoleAsync(SpaceRole spaceRole, Guid memberId)
     {
         Guard.AgainstNull(spaceRole, "Space role cannot be null.");
         Guard.AgainstEmptyGuid(spaceRole.Id, "Space role ID cannot be empty.");
@@ -216,7 +216,7 @@ public class SpaceService(
         return result;
     }
 
-    public async Task<ISpaceMember> AddMemberToSpaceAsync(Guid spaceId, Guid userId, Guid roleId)
+    public async Task<SpaceMember> AddMemberToSpaceAsync(Guid spaceId, Guid userId, Guid roleId)
     {
         Guard.AgainstEmptyGuid(spaceId, "Space ID cannot be empty.");
         Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
@@ -250,7 +250,7 @@ public class SpaceService(
         return result;
     }
 
-    public async Task<ISpaceMember?> UpdateSpaceMemberAsync(ISpaceMember spaceMember)
+    public async Task<SpaceMember?> UpdateSpaceMemberAsync(SpaceMember spaceMember)
     {
         Guard.AgainstNull(spaceMember, "Space member cannot be null.");
         Guard.AgainstEmptyGuid(spaceMember.Id, "Space member cannot be empty.");

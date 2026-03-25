@@ -1,24 +1,25 @@
 using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 
-namespace UserSpaceService.ABS.Mappers;
+namespace UserSpaceService.BLL.Mappers;
 
-public class SpaceRoleMapper(IEntityFactory<ISpaceRole> entityFactory)
-    : IMapper<ISpaceRole, SpaceRoleDto>
+public class SpaceRoleMapper
+    : IMapper<SpaceRole, SpaceRoleDto>
 {
-    public ISpaceRole ToEntity(SpaceRoleDto dto)
+    public SpaceRole ToEntity(SpaceRoleDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var spaceRole = entityFactory.CreateEntity();
-        spaceRole.Id = dto.Id;
-        spaceRole.SpaceId = dto.SpaceId;
-        spaceRole.Name = dto.Name;
-        spaceRole.RolePermissions = dto.RolePermissions;
-        return spaceRole;
+        return new SpaceRole
+        {
+            Id = dto.Id,
+            SpaceId = dto.SpaceId,
+            Name = dto.Name,
+            RolePermissions = dto.RolePermissions,
+        };
     }
 
-    public SpaceRoleDto ToDto(ISpaceRole entity)
+    public SpaceRoleDto ToDto(SpaceRole entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceRoleDto

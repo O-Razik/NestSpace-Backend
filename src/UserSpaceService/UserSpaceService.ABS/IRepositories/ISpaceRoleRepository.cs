@@ -1,16 +1,16 @@
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.ABS.IRepositories;
 
 public interface ISpaceRoleRepository
 {
-    Task<IEnumerable<ISpaceRole>> GetBySpaceAsync(Guid spaceId);
+    Task<IEnumerable<SpaceRole>> GetBySpaceAsync(Guid spaceId);
     
-    Task<ISpaceRole?> GetByIdAsync(Guid roleId);
+    Task<SpaceRole?> GetByIdAsync(Guid roleId);
     
-    Task<ISpaceRole> CreateAsync(Guid spaceId, string roleName, Permission permissions);
+    Task<SpaceRole> CreateAsync(Guid spaceId, string roleName, Permission permissions);
     
-    Task<ISpaceRole?> UpdateAsync(ISpaceRole updatedRole);
+    Task<SpaceRole?> UpdateAsync(SpaceRole updatedRole);
     
     Task<bool> DeleteAsync(Guid roleId);
 }

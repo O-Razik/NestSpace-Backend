@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.BLL.Helpers;
 

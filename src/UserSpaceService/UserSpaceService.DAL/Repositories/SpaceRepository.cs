@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using UserSpaceService.ABS.Filters;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.DAL.Data;
-using UserSpaceService.DAL.Models;
 
 namespace UserSpaceService.DAL.Repositories;
 
 public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
 {
-    public async Task<ISpace?> GetByIdAsync(Guid spaceId)
+    public async Task<Space?> GetByIdAsync(Guid spaceId)
     {
         return await context.Spaces
             .Where(s => s.Id == spaceId)
@@ -19,7 +19,7 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<PagedResult<ISpace>> SearchAsync(SpaceFilter filter)
+    public async Task<PagedResult<Space>> SearchAsync(SpaceFilter filter)
     {
         var query = context.Spaces.AsQueryable();
         
@@ -49,7 +49,7 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
             .Include(s => s.Roles)
             .ToListAsync();
         
-        return new PagedResult<ISpace>
+        return new PagedResult<Space>
         {
             Items = spaces,
             PageNumber = filter.PageNumber,
@@ -58,14 +58,14 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
         };
     }
 
-    public async Task<ISpace?> SearchByNameAsync(string name)
+    public async Task<Space?> SearchByNameAsync(string name)
     {
         return await context.Spaces
             .Where(s => s.Name == name)
             .FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId)
+    public async Task<IEnumerable<Space>> GetAllSpacesOfUserAsync(Guid userId)
     {
         return await context.SpaceMembers
             .Where(sm => sm.UserId == userId)
@@ -73,7 +73,7 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
             .ToListAsync();
     }
 
-    public async Task<ISpace> CreateAsync(Guid creatorId, string name, IList<Guid> memberIds)
+    public async Task<Space> CreateAsync(Guid creatorId, string name, IList<Guid> memberIds)
     {
         var ownerRoleId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
@@ -123,7 +123,7 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
         return space;
     }
 
-    public async Task<ISpace?> UpdateAsync(ISpace updatedSpace)
+    public async Task<Space?> UpdateAsync(Space updatedSpace)
     {
         var existingSpace = await context.Spaces.FindAsync(updatedSpace.Id);
         if (existingSpace == null)

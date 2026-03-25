@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using UserSpaceService.DAL.Models;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.DAL.Data;
 

@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using UserSpaceService.ABS.IModels;
 
-namespace UserSpaceService.DAL.Models;
+namespace UserSpaceService.ABS.Models;
 
-public sealed class ExternalLogin : IExternalLogin
+public sealed class ExternalLogin
 {
     [Key]
     [Column("external_login_id")]
@@ -23,10 +22,10 @@ public sealed class ExternalLogin : IExternalLogin
 
     [ForeignKey("UserId")]
     public User User { get; set; } = null!;
+}
 
-    IUser IExternalLogin.User
-    {
-        get => User;
-        set => User = (User)value;
-    }
+public enum Provider 
+{
+    Google,
+    Microsoft,
 }

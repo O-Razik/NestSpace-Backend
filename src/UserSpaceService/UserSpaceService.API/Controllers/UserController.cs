@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.Exceptions;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IServices;
 
 namespace UserSpaceService.API.Controllers;
@@ -20,8 +20,8 @@ namespace UserSpaceService.API.Controllers;
 public class UserController(
     IUserService service,
     IGetCurrentUser currentUser,
-    IMapper<IUser,UserDto> userMapper,
-    IMapper<IUser,UserDtoShort> userShortMapper) : ControllerBase
+    IMapper<User,UserDto> userMapper,
+    IMapper<User,UserDtoShort> userShortMapper) : ControllerBase
 {
     /// <summary>
     /// Retrieves a user by their ID.

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UserSpaceService.ABS.DTOs;
 using UserSpaceService.ABS.Exceptions;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IServices;
 using UserSpaceService.BLL.Helpers;
 
@@ -18,11 +18,11 @@ namespace UserSpaceService.API.Controllers;
 public class SpaceController(
     ISpaceService spaceService,
     IGetCurrentUser currentUser,
-    IMapper<ISpace, SpaceDto> spaceDtoMapper,
-    IMapper<ISpace, SpaceDtoShort> spaceShortDtoMapper,
-    IMapper<ISpaceRole, SpaceRoleDto> spaceRoleDtoMapper,
-    IMapper<ISpaceMember, SpaceMemberDto> spaceMemberDtoMapper,
-    IMapper<ISpaceMember, SpaceMemberDtoShort> spaceMemberShortMapper)
+    IMapper<Space, SpaceDto> spaceDtoMapper,
+    IMapper<Space, SpaceDtoShort> spaceShortDtoMapper,
+    IMapper<SpaceRole, SpaceRoleDto> spaceRoleDtoMapper,
+    IMapper<SpaceMember, SpaceMemberDto> spaceMemberDtoMapper,
+    IMapper<SpaceMember, SpaceMemberDtoShort> spaceMemberShortMapper)
     : ControllerBase
 {
 

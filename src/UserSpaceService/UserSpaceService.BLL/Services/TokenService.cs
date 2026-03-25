@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.ABS.IServices;
 using UserSpaceService.BLL.Helpers;
@@ -18,7 +18,7 @@ public class TokenService(
     IDateTimeProvider dateTimeProvider
         ) : ITokenService
 {
-    public string GenerateAccessToken(IUser user)
+    public string GenerateAccessToken(User user)
     {
         Guard.AgainstNull(user);
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -54,13 +54,13 @@ public class TokenService(
         return Convert.ToBase64String(randomNumber);
     }
 
-    public async Task<IRefreshToken> SaveRefreshTokenAsync(Guid userId, string token)
+    public async Task<RefreshToken> SaveRefreshTokenAsync(Guid userId, string token)
     {
         var expiresAt = dateTimeProvider.UtcNow.DateTime.AddDays(7); // 7 днів
         return await refreshTokenRepository.CreateAsync(userId, token, expiresAt);
     }
 
-    public async Task<IRefreshToken?> GetRefreshTokenAsync(string token)
+    public async Task<RefreshToken?> GetRefreshTokenAsync(string token)
     {
         return await refreshTokenRepository.GetByTokenAsync(token);
     }

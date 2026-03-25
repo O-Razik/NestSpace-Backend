@@ -1,14 +1,14 @@
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.ABS.IRepositories;
 
 public interface IRefreshTokenRepository
 {
-    Task<IRefreshToken> CreateAsync(Guid userId, string token, DateTime expiresAt);
+    Task<RefreshToken> CreateAsync(Guid userId, string token, DateTime expiresAt);
     
-    Task<IRefreshToken?> GetByTokenAsync(string token);
+    Task<RefreshToken?> GetByTokenAsync(string token);
     
-    Task<IEnumerable<IRefreshToken>> GetActiveByUserIdAsync(Guid userId);
+    Task<IEnumerable<RefreshToken>> GetActiveByUserIdAsync(Guid userId);
     
     Task RevokeAsync(string token, string? replacedByToken = null);
     

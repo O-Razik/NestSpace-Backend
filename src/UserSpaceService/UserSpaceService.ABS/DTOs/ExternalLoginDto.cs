@@ -1,4 +1,4 @@
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.ABS.DTOs;
 
