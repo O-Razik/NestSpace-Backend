@@ -1,6 +1,6 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.ABS.IServices;
 using EventScheduleService.BLL.RabbitMQ;
@@ -10,19 +10,19 @@ namespace EventScheduleService.BLL.Services;
 public class SoloEventService(
     ISoloEventRepository soloEventRepository,
     SpaceLogPublish logPublish,
-    IEntityMapper<ISoloEvent, CreateSoloEventDto> createMapper) : ISoloEventService
+    IEntityMapper<SoloEvent, CreateSoloEventDto> createMapper) : ISoloEventService
 {
-    public async Task<IEnumerable<ISoloEvent>> GetSoloEventsBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<SoloEvent>> GetSoloEventsBySpaceAsync(Guid spaceId)
     {
         return await soloEventRepository.GetBySpaceAsync(spaceId);
     }
 
-    public async Task<ISoloEvent?> GetSoloEventByIdAsync(Guid soloEventId)
+    public async Task<SoloEvent?> GetSoloEventByIdAsync(Guid soloEventId)
     {
         return await soloEventRepository.GetByIdAsync(soloEventId);
     }
 
-    public async Task<ISoloEvent> CreateSoloEventAsync(CreateSoloEventDto newSoloEvent)
+    public async Task<SoloEvent> CreateSoloEventAsync(CreateSoloEventDto newSoloEvent)
     {
         var result = await soloEventRepository
             .AddAsync(createMapper.ToEntity(newSoloEvent));
@@ -36,7 +36,7 @@ public class SoloEventService(
         return result;
     }
 
-    public async Task<ISoloEvent?> UpdateSoloEventAsync(ISoloEvent updatedSoloEvent)
+    public async Task<SoloEvent?> UpdateSoloEventAsync(SoloEvent updatedSoloEvent)
     {
         var result = await soloEventRepository.UpdateAsync(updatedSoloEvent);
             

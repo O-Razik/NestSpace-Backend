@@ -1,15 +1,14 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.BLL.Mappers;
 
 public class SoloEventMapper(
-    IEntityFactory<ISoloEvent> factory,
     TagMapper tagMapper
-) : IMapper<ISoloEvent, SoloEventDto>, IEntityMapper<ISoloEvent, CreateSoloEventDto>
+) : IMapper<SoloEvent, SoloEventDto>, IEntityMapper<SoloEvent, CreateSoloEventDto>
 {
-    public SoloEventDto ToDto(ISoloEvent source)
+    public SoloEventDto ToDto(SoloEvent source)
     {
         return new SoloEventDto
         {
@@ -25,34 +24,35 @@ public class SoloEventMapper(
         };
     }
 
-    public ISoloEvent ToEntity(SoloEventDto dto)
+    public SoloEvent ToEntity(SoloEventDto dto)
     {
-        var soloEvent = factory.CreateEntity();
-        soloEvent.Id = dto.Id;
-        soloEvent.SpaceId = dto.SpaceId;
-        soloEvent.CategoryId = dto.CategoryId;
-        soloEvent.Title = dto.Title;
-        soloEvent.Description = dto.Description;
-        soloEvent.StartDate = dto.StartDate;
-        soloEvent.EndDate = dto.EndDate;
-        soloEvent.IsYearly = dto.IsYearly;
-        soloEvent.Tags = dto.Tags
-            .Select(tagMapper.ToEntity).ToList();
-        return soloEvent;
+        return new SoloEvent
+        {
+            Id = dto.Id,
+            SpaceId = dto.SpaceId,
+            CategoryId = dto.CategoryId,
+            Title = dto.Title,
+            Description = dto.Description,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            IsYearly = dto.IsYearly,
+            Tags = dto.Tags.Select(tagMapper.ToEntity).ToList()
+        };
     }
 
-    public ISoloEvent ToEntity(CreateSoloEventDto dto)
+    public SoloEvent ToEntity(CreateSoloEventDto dto)
     {
-        var soloEvent = factory.CreateEntity();
-        soloEvent.SpaceId = Guid.NewGuid();
-        soloEvent.CategoryId = dto.CategoryId;
-        soloEvent.Title = dto.Title;
-        soloEvent.Description = dto.Description;
-        soloEvent.StartDate = dto.StartDate;
-        soloEvent.EndDate = dto.EndDate;
-        soloEvent.IsYearly = dto.IsYearly;
-        soloEvent.Tags = dto.Tags
-            .Select(tagMapper.ToEntity).ToList();
-        return soloEvent;
+        return new SoloEvent
+        {
+            Id = Guid.NewGuid(),
+            SpaceId = dto.SpaceId,
+            CategoryId = dto.CategoryId,
+            Title = dto.Title,
+            Description = dto.Description,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            IsYearly = dto.IsYearly,
+            Tags = dto.Tags.Select(tagMapper.ToEntity).ToList()
+        };
     }
 }

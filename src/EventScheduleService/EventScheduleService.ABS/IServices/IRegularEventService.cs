@@ -1,17 +1,17 @@
 using EventScheduleService.ABS.Dto;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.ABS.IServices;
 
 public interface IRegularEventService
 {
-    Task<IEnumerable<IRegularEvent>> GetRegularEventsBySpaceAsync(Guid spaceId);
+    Task<IEnumerable<RegularEvent>> GetRegularEventsBySpaceAsync(Guid spaceId);
     
-    Task<IRegularEvent?> GetRegularEventByIdAsync(Guid regularEventId);
+    Task<RegularEvent?> GetRegularEventByIdAsync(Guid regularEventId);
     
-    Task<IRegularEvent> CreateRegularEventAsync(CreateRegularEventDto newRegularEvent);
+    Task<RegularEvent> CreateRegularEventAsync(CreateRegularEventDto newRegularEvent);
     
-    Task<IRegularEvent?> UpdateRegularEventAsync(IRegularEvent updatedRegularEvent);
+    Task<RegularEvent?> UpdateRegularEventAsync(RegularEvent updatedRegularEvent);
     
     Task<bool> DeleteRegularEventAsync(Guid regularEventId);
     

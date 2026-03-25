@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using EventScheduleService.ABS.IModels;
 
-namespace EventScheduleService.DAL.Models;
+namespace EventScheduleService.ABS.Models;
 
-public class EventTag : IEventTag
+public class EventTag
 {
     [Key]
     [Column("marker_id")]
@@ -24,16 +23,4 @@ public class EventTag : IEventTag
     public ICollection<SoloEvent> SoloEvents { get; set; } = new List<SoloEvent>();
 
     public ICollection<RegularEvent> RegularEvents { get; set; } = new List<RegularEvent>();
-
-    ICollection<ISoloEvent> IEventTag.SoloEvents
-    {
-        get => SoloEvents.Cast<ISoloEvent>().ToList();
-        set => SoloEvents = value.Cast<SoloEvent>().ToList();
-    }
-    
-    ICollection<IRegularEvent> IEventTag.RegularEvents
-    {
-        get => RegularEvents.Cast<IRegularEvent>().ToList();
-        set => RegularEvents = value.Cast<RegularEvent>().ToList();
-    }
 }

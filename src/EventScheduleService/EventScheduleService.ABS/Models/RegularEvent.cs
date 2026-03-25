@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using EventScheduleService.ABS.IModels;
 
-namespace EventScheduleService.DAL.Models;
+namespace EventScheduleService.ABS.Models;
 
-public class RegularEvent : IRegularEvent
+public class RegularEvent
 {
     [Key]
     [Column("regular_event_id")]
@@ -41,16 +40,23 @@ public class RegularEvent : IRegularEvent
     public EventCategory Category { get; set; } = null!;
     
     public ICollection<EventTag> Tags { get; set; } = new List<EventTag>();
+}
 
-    IEventCategory IRegularEvent.Category
-    {
-        get => Category;
-        set => Category = (EventCategory)value;
-    }
-    
-    ICollection<IEventTag> IRegularEvent.Tags
-    {
-        get => Tags.Cast<IEventTag>().ToList();
-        set => Tags = value.Cast<EventTag>().ToList();
-    }
+public enum Day
+{
+    Monday = 0,
+    Tuesday = 1,
+    Wednesday = 2,
+    Thursday = 3,
+    Friday = 4,
+    Saturday = 5,
+    Sunday = 6
+}
+
+public enum Frequency
+{
+    Weekly = 0,
+    BiWeekly = 1,
+    TriWeekly = 2,
+    Monthly = 3
 }

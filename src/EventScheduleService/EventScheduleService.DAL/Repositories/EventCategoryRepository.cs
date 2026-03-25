@@ -1,21 +1,20 @@
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.DAL.Data;
-using EventScheduleService.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventScheduleService.DAL.Repositories;
 
 public class EventCategoryRepository(EventScheduleDbContext context) : IEventCategoryRepository
 {
-    public async Task<IEnumerable<IEventCategory>> GetBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<EventCategory>> GetBySpaceAsync(Guid spaceId)
     {
         return await context.EventCategories
             .Where(ec => ec.SpaceId == spaceId)
             .ToListAsync();
     }
 
-    public async Task<IEventCategory?> GetByIdAsync(Guid eventId)
+    public async Task<EventCategory?> GetByIdAsync(Guid eventId)
     {
         return await context.EventCategories
             .Include(ec => ec.SoloEvents)
@@ -23,7 +22,7 @@ public class EventCategoryRepository(EventScheduleDbContext context) : IEventCat
             .FirstOrDefaultAsync(ec => ec.Id == eventId);
     }
 
-    public async Task<IEventCategory> AddAsync(Guid spaceId, string title, string description)
+    public async Task<EventCategory> AddAsync(Guid spaceId, string title, string description)
     {
         var eventCategoryEntity = new EventCategory
         {
@@ -37,7 +36,7 @@ public class EventCategoryRepository(EventScheduleDbContext context) : IEventCat
         return eventCategoryEntity;
     }
 
-    public async Task<IEventCategory?> UpdateAsync(IEventCategory updatedEvent)
+    public async Task<EventCategory?> UpdateAsync(EventCategory updatedEvent)
     {
         var eventCategoryEntity = new EventCategory
         {

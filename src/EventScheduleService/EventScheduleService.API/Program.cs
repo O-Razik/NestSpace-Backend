@@ -6,8 +6,17 @@ using EventScheduleService.API.Middleware;
 
 namespace EventScheduleService.API;
 
+/// <summary>
+/// The main entry point of the Event Schedule Service API application.
+/// This class is responsible for configuring and running the web application, including setting up services,
+/// middleware, and defining the HTTP request pipeline.
+/// </summary>
 public static class Program
 {
+    /// <summary>
+    /// The main entry point of the application. It sets up the web application, configures services, and defines the HTTP request pipeline.
+    /// </summary>
+    /// <param name="args"></param>
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +36,7 @@ public static class Program
             .AddModels()
             .AddRepositories()
             .AddServices()
-            .AddMappersAndFactories()
+            .AddMappers()
             .AddRabbitMqServices()
             .AddSerilog()
             .AddOpenTelemetry();

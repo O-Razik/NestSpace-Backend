@@ -1,6 +1,6 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IServices;
 using EventScheduleService.BLL.Helpers;
 using Microsoft.AspNetCore.Authorization;
@@ -19,9 +19,9 @@ namespace EventScheduleService.API.Controllers;
 [ApiController]
 public class EventController(
     IEventService eventService,
-    IMapper<IEventCategory, CategoryDto> categoryMapper,
-    IMapper<IEventCategory, CategoryShortDto> categoryShortMapper,
-    IMapper<IEventTag, TagDto> tagMapper)
+    IMapper<EventCategory, CategoryDto> categoryMapper,
+    IMapper<EventCategory, CategoryShortDto> categoryShortMapper,
+    IMapper<EventTag, TagDto> tagMapper)
     : ControllerBase
 {
     /// <summary>

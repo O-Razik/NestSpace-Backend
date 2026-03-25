@@ -1,6 +1,6 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.ABS.IServices;
 using EventScheduleService.BLL.RabbitMQ;
@@ -10,19 +10,19 @@ namespace EventScheduleService.BLL.Services;
 public class RegularEventService(
     IRegularEventRepository regularEventRepository,
     SpaceLogPublish logPublish,
-    IEntityMapper<IRegularEvent, CreateRegularEventDto> createMapper) : IRegularEventService
+    IEntityMapper<RegularEvent, CreateRegularEventDto> createMapper) : IRegularEventService
 {
-    public async Task<IEnumerable<IRegularEvent>> GetRegularEventsBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<RegularEvent>> GetRegularEventsBySpaceAsync(Guid spaceId)
     {
         return await regularEventRepository.GetAllBySpaceAsync(spaceId);
     }
 
-    public async Task<IRegularEvent?> GetRegularEventByIdAsync(Guid regularEventId)
+    public async Task<RegularEvent?> GetRegularEventByIdAsync(Guid regularEventId)
     {
         return await regularEventRepository.GetByIdAsync(regularEventId);
     }
 
-    public async Task<IRegularEvent> CreateRegularEventAsync(CreateRegularEventDto newRegularEvent)
+    public async Task<RegularEvent> CreateRegularEventAsync(CreateRegularEventDto newRegularEvent)
     {
         var result = await regularEventRepository
             .AddAsync(createMapper.ToEntity(newRegularEvent));
@@ -36,7 +36,7 @@ public class RegularEventService(
         return result;
     }
 
-    public async Task<IRegularEvent?> UpdateRegularEventAsync(IRegularEvent updatedRegularEvent)
+    public async Task<RegularEvent?> UpdateRegularEventAsync(RegularEvent updatedRegularEvent)
     {
         var result = await regularEventRepository.UpdateAsync(updatedRegularEvent);
 

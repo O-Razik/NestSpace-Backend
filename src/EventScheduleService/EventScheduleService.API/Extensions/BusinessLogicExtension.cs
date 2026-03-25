@@ -1,12 +1,11 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IServices;
 using EventScheduleService.BLL.Mappers;
 using EventScheduleService.BLL.Mappers.Send;
 using EventScheduleService.BLL.Services;
 using EventScheduleService.BLL.Validators;
-using EventScheduleService.DAL.Factories;
 using FluentValidation;
 
 namespace EventScheduleService.API.Extensions;
@@ -32,38 +31,22 @@ public static class BusinessLogicExtension
     }
     
     /// <summary>
-    /// Registers the application's mappers and factories with the dependency injection container, allowing them to be injected into services and controllers as needed.
+    /// Registers the application's mappers with the dependency injection container
     /// </summary>
     /// <param name="builder"></param>
     /// <returns></returns>
-    public static WebApplicationBuilder AddMappersAndFactories(this WebApplicationBuilder builder)
-    {
-        builder.AddFactories();
-        builder.AddMappers();
-        return builder;
-    }
-
-    private static WebApplicationBuilder AddFactories(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddScoped<IEntityFactory<IEventCategory>, CategoryFactory>();
-        builder.Services.AddScoped<IEntityFactory<IEventTag>,TagFactory>();
-        builder.Services.AddScoped<IEntityFactory<ISoloEvent>, SoloEventFactory>();
-        builder.Services.AddScoped<IEntityFactory<IRegularEvent>, RegularEventFactory>();
-        return builder;
-    }
-
-    private static WebApplicationBuilder AddMappers(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddMappers(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<RegularEventMapper>();
         builder.Services.AddScoped<TagMapper>();
         builder.Services.AddScoped<CategoryMapper>();
         builder.Services.AddScoped<SoloEventMapper>();
 
-        builder.Services.AddScoped<IMapper<IEventCategory, CategoryDto>, CategoryMapper>();
-        builder.Services.AddScoped<IMapper<IEventCategory, CategoryShortDto>, CategoryShortMapper>();
-        builder.Services.AddScoped<IMapper<IEventTag, TagDto>, TagMapper>();
-        builder.Services.AddScoped<IMapper<IRegularEvent, RegularEventDto>, RegularEventMapper>();
-        builder.Services.AddScoped<IMapper<ISoloEvent, SoloEventDto>, SoloEventMapper>();
+        builder.Services.AddScoped<IMapper<EventCategory, CategoryDto>, CategoryMapper>();
+        builder.Services.AddScoped<IMapper<EventCategory, CategoryShortDto>, CategoryShortMapper>();
+        builder.Services.AddScoped<IMapper<EventTag, TagDto>, TagMapper>();
+        builder.Services.AddScoped<IMapper<RegularEvent, RegularEventDto>, RegularEventMapper>();
+        builder.Services.AddScoped<IMapper<SoloEvent, SoloEventDto>, SoloEventMapper>();
         return builder;
     }
     

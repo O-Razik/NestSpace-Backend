@@ -1,7 +1,6 @@
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.DAL.Data;
-using EventScheduleService.DAL.Models;
 using EventScheduleService.DAL.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,10 +38,10 @@ public static class DbAccessExtension
     /// <returns></returns>
     public static WebApplicationBuilder AddModels(this WebApplicationBuilder builder)
     {
-        builder.Services.AddScoped<IEventCategory, EventCategory>();
-        builder.Services.AddScoped<ISoloEvent, SoloEvent>();
-        builder.Services.AddScoped<IEventTag, EventTag>();
-        builder.Services.AddScoped<IRegularEvent, RegularEvent>();
+        builder.Services.AddScoped<EventCategory>();
+        builder.Services.AddScoped<SoloEvent>();
+        builder.Services.AddScoped<EventTag>();
+        builder.Services.AddScoped<RegularEvent>();
         return builder;
     }
     

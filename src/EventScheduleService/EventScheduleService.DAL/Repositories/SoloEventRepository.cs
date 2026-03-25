@@ -1,14 +1,13 @@
-using EventScheduleService.ABS.IModels;
 using EventScheduleService.ABS.IRepositories;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.DAL.Data;
-using EventScheduleService.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventScheduleService.DAL.Repositories;
 
 public class SoloEventRepository(EventScheduleDbContext context) : ISoloEventRepository
 {
-    public async Task<IEnumerable<ISoloEvent>> GetBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<SoloEvent>> GetBySpaceAsync(Guid spaceId)
     {
         return await context.SoloEvents
             .Where(se => se.SpaceId == spaceId)
@@ -17,7 +16,7 @@ public class SoloEventRepository(EventScheduleDbContext context) : ISoloEventRep
             .ToListAsync();
     }
 
-    public async Task<ISoloEvent?> GetByIdAsync(Guid soloEventId)
+    public async Task<SoloEvent?> GetByIdAsync(Guid soloEventId)
     {
         return await context.SoloEvents
             .Include(se => se.Tags)
@@ -25,7 +24,7 @@ public class SoloEventRepository(EventScheduleDbContext context) : ISoloEventRep
             .FirstOrDefaultAsync(se => se.Id == soloEventId);
     }
 
-    public async Task<ISoloEvent> AddAsync(ISoloEvent newSoloEvent)
+    public async Task<SoloEvent> AddAsync(SoloEvent newSoloEvent)
     {
         var soloEventEntity = new SoloEvent
         {
@@ -52,7 +51,7 @@ public class SoloEventRepository(EventScheduleDbContext context) : ISoloEventRep
     }
 
 
-    public async Task<ISoloEvent?> UpdateAsync(ISoloEvent updatedSoloEvent)
+    public async Task<SoloEvent?> UpdateAsync(SoloEvent updatedSoloEvent)
     {
         var existingSoloEvent = await context.SoloEvents
             .Include(e => e.Tags)

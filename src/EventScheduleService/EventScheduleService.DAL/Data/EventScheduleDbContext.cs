@@ -1,6 +1,6 @@
-using EventScheduleService.ABS.IModels;
-using EventScheduleService.DAL.Models;
+using EventScheduleService.ABS.Models;
 using Microsoft.EntityFrameworkCore;
+
 namespace EventScheduleService.DAL.Data;
 
 public class EventScheduleDbContext : DbContext

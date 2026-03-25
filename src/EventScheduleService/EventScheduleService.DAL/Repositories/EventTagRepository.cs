@@ -1,32 +1,31 @@
-using EventScheduleService.ABS.IModels;
 using EventScheduleService.ABS.IRepositories;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.DAL.Data;
-using EventScheduleService.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventScheduleService.DAL.Repositories;
 
 public class EventTagRepository(EventScheduleDbContext context) : IEventTagRepository
 {
-    public async Task<IEventTag?> GetByIdAsync(Guid tagId)
+    public async Task<EventTag?> GetByIdAsync(Guid tagId)
     {
         return await context.EventTags
             .FirstOrDefaultAsync(m => m.Id == tagId);
     }
 
-    public async Task<IEnumerable<IEventTag>> GetAllAsync()
+    public async Task<IEnumerable<EventTag>> GetAllAsync()
     {
         return await context.EventTags.ToListAsync();
     }
 
-    public async Task<IEnumerable<IEventTag>> GetBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<EventTag>> GetBySpaceAsync(Guid spaceId)
     {
         return await context.EventTags
             .Where(m => m.SpaceId == spaceId)
             .ToListAsync();
     }
 
-    public async Task<IEventTag> AddAsync(Guid spaceId, string title, string color)
+    public async Task<EventTag> AddAsync(Guid spaceId, string title, string color)
     {
         var tag = new EventTag
         {
@@ -40,7 +39,7 @@ public class EventTagRepository(EventScheduleDbContext context) : IEventTagRepos
         return tag;
     }
 
-    public async Task<IEventTag?> UpdateAsync(IEventTag updatedTag)
+    public async Task<EventTag?> UpdateAsync(EventTag updatedTag)
     {
         var tag = new EventTag
         {

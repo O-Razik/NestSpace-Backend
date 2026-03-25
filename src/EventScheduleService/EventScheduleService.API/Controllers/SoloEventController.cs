@@ -1,7 +1,7 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.Exceptions;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IServices;
 using EventScheduleService.BLL.Helpers;
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +19,7 @@ namespace EventScheduleService.API.Controllers;
 [ApiController]
 public class SoloEventController(
     ISoloEventService soloEventService,
-    IMapper<ISoloEvent, SoloEventDto> soloEventMapper)
+    IMapper<SoloEvent, SoloEventDto> soloEventMapper)
     : ControllerBase
 {
     /// <summary>

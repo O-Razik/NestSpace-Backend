@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.ABS.Dto;
 

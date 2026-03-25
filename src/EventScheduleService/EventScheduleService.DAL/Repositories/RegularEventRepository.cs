@@ -1,14 +1,13 @@
-using EventScheduleService.ABS.IModels;
 using EventScheduleService.ABS.IRepositories;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.DAL.Data;
-using EventScheduleService.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventScheduleService.DAL.Repositories;
 
 public class RegularEventRepository(EventScheduleDbContext context) : IRegularEventRepository
 {
-    public async Task<IEnumerable<IRegularEvent>> GetAllBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<RegularEvent>> GetAllBySpaceAsync(Guid spaceId)
     {
         return await context.RegularEvents
             .Where(re => re.SpaceId == spaceId)
@@ -17,7 +16,7 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
             .ToListAsync();
     }
 
-    public async Task<IRegularEvent?> GetByIdAsync(Guid regularEventId)
+    public async Task<RegularEvent?> GetByIdAsync(Guid regularEventId)
     {
         return await context.RegularEvents
             .Include(re => re.Tags)
@@ -25,7 +24,7 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
             .FirstOrDefaultAsync(re => re.Id == regularEventId);
     }
 
-    public async Task<IRegularEvent> AddAsync(IRegularEvent newRegularEvent)
+    public async Task<RegularEvent> AddAsync(RegularEvent newRegularEvent)
     {
         var regularEvent = new RegularEvent
         {
@@ -50,7 +49,7 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
         return regularEvent;
     }
 
-    public async Task<IRegularEvent?> UpdateAsync(IRegularEvent updatedRegularEvent)
+    public async Task<RegularEvent?> UpdateAsync(RegularEvent updatedRegularEvent)
     {
         var existingRegularEvent = await context.RegularEvents
             .Include(r => r.Tags)

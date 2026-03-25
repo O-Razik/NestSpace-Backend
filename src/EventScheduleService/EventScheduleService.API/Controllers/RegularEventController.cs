@@ -1,6 +1,6 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IServices;
 using EventScheduleService.BLL.Helpers;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +18,7 @@ namespace EventScheduleService.API.Controllers;
 [ApiController]
 public class RegularEventController(
     IRegularEventService regularEventService,
-    IMapper<IRegularEvent, RegularEventDto> regularEventMapper)
+    IMapper<RegularEvent, RegularEventDto> regularEventMapper)
     : ControllerBase
 {
     /// <summary>

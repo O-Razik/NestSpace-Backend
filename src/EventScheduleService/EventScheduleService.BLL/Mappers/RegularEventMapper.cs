@@ -1,17 +1,15 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.BLL.Mappers;
 
 public class RegularEventMapper(
-    IEntityFactory<IRegularEvent> factory,
-    IEntityFactory<IEventTag> tagFactory,
     TagMapper tagMapper
-) : IMapper<IRegularEvent, RegularEventDto> , IEntityMapper<IRegularEvent, CreateRegularEventDto>
+) : IMapper<RegularEvent, RegularEventDto> , IEntityMapper<RegularEvent, CreateRegularEventDto>
     
 {
-    public RegularEventDto ToDto(IRegularEvent source)
+    public RegularEventDto ToDto(RegularEvent source)
     {
         return new RegularEventDto
         {
@@ -28,35 +26,37 @@ public class RegularEventMapper(
         };
     }
 
-    public IRegularEvent ToEntity(RegularEventDto dto)
+    public RegularEvent ToEntity(RegularEventDto dto)
     {
-        var regularEvent = factory.CreateEntity();
-        regularEvent.Id = dto.Id;
-        regularEvent.SpaceId = dto.SpaceId;
-        regularEvent.CategoryId = dto.CategoryId;
-        regularEvent.Title = dto.Title;
-        regularEvent.Description = dto.Description;
-        regularEvent.StartTime = dto.StartTime;
-        regularEvent.Duration = dto.Duration;
-        regularEvent.Day = dto.Day;
-        regularEvent.Frequency = dto.Frequency;
-        regularEvent.Tags = dto.Tags.Select(tagMapper.ToEntity).ToList();
-        return regularEvent;
+        return new RegularEvent
+        {
+            Id = dto.Id,
+            SpaceId = dto.SpaceId,
+            CategoryId = dto.CategoryId,
+            Title = dto.Title,
+            Description = dto.Description,
+            StartTime = dto.StartTime,
+            Duration = dto.Duration,
+            Day = dto.Day,
+            Frequency = dto.Frequency,
+            Tags = dto.Tags.Select(tagMapper.ToEntity).ToList()
+        };
     }
 
-    public IRegularEvent ToEntity(CreateRegularEventDto createDto)
+    public RegularEvent ToEntity(CreateRegularEventDto createDto)
     {
-        var regularEvent = factory.CreateEntity();
-        regularEvent.SpaceId = Guid.NewGuid();
-        regularEvent.CategoryId = createDto.CategoryId;
-        regularEvent.Title = createDto.Title;
-        regularEvent.Description = createDto.Description;
-        regularEvent.StartTime = createDto.StartTime;
-        regularEvent.Duration = createDto.Duration;
-        regularEvent.Day = createDto.Day;
-        regularEvent.Frequency = createDto.Frequency;
-        regularEvent.Tags = createDto.Tags
-            .Select(tagMapper.ToEntity).ToList();
-        return regularEvent;
+        return new RegularEvent
+        {
+            Id = Guid.NewGuid(),
+            SpaceId = createDto.SpaceId,
+            CategoryId = createDto.CategoryId,
+            Title = createDto.Title,
+            Description = createDto.Description,
+            StartTime = createDto.StartTime,
+            Duration = createDto.Duration,
+            Day = createDto.Day,
+            Frequency = createDto.Frequency,
+            Tags = createDto.Tags.Select(tagMapper.ToEntity).ToList()
+        };
     }
 }

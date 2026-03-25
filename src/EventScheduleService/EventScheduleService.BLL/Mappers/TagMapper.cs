@@ -1,12 +1,12 @@
 using EventScheduleService.ABS.Dto;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.BLL.Mappers;
 
-public class TagMapper(IEntityFactory<IEventTag> factory) : IMapper<IEventTag, TagDto>
+public class TagMapper : IMapper<EventTag, TagDto>
 {
-    public TagDto ToDto(IEventTag source)
+    public TagDto ToDto(EventTag source)
     {
         return new TagDto
         {
@@ -18,13 +18,15 @@ public class TagMapper(IEntityFactory<IEventTag> factory) : IMapper<IEventTag, T
         };
     }
 
-    public IEventTag ToEntity(TagDto dto)
+    public EventTag ToEntity(TagDto dto)
     {
-        var tag = factory.CreateEntity();
-        tag.Id = dto.Id;
-        tag.SpaceId = dto.SpaceId;
-        tag.Title = dto.Title;
-        tag.Color = dto.Color;
-        return tag;
+        return new EventTag
+        {
+            Id = dto.Id != Guid.Empty
+                ? dto.Id : Guid.NewGuid(),
+            SpaceId = dto.SpaceId,
+            Title = dto.Title,
+            Color = dto.Color,
+        };
     }
 }

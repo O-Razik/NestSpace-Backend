@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using EventScheduleService.ABS.IModels;
 
-namespace EventScheduleService.DAL.Models;
+namespace EventScheduleService.ABS.Models;
 
-public class SoloEvent : ISoloEvent
+public class SoloEvent
 {
     [Key]
     [Column("solo_event_id")]
@@ -37,16 +36,4 @@ public class SoloEvent : ISoloEvent
     public EventCategory Category { get; set; } = null!;
 
     public ICollection<EventTag> Tags { get; set; } = new List<EventTag>();
-
-    IEventCategory ISoloEvent.Category
-    {
-        get => Category;
-        set => Category = ((EventCategory)value)!;
-    }
-
-    ICollection<IEventTag> ISoloEvent.Tags
-    {
-        get => Tags.Cast<IEventTag>().ToList();
-        set => Tags = value.Cast<EventTag>().ToList();
-    }
 }

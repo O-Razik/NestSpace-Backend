@@ -1,5 +1,5 @@
 using EventScheduleService.ABS.Dto;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.ABS.IServices;
 using EventScheduleService.BLL.Helpers;
@@ -13,17 +13,17 @@ public class EventService(
     SpaceLogPublish logPublish
     ) : IEventService
 {
-    public async Task<IEnumerable<IEventCategory>> GetCategoriesBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<EventCategory>> GetCategoriesBySpaceAsync(Guid spaceId)
     {
         return await categoryRepository.GetBySpaceAsync(spaceId);
     }
 
-    public async Task<IEventCategory?> GetCategoryByIdAsync(Guid eventId)
+    public async Task<EventCategory?> GetCategoryByIdAsync(Guid eventId)
     {
         return await categoryRepository.GetByIdAsync(eventId);
     }
 
-    public async Task<IEventCategory> CreateCategoryAsync(CreateCategoryDto newCategory)
+    public async Task<EventCategory> CreateCategoryAsync(CreateCategoryDto newCategory)
     {
         Guard.AgainstNull(newCategory);
 
@@ -38,7 +38,7 @@ public class EventService(
         return result;
     }
 
-    public async Task<IEventCategory?> UpdateCategoryAsync(IEventCategory updatedCategory)
+    public async Task<EventCategory?> UpdateCategoryAsync(EventCategory updatedCategory)
     {
         Guard.AgainstNull(updatedCategory);
         var result = await categoryRepository.UpdateAsync(updatedCategory);
@@ -74,17 +74,17 @@ public class EventService(
         return await categoryRepository.DeleteBySpaceIdAsync(spaceId);
     }
 
-    public async Task<IEnumerable<IEventTag>> GetTagsBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<EventTag>> GetTagsBySpaceAsync(Guid spaceId)
     {
         return await tagRepository.GetBySpaceAsync(spaceId);
     }
 
-    public async Task<IEventTag?> GetTagByIdAsync(Guid markerId)
+    public async Task<EventTag?> GetTagByIdAsync(Guid markerId)
     {
         return await tagRepository.GetByIdAsync(markerId);
     }
 
-    public async Task<IEventTag> CreateTagAsync(CreateTagDto newTag)
+    public async Task<EventTag> CreateTagAsync(CreateTagDto newTag)
     {
         Guard.AgainstNull(newTag);
         var result = await tagRepository
@@ -98,7 +98,7 @@ public class EventService(
         return result;
     }
 
-    public async Task<IEventTag?> UpdateTagAsync(IEventTag updatedTag)
+    public async Task<EventTag?> UpdateTagAsync(EventTag updatedTag)
     {
         Guard.AgainstNull(updatedTag);
         
