@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.Models;
 

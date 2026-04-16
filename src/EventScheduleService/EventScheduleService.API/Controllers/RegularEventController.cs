@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IServices;
@@ -63,7 +63,7 @@ public class RegularEventController(
     [HttpPost("create")]
     [ProducesResponseType(typeof(RegularEventDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<RegularEventDto>> CreateRegularEventAsync([FromRoute] Guid spaceId, [FromBody] CreateRegularEventDto newRegularEvent)
+    public async Task<ActionResult<RegularEventDto>> CreateRegularEventAsync([FromRoute] Guid spaceId, [FromBody] RegularEventCreateDto newRegularEvent)
     {
         Guard.AgainstEmptyGuid(spaceId);
         var createdEvent = await regularEventService.CreateRegularEventAsync(newRegularEvent);

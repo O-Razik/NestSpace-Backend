@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.Exceptions;
 using EventScheduleService.ABS.IHelpers;
 

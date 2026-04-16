@@ -1,4 +1,4 @@
-namespace ChatNotifyService.BLL.RabbitMQ;
+namespace ChatNotifyService.BLL.RabbitMQ.Events;
 
 public class ChatCreateEvent
 {
@@ -7,12 +7,12 @@ public class ChatCreateEvent
     
     public Guid MemberId { get; set; } = Guid.Empty;
     
-    public DateTime CreatedAt { get; set; } = DateTime.MinValue;
+    public DateTime CreatedAt { get; set; }
 }
 
 public class DeleteSpaceEvent
 {
     public Guid SpaceId { get; set; } = Guid.Empty;
     
-    public DateTime DeletedAt { get; set; } = DateTime.MinValue;
+    public DateTime DeletedAt { get; set; }
 }

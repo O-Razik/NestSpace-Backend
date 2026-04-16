@@ -1,5 +1,4 @@
-using Microsoft.Extensions.Configuration;
-using UserSpaceService.ABS.DTOs;
+using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
@@ -10,7 +9,6 @@ namespace UserSpaceService.BLL.Services;
 
 public class UserService(
     IUserRepository repository,
-    IConfiguration configuration,
     PasswordService passwordService,
     ITokenService tokenService)
     : IUserService
@@ -25,8 +23,8 @@ public class UserService(
 
     public async Task<AuthResponseDto> RegisterByExternalProviderAsync(Provider provider, string providerUserId, string email)
     {
-        Guard.AgainstNullOrEmpty(providerUserId, "Provider user ID cannot be null or empty.");
-        Guard.AgainstNullOrEmpty(email, "Email cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(providerUserId);
+        Guard.AgainstNullOrEmpty(email);
         
         var baseUsername = GetUsernameFromEmail(email);
         var uniqueUsername = await EnsureUniqueUsernameAsync(baseUsername);
@@ -55,14 +53,14 @@ public class UserService(
 
     public async Task<AuthResponseDto?> LoginByExternalProviderAsync(Provider provider, string providerUserId)
     {
-        Guard.AgainstNullOrEmpty(providerUserId, "Provider user ID cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(providerUserId);
         var user = await repository.GetByExternalLoginAsync(provider, providerUserId);
         return user == null ?  null : await GenerateAuthResponseAsync(user);
     }
     
     public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken)
     {
-        Guard.AgainstNullOrEmpty(refreshToken, "Refresh token cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(refreshToken);
         var token = await tokenService.GetRefreshTokenAsync(refreshToken);
 
         if (token is not { IsActive: true })
@@ -78,14 +76,14 @@ public class UserService(
     
     public async Task LogoutAsync(string refreshToken)
     {
-        Guard.AgainstNullOrEmpty(refreshToken, "Refresh token cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(refreshToken);
         await tokenService.RevokeRefreshTokenAsync(refreshToken);
     }
 
     public async Task<User?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId)
     {
-        Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
-        Guard.AgainstNullOrEmpty(providerUserId, "Provider user ID cannot be null or empty.");
+        Guard.AgainstEmptyGuid(userId);
+        Guard.AgainstNullOrEmpty(providerUserId);
 
         var user = await repository.GetByIdAsync(userId);
         if (user == null)
@@ -110,39 +108,39 @@ public class UserService(
 
     public async Task<User?> GetUserByIdAsync(Guid userId)
     {
-        Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
+        Guard.AgainstEmptyGuid(userId);
         return await repository.GetByIdAsync(userId);
     }
     
     public async Task<User?> GetUserByUsernameAsync(string username)
     {
-        Guard.AgainstNullOrEmpty(username, "Username cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(username);
         return await repository.GetByUsernameAsync(username);
     }
     
     public async Task<User?> GetUserByEmailAsync(string email)
     {
-        Guard.AgainstNullOrEmpty(email, "Email cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(email);
         return await repository.GetByEmailAsync(email);
     }
 
     public async Task<User?> UpdateUserAsync(User user)
     {
-        Guard.AgainstNull(user, "User cannot be null.");
-        Guard.AgainstNullOrEmpty(user.Username, "Username cannot be null or empty.");
+        Guard.AgainstNull(user);
+        Guard.AgainstNullOrEmpty(user.Username);
         return await repository.UpdateAsync(user);
     }
 
     public async Task<bool> DeleteUserAsync(Guid userId)
     {
-        Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
+        Guard.AgainstEmptyGuid(userId);
         await tokenService.RevokeAllUserTokensAsync(userId);
         return await repository.DeleteAsync(userId);
     }
     
     private async Task<AuthResponseDto> GenerateAuthResponseAsync(User user)
     {
-        Guard.AgainstNull(user, "User cannot be null.");
+        Guard.AgainstNull(user);
         var accessToken = tokenService.GenerateAccessToken(user);
         var refreshToken = tokenService.GenerateRefreshToken();
         await tokenService.SaveRefreshTokenAsync(user.Id, refreshToken);
@@ -164,14 +162,14 @@ public class UserService(
     
     private static string GetUsernameFromEmail(string email)
     {
-        Guard.AgainstNullOrEmpty(email, "Email cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(email);
         var atIndex = email.IndexOf('@');
         return atIndex <= 0 ? email : email[..atIndex];
     }
     
     private async Task<string> EnsureUniqueUsernameAsync(string baseUsername)
     {
-        Guard.AgainstNullOrEmpty(baseUsername, "Username cannot be null or empty.");
+        Guard.AgainstNullOrEmpty(baseUsername);
         var username = baseUsername;
         while (await repository.GetByUsernameAsync(username) != null)
         {

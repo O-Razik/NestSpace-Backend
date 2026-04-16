@@ -1,14 +1,13 @@
-using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IRepositories;
+using ChatNotifyService.ABS.Models;
 using ChatNotifyService.DAL.Data;
-using ChatNotifyService.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Repositories;
 
 public class SpaceActivityLogRepository(ChatNotifyDbContext context) : ISpaceActivityLogRepository
 {
-    public async Task<IEnumerable<ISpaceActivityLog>> GetActivityLogsBySpaceAsync(Guid spaceId, int page, int amount)
+    public async Task<IEnumerable<SpaceActivityLog>> GetActivityLogsBySpaceAsync(Guid spaceId, int page, int amount)
     {
         return await context.SpaceActivityLogs.Where(log => log.SpaceId == spaceId)
             .OrderByDescending(log => log.Timestamp)
@@ -17,12 +16,11 @@ public class SpaceActivityLogRepository(ChatNotifyDbContext context) : ISpaceAct
             .ToListAsync();
     }
 
-    public async Task<ISpaceActivityLog> CreateActivityLogAsync(ISpaceActivityLog newActivityLog)
+    public async Task<SpaceActivityLog> CreateActivityLogAsync(SpaceActivityLog newActivityLog)
     {
-        var entity = (SpaceActivityLog)newActivityLog;
-        await context.SpaceActivityLogs.AddAsync(entity);
+        await context.SpaceActivityLogs.AddAsync(newActivityLog);
         await context.SaveChangesAsync();
-        return entity;
+        return newActivityLog;
     }
 
     public async Task<bool> DeleteActivityLogsBySpaceIdAsync(Guid spaceId)

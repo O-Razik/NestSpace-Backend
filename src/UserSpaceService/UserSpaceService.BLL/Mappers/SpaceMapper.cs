@@ -1,4 +1,4 @@
-using UserSpaceService.ABS.DTOs;
+using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.Models;
 

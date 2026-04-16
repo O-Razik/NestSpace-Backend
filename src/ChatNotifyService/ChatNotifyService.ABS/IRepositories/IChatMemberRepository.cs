@@ -1,14 +1,18 @@
-using ChatNotifyService.ABS.IEntities;
+
+
+using ChatNotifyService.ABS.Models;
 
 namespace ChatNotifyService.ABS.IRepositories;
 
 public interface IChatMemberRepository
 {
-    Task<IEnumerable<IChatMember>> GetAllAsync(Guid chatId);
+    Task<IEnumerable<ChatMember>> GetAllAsync(Guid chatId);
 
-    Task<IChatMember?> GetByIdAsync(Guid chatId, Guid memberId);
+    Task<ChatMember?> GetByIdAsync(Guid chatId, Guid memberId);
 
-    Task<IChatMember> AddMemberToChatAsync(IChatMember chatMember);
+    Task<ChatMember> AddMemberToChatAsync(ChatMember addedMember);
+    
+    Task<ChatMember?> UpdateChatMemberAsync(ChatMember updatedMember);
     
     Task<bool> RemoveMemberFromChatAsync(Guid chatId, Guid memberId);
 }

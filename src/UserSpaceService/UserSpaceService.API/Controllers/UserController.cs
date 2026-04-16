@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UserSpaceService.ABS.DTOs;
+using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.Exceptions;
 using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.Models;

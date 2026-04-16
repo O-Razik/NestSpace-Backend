@@ -1,5 +1,4 @@
-using ChatNotifyService.ABS.IEntities;
-using ChatNotifyService.DAL.Entities;
+using ChatNotifyService.ABS.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Data;
@@ -29,7 +28,7 @@ public class ChatNotifyDbContext : DbContext
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.SpaceId).IsRequired();
-            entity.Property(c => c.Name).IsRequired().HasMaxLength(255);
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(maxLength: 255);
             entity.HasMany(c => c.Members)
                 .WithOne()
                 .HasForeignKey(cm => cm.ChatId)
@@ -40,7 +39,7 @@ public class ChatNotifyDbContext : DbContext
 
         modelBuilder.Entity<ChatMember>(entity =>
         {
-            entity.Property(cm => cm.JoinedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(cm => cm.JoinedAt).HasDefaultValueSql(CurrentTimestampSql);
             entity.HasKey(cm => new { cm.ChatId, cm.MemberId });
             entity.Property(cm => cm.PermissionLevel)
                 .HasColumnType("permission_level")
@@ -54,7 +53,7 @@ public class ChatNotifyDbContext : DbContext
             entity.Property(m => m.ChatId).IsRequired();
             entity.Property(m => m.SenderId).IsRequired();
             entity.Property(m => m.Content).IsRequired();
-            entity.Property(m => m.SentAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(m => m.SentAt).HasDefaultValueSql(CurrentTimestampSql);
             entity.HasOne<Chat>()
                 .WithMany()
                 .HasForeignKey(m => m.ChatId)
@@ -68,7 +67,7 @@ public class ChatNotifyDbContext : DbContext
         modelBuilder.Entity<MessageRead>(entity =>
         {
             entity.HasKey(mr => new { mr.MessageId, mr.ReaderId });
-            entity.Property(mr => mr.ReadAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(mr => mr.ReadAt).HasDefaultValueSql(CurrentTimestampSql);
             entity.HasOne(mr => mr.Message)
                 .WithMany(m => m.Reads)
                 .HasForeignKey(mr => mr.MessageId)
@@ -83,11 +82,13 @@ public class ChatNotifyDbContext : DbContext
         {
             entity.HasKey(sal => sal.Id);
             entity.Property(sal => sal.SpaceId).IsRequired();
-            entity.Property(sal => sal.Type).IsRequired().HasMaxLength(100);
-            entity.Property(sal => sal.Description).IsRequired().HasMaxLength(1000);
-            entity.Property(sal => sal.Timestamp).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(sal => sal.Type).IsRequired().HasMaxLength(maxLength: 100);
+            entity.Property(sal => sal.Description).IsRequired().HasMaxLength(maxLength: 1000);
+            entity.Property(sal => sal.Timestamp).HasDefaultValueSql(CurrentTimestampSql);
         });
 
         base.OnModelCreating(modelBuilder);
     }
+    
+    private const string CurrentTimestampSql = "CURRENT_TIMESTAMP";
 }

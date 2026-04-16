@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
@@ -10,7 +10,7 @@ namespace EventScheduleService.BLL.Services;
 public class SoloEventService(
     ISoloEventRepository soloEventRepository,
     SpaceLogPublish logPublish,
-    IEntityMapper<SoloEvent, CreateSoloEventDto> createMapper) : ISoloEventService
+    IEntityMapper<SoloEvent, SoloEventCreateDto> createMapper) : ISoloEventService
 {
     public async Task<IEnumerable<SoloEvent>> GetSoloEventsBySpaceAsync(Guid spaceId)
     {
@@ -22,7 +22,7 @@ public class SoloEventService(
         return await soloEventRepository.GetByIdAsync(soloEventId);
     }
 
-    public async Task<SoloEvent> CreateSoloEventAsync(CreateSoloEventDto newSoloEvent)
+    public async Task<SoloEvent> CreateSoloEventAsync(SoloEventCreateDto newSoloEvent)
     {
         var result = await soloEventRepository
             .AddAsync(createMapper.ToEntity(newSoloEvent));

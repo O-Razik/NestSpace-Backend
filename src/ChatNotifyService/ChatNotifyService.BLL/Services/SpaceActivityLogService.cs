@@ -1,23 +1,34 @@
+using ChatNotifyService.ABS.Dtos;
+using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IRepositories;
 using ChatNotifyService.ABS.IServices;
+using ChatNotifyService.ABS.Models;
+using ChatNotifyService.BLL.Helpers;
 
 namespace ChatNotifyService.BLL.Services;
 
 public class SpaceActivityLogService(
-    ISpaceActivityLogRepository repository) : ISpaceActivityLogService
+    ISpaceActivityLogRepository repository,
+    ICreateMapper<SpaceActivityLog, SpaceActivityLogCreateDto> createMapper) : 
+    ISpaceActivityLogService
 {
-    public Task<IEnumerable<ABS.IEntities.ISpaceActivityLog>> GetActivityLogsBySpaceAsync(Guid spaceId, int limit, int offset)
+    public async Task<IEnumerable<SpaceActivityLog>> GetActivityLogsBySpaceAsync(Guid spaceId, int limit, int offset)
     {
-        return repository.GetActivityLogsBySpaceAsync(spaceId, limit, offset);
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstNegative(offset);
+        Guard.AgainstNegativeOrZero(limit);
+        return await repository.GetActivityLogsBySpaceAsync(spaceId, limit, offset);
     }
 
-    public Task<ABS.IEntities.ISpaceActivityLog> CreateActivityLogAsync(ABS.IEntities.ISpaceActivityLog newActivityLog)
+    public async Task<SpaceActivityLog> CreateActivityLogAsync(SpaceActivityLogCreateDto newActivityLog)
     {
-        return repository.CreateActivityLogAsync(newActivityLog);
+        Guard.AgainstNull(newActivityLog);
+        return await repository.CreateActivityLogAsync(createMapper.ToEntity(newActivityLog));
     }
 
-    public Task<bool> DeleteActivityLogsBySpaceIdAsync(Guid spaceId)
+    public async Task<bool> DeleteActivityLogsBySpaceIdAsync(Guid spaceId)
     {
-        return repository.DeleteActivityLogsBySpaceIdAsync(spaceId);
+        Guard.AgainstEmptyGuid(spaceId);
+        return await repository.DeleteActivityLogsBySpaceIdAsync(spaceId);
     }
 }

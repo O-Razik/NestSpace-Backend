@@ -1,4 +1,4 @@
-using UserSpaceService.ABS.DTOs;
+using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.Filters;
 using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.Models;
@@ -84,7 +84,7 @@ public class SpaceService(
 
     public async Task<Space?> UpdateSpaceNameAsync(Guid spaceId, string newName, Guid memberId)
     {
-        Guard.AgainstNullOrWhiteSpace(newName, "New space name cannot be null or empty.");
+        Guard.AgainstNullOrWhiteSpace(newName);
         var space = await spaceRepository.GetByIdAsync(spaceId) 
                     ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
 
@@ -109,7 +109,7 @@ public class SpaceService(
 
     public async Task<bool> DeleteSpaceAsync(Guid spaceId)
     {
-        Guard.AgainstEmptyGuid(spaceId, "Space ID cannot be null or empty.");
+        Guard.AgainstEmptyGuid(spaceId);
         var result = await spaceRepository.DeleteAsync(spaceId);
 
         if (result)
@@ -134,7 +134,7 @@ public class SpaceService(
         Guid spaceId, string roleName,
         Permission permissions, Guid memberId)
     {
-        Guard.AgainstNullOrWhiteSpace(roleName, "Role name cannot be null or empty.");
+        Guard.AgainstNullOrWhiteSpace(roleName);
         var space = await spaceRepository.GetByIdAsync(spaceId)
                     ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
 
@@ -165,13 +165,13 @@ public class SpaceService(
 
     public async Task<SpaceRole?> UpdateSpaceRoleAsync(SpaceRole spaceRole, Guid memberId)
     {
-        Guard.AgainstNull(spaceRole, "Space role cannot be null.");
-        Guard.AgainstEmptyGuid(spaceRole.Id, "Space role ID cannot be empty.");
+        Guard.AgainstNull(spaceRole);
+        Guard.AgainstEmptyGuid(spaceRole.Id);
 
         var existingRole = await spaceRoleRepository.GetByIdAsync(spaceRole.Id)
                             ?? throw new KeyNotFoundException($"Space role with ID {spaceRole.Id} not found.");
         
-        Guard.AgainstNullOrWhiteSpace(spaceRole.Name, "Role name cannot be null or empty.");
+        Guard.AgainstNullOrWhiteSpace(spaceRole.Name);
         existingRole.Name = spaceRole.Name;
         existingRole.RolePermissions = spaceRole.RolePermissions;
         
@@ -191,8 +191,8 @@ public class SpaceService(
 
     public async Task<bool> DeleteSpaceRoleAsync(Guid spaceId, Guid roleId, Guid memberId)
     {
-        Guard.AgainstEmptyGuid(spaceId, "Space ID cannot be empty.");
-        Guard.AgainstEmptyGuid(roleId, "Role ID cannot be empty.");
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstEmptyGuid(roleId);
 
         var space = await spaceRepository.GetByIdAsync(spaceId)
                         ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
@@ -218,9 +218,9 @@ public class SpaceService(
 
     public async Task<SpaceMember> AddMemberToSpaceAsync(Guid spaceId, Guid userId, Guid roleId)
     {
-        Guard.AgainstEmptyGuid(spaceId, "Space ID cannot be empty.");
-        Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
-        Guard.AgainstEmptyGuid(roleId, "Role ID cannot be empty.");
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstEmptyGuid(userId);
+        Guard.AgainstEmptyGuid(roleId);
 
         var space = await spaceRepository.GetByIdAsync(spaceId) 
                     ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
@@ -252,8 +252,8 @@ public class SpaceService(
 
     public async Task<SpaceMember?> UpdateSpaceMemberAsync(SpaceMember spaceMember)
     {
-        Guard.AgainstNull(spaceMember, "Space member cannot be null.");
-        Guard.AgainstEmptyGuid(spaceMember.Id, "Space member cannot be empty.");
+        Guard.AgainstNull(spaceMember);
+        Guard.AgainstEmptyGuid(spaceMember.Id);
 
         var existingMember = await spaceMemberRepository.GetByIdAsync(spaceMember.SpaceId, spaceMember.UserId)
                             ?? throw new KeyNotFoundException($"Member with User ID {spaceMember.UserId} not found in space {spaceMember.SpaceId}.");
@@ -276,8 +276,8 @@ public class SpaceService(
 
     public async Task<bool> RemoveMemberFromSpaceAsync(Guid spaceId, Guid userId)
     {
-        Guard.AgainstEmptyGuid(spaceId, "Space ID cannot be empty.");
-        Guard.AgainstEmptyGuid(userId, "User ID cannot be empty.");
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstEmptyGuid(userId);
 
         var space = await spaceRepository.GetByIdAsync(spaceId)
                         ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");

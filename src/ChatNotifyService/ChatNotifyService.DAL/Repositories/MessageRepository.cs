@@ -1,14 +1,16 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IRepositories;
+using ChatNotifyService.ABS.Models;
 using ChatNotifyService.DAL.Data;
-using ChatNotifyService.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Repositories;
 
-public class MessageRepository(ChatNotifyDbContext dbContext) : IMessageRepository
+public class MessageRepository(
+    ChatNotifyDbContext dbContext,
+    IDateTimeProvider dateTimeProvider) : IMessageRepository
 {
-    public async Task<IEnumerable<IMessage>> GetAllAsync(Guid chatId, int pageNumber, int pageSize)
+    public async Task<IEnumerable<Message>> GetAllAsync(Guid chatId, int pageNumber, int pageSize)
     {
         return await dbContext.Messages
             .Where(m => m.ChatId == chatId)
@@ -18,7 +20,7 @@ public class MessageRepository(ChatNotifyDbContext dbContext) : IMessageReposito
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<IMessage>> GetRecentMessagesAsync(Guid chatId, int count = 20)
+    public async Task<IEnumerable<Message>> GetRecentMessagesAsync(Guid chatId, int count = 20)
     {
         return await dbContext.Messages
             .Where(m => m.ChatId == chatId)
@@ -27,7 +29,7 @@ public class MessageRepository(ChatNotifyDbContext dbContext) : IMessageReposito
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<IMessage>> GetUnreadMessagesAsync(Guid chatId, Guid userId)
+    public async Task<IEnumerable<Message>> GetUnreadMessagesAsync(Guid chatId, Guid userId)
     {
         var readIds = await dbContext.MessageReads
             .Where(r => r.ReaderId == userId)
@@ -39,7 +41,7 @@ public class MessageRepository(ChatNotifyDbContext dbContext) : IMessageReposito
             .ToListAsync();
     }
 
-    public async Task<IMessage?> GetByIdAsync(Guid messageId)
+    public async Task<Message?> GetByIdAsync(Guid messageId)
     {
         return await dbContext.Messages
             .Include(m => m.Sender)
@@ -47,32 +49,30 @@ public class MessageRepository(ChatNotifyDbContext dbContext) : IMessageReposito
             .FirstOrDefaultAsync(m => m.Id == messageId);
     }
 
-    public async Task<IMessage> CreateAsync(IMessage message)
+    public async Task<Message> CreateAsync(Message message)
     {
-        var entity = (Message)message;
-
-        await dbContext.Messages.AddAsync(entity);
+        await dbContext.Messages.AddAsync(message);
         await dbContext.SaveChangesAsync();
 
-        return entity;
+        return message;
     }
 
-    public async Task<IMessage?> UpdateAsync(IMessage updatedMessage)
+    public async Task<Message?> UpdateAsync(Message updatedMessage)
     {
         var existing = await dbContext.Messages
             .FirstOrDefaultAsync(m => m.Id == updatedMessage.Id);
 
         if (existing == null)
+        {
             return null;
+        }
 
-        var updated = (Message)updatedMessage;
 
-        // 👇 Оновлюємо лише дозволені поля
-        existing.Content = updated.Content;
-        existing.ModifiedAt = DateTime.UtcNow;
+        existing.Content = updatedMessage.Content;
+        existing.ModifiedAt = dateTimeProvider.UtcNow.DateTime;
         existing.IsEdited = true;
-        existing.ReplyToMessageId = updated.ReplyToMessageId;
-        existing.IsDeleted = updated.IsDeleted;
+        existing.ReplyToMessageId = updatedMessage.ReplyToMessageId;
+        existing.IsDeleted = updatedMessage.IsDeleted;
 
         await dbContext.SaveChangesAsync();
         return existing;
@@ -83,7 +83,9 @@ public class MessageRepository(ChatNotifyDbContext dbContext) : IMessageReposito
         var existing = await dbContext.Messages.FirstOrDefaultAsync(m => m.Id == messageId);
 
         if (existing == null)
+        {
             return false;
+        }
 
         dbContext.Messages.Remove(existing);
         await dbContext.SaveChangesAsync();

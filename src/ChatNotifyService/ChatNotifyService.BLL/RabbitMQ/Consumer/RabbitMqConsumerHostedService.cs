@@ -1,7 +1,7 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Dtos;
+using ChatNotifyService.ABS.Models;
 using ChatNotifyService.ABS.IServices;
-using ChatNotifyService.BLL.Dtos.Send;
-using ChatNotifyService.BLL.Mappers.Send;
+using ChatNotifyService.BLL.Mappers;
 using ChatNotifyService.BLL.RabbitMQ.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,41 +19,41 @@ public class RabbitMqConsumerHostedService(
     {
         logger.LogInformation("Starting RabbitMQ consumer for ChatCreateEvent...");
 
-        await consumer.StartConsuming(new RabbitMqSubscription<ChatCreateEvent>
+        await consumer.StartConsumingAsync(new RabbitMqSubscription<ChatCreateEvent>
         {
             QueueName = "chat.queue",
             ExchangeName = "chat.exchange",
             RoutingKey = "chat.create",
             HandleEvent = async evt =>
             {
-                await HandleSpaceCreation(evt);
+                await HandleSpaceCreationAsync(evt);
             }
         });
         
-        await consumer.StartConsuming(new RabbitMqSubscription<DeleteSpaceEvent>
+        await consumer.StartConsumingAsync(new RabbitMqSubscription<DeleteSpaceEvent>
         {
             QueueName = "chat.space.deleted",
             ExchangeName = "space.exchange",
             RoutingKey = "space.deleted",
             HandleEvent = async evt =>
             {
-                await HandleSpaceDeletion(evt);
+                await HandleSpaceDeletionAsync(evt);
             }
         });
         
-        await consumer.StartConsuming(new RabbitMqSubscription<SpaceActivityLogEvent>
+        await consumer.StartConsumingAsync(new RabbitMqSubscription<SpaceActivityLogEvent>
         {
             QueueName = "chat.space.activity.log",
             ExchangeName = "log.exchange",
             RoutingKey = "space.activity.log",
             HandleEvent = async evt =>
             {
-                await HandleActivityLog(evt);
+                await HandleActivityLogAsync(evt);
             }
         });
     }
 
-    private async Task HandleSpaceCreation(ChatCreateEvent evt)
+    private async Task HandleSpaceCreationAsync(ChatCreateEvent evt)
     {
         using var scope = scopeFactory.CreateScope();
         var chatService = scope.ServiceProvider.GetRequiredService<IChatService>();
@@ -61,29 +61,26 @@ public class RabbitMqConsumerHostedService(
                 
         loggerScoped.LogInformation("Received ChatCreateEvent for SpaceId {SpaceId}", evt.SpaceId);
 
-        var chatDto = new ChatDto()
+        var chatDto = new ChatCreateDto
         {
-            Id = evt.ChatId,
             SpaceId = evt.SpaceId,
             Name = "Main Chat",
-            Members = new List<MemberDto>()
+            Members = new List<MemberCreateDto>
             {
-                new MemberDto
+                new MemberCreateDto
                 {
                     MemberId = evt.MemberId,
-                    ChatId = evt.ChatId,
                     PermissionLevel = PermissionLevel.Admin,
-                    JoinedAt = evt.CreatedAt
                 }
             }
         };
                 
-        await chatService.CreateChatAsync(chatMapper.ToEntity(chatDto));
+        await chatService.CreateChatAsync(chatDto);
 
         loggerScoped.LogInformation("Chat created: {ChatId}", evt.ChatId);
     }
     
-    private async Task HandleSpaceDeletion(DeleteSpaceEvent evt)
+    private async Task HandleSpaceDeletionAsync(DeleteSpaceEvent evt)
     {
         using var scope = scopeFactory.CreateScope();
         var chatService = scope.ServiceProvider.GetRequiredService<IChatService>();
@@ -96,24 +93,22 @@ public class RabbitMqConsumerHostedService(
         loggerScoped.LogInformation("Deleted chats for SpaceId {SpaceId}", evt.SpaceId);
     }
     
-    private async Task<SpaceActivityLogEvent> HandleActivityLog(SpaceActivityLogEvent evt)
+    private async Task<SpaceActivityLogEvent> HandleActivityLogAsync(SpaceActivityLogEvent evt)
     {
         using var scope = scopeFactory.CreateScope();
         var activityLogService = scope.ServiceProvider.GetRequiredService<ISpaceActivityLogService>();
-        var logMapper = scope.ServiceProvider.GetRequiredService<SpaceActivityLogMapper>();
 
         logger.LogInformation("Received SpaceActivityLogEvent: {SpaceId}, Type: {Type}, Description: {Description}",
             evt.SpaceId, evt.Type, evt.Description);
 
-        var activityLog = new SpaceActivityLogDto()
+        var activityLog = new SpaceActivityLogCreateDto
         {
             SpaceId = evt.SpaceId,
             Type = evt.Type,
-            Description = evt.Description,
-            CreatedAt = evt.ActivityAt
+            Description = evt.Description
         };
 
-        await activityLogService.CreateActivityLogAsync(logMapper.ToEntity(activityLog));
+        await activityLogService.CreateActivityLogAsync(activityLog);
 
         logger.LogInformation("Logged activity for space: {SpaceId}, Type: {Type}, Description: {Description}",
             evt.SpaceId, evt.Type, evt.Description);
@@ -124,7 +119,7 @@ public class RabbitMqConsumerHostedService(
     public Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Stopping RabbitMQ consumer...");
-        _ = consumer.Stop();
+        _ = consumer.StopAsync();
         return Task.CompletedTask;
     }
 }

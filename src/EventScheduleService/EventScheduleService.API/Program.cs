@@ -35,9 +35,11 @@ public static class Program
             .AddSqlDbContext()
             .AddModels()
             .AddRepositories()
+            .AddHelpers()
+            .AddRabbitMqServices()
             .AddServices()
             .AddMappers()
-            .AddRabbitMqServices()
+            .AddValidation()
             .AddSerilog()
             .AddOpenTelemetry();
 

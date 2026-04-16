@@ -31,6 +31,7 @@ public static class MicroserviceExtension
         builder.Services.AddScoped<IEventPublisher, RabbitMqPublisher>();
         builder.Services.AddSingleton<RabbitMqConsumer>();
         builder.Services.AddHostedService<RabbitMqConsumerHostedService>();
+        builder.Services.AddScoped<SpaceLogPublish>();
         
         return builder;
     }

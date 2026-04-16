@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.ABS.IServices;
@@ -9,7 +9,7 @@ public interface IEventService
     
     Task<EventCategory?> GetCategoryByIdAsync(Guid eventId);
     
-    Task<EventCategory> CreateCategoryAsync(CreateCategoryDto newCategory);
+    Task<EventCategory> CreateCategoryAsync(CategoryCreateDto newCategory);
     
     Task<EventCategory?> UpdateCategoryAsync(EventCategory updatedCategory);
     

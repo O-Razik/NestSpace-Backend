@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IServices;
@@ -68,7 +68,7 @@ public class EventController(
     [HttpPost("categories")]
     [ProducesResponseType(typeof(CategoryShortDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<CategoryDto>> CreateCategoryAsync([FromRoute] Guid spaceId, [FromBody] CreateCategoryDto newCategory)
+    public async Task<ActionResult<CategoryDto>> CreateCategoryAsync([FromRoute] Guid spaceId, [FromBody] CategoryCreateDto newCategory)
     {
         var createdEvent = await eventService.CreateCategoryAsync(newCategory);
         return Created(new Uri("catregories/" + createdEvent.Id),

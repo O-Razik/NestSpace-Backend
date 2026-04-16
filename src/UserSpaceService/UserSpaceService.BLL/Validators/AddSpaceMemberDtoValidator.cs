@@ -1,5 +1,5 @@
 using FluentValidation;
-using UserSpaceService.ABS.DTOs;
+using UserSpaceService.ABS.Dtos;
 
 namespace UserSpaceService.BLL.Validators;
 

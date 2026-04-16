@@ -13,7 +13,7 @@ public interface IBigMapper<TSource, TDto, TShortDto> : IMapper<TSource, TDto>
     TSource ToEntity(TShortDto dto);
 }
 
-public interface ICreateMapper<TSource, TDto>
+public interface ICreateMapper<out TSource, in TDto>
 {
-    TSource ToEntity(Guid id, TDto dto);
+    TSource ToEntity(TDto dto);
 }

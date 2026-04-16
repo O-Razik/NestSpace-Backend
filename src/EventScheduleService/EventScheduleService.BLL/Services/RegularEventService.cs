@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
@@ -10,7 +10,7 @@ namespace EventScheduleService.BLL.Services;
 public class RegularEventService(
     IRegularEventRepository regularEventRepository,
     SpaceLogPublish logPublish,
-    IEntityMapper<RegularEvent, CreateRegularEventDto> createMapper) : IRegularEventService
+    IEntityMapper<RegularEvent, RegularEventCreateDto> createMapper) : IRegularEventService
 {
     public async Task<IEnumerable<RegularEvent>> GetRegularEventsBySpaceAsync(Guid spaceId)
     {
@@ -22,7 +22,7 @@ public class RegularEventService(
         return await regularEventRepository.GetByIdAsync(regularEventId);
     }
 
-    public async Task<RegularEvent> CreateRegularEventAsync(CreateRegularEventDto newRegularEvent)
+    public async Task<RegularEvent> CreateRegularEventAsync(RegularEventCreateDto newRegularEvent)
     {
         var result = await regularEventRepository
             .AddAsync(createMapper.ToEntity(newRegularEvent));

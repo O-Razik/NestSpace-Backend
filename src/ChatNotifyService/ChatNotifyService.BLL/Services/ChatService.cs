@@ -1,163 +1,140 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Dtos;
 using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IRepositories;
 using ChatNotifyService.ABS.IServices;
-using ChatNotifyService.BLL.Dtos.Send;
+using ChatNotifyService.ABS.Models;
+using ChatNotifyService.BLL.Helpers;
 
 namespace ChatNotifyService.BLL.Services;
 
 public class ChatService(
     IChatRepository chatRepository,
     IChatMemberRepository memberRepository,
-    ISpaceActivityLogRepository activityLogRepository,
-    IMapper<ISpaceActivityLog , SpaceActivityLogDto> activityLogMapper,
-    IChatNotificationService notificationService) : IChatService
+    ICreateMapper<Chat, ChatCreateDto> createMapper,
+    IBigMapper<ChatMember, MemberDto, MemberDtoShort> memberMapper,
+    IChatNotificationService notificationService,
+    SpaceActivityLogHelper activityLogHelper) : IChatService
 {
-    public async Task<IEnumerable<IChat>> GetAllChatsAsync(Guid spaceId, Guid memberId)
+    public async Task<IEnumerable<Chat>> GetAllChatsAsync(Guid spaceId, Guid memberId)
     {
-        if(spaceId == Guid.Empty)
-            throw new ArgumentException("SpaceId cannot be empty", nameof(spaceId));
-        
-        if(memberId == Guid.Empty)
-            throw new ArgumentException("MemberId cannot be empty", nameof(memberId));
-        
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstEmptyGuid(memberId);
         return await chatRepository.GetAllAsync(spaceId, memberId);
     }
 
-    public async Task<IChat?> GetChatByIdAsync(Guid chatId, Guid memberId)
+    public async Task<Chat?> GetChatByIdAsync(Guid chatId, Guid memberId)
     {
-        if(chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
-        
-        if(memberId == Guid.Empty)
-            throw new ArgumentException("MemberId cannot be empty", nameof(memberId));
-        
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstEmptyGuid(memberId);
         return await chatRepository.GetByIdAsync(chatId, memberId);
     }
 
-    public async Task<IChat> CreateChatAsync(IChat chat)
+    public async Task<Chat> CreateChatAsync(ChatCreateDto chat)
     {
-        if(chat == null)
-            throw new ArgumentNullException(nameof(chat), "Chat cannot be null");
-        
-        var created = await chatRepository.CreateAsync(chat);
+        Guard.AgainstNull(chat);
+        var created = await chatRepository.CreateAsync(createMapper.ToEntity(chat));
 
-        var logEntry = new SpaceActivityLogDto()
-        {
-            SpaceId = created.SpaceId,
-            Type = "ChatCreated",
-            Description = $"Chat '{created.Name}' created.",
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await activityLogRepository.CreateActivityLogAsync(activityLogMapper.ToEntity(logEntry));
-        
+        await activityLogHelper.LogActivityAsync(created.SpaceId, created.Name, "ChatCreated");
         await notificationService.NotifyChatUpdatedAsync(created);
         
         return created;
     }
 
-    public async Task<IChat?> UpdateChatAsync(IChat updatedChat)
+    public async Task<Chat?> UpdateChatAsync(Chat updatedChat)
     {
-        if(updatedChat == null)
-            throw new ArgumentNullException(nameof(updatedChat), "Updated chat cannot be null");
-        
-        if(updatedChat.Id == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(updatedChat));
+        Guard.AgainstNull(updatedChat);
+        Guard.AgainstEmptyGuid(updatedChat.Id);
         
         var updated = await chatRepository.UpdateAsync(updatedChat);
 
-        if (updated == null) return updated;
-        await notificationService.NotifyChatUpdatedAsync(updated);
-        var logEntry = new SpaceActivityLogDto()
+        if (updated is not null)
         {
-            SpaceId = updated.SpaceId,
-            Type = "ChatUpdated",
-            Description = $"Chat '{updated.Name}' updated.",
-            CreatedAt = DateTime.UtcNow
-        };
-            
-        await activityLogRepository.CreateActivityLogAsync(activityLogMapper.ToEntity(logEntry));
-
+            await notificationService.NotifyChatUpdatedAsync(updated);
+            await activityLogHelper.LogActivityAsync(updated.SpaceId, updated.Name, "ChatUpdated");
+        }
+        
         return updated;
     }
 
     public async Task<bool> DeleteChatAsync(Guid chatId, Guid memberId)
     {
-        if(chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
-        
-        if(memberId == Guid.Empty)
-            throw new ArgumentException("MemberId cannot be empty", nameof(memberId));
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstEmptyGuid(memberId);
         
         var chat = await chatRepository.GetByIdAsync(chatId, memberId);
-        if(chat == null)
-            throw new InvalidOperationException("Chat not found or member does not have access to delete the chat");
+        Guard.AgainstNull(chat);
         
         var deleted = await chatRepository.DeleteAsync(chat);
 
-        if (!deleted) return deleted;
-        await notificationService.NotifyChatDeletedAsync(chatId);
-        
-        var logEntry = new SpaceActivityLogDto()
+        if (deleted)
         {
-            SpaceId = chat.SpaceId,
-            MemberId = memberId,
-            Type = "ChatDeleted",
-            Description = $"Chat '{chat.Name}' deleted.",
-            CreatedAt = DateTime.UtcNow
-        };
+            await notificationService.NotifyChatDeletedAsync(chatId);
+            await activityLogHelper.LogActivityAsync(chat.SpaceId, chat.Name, "ChatDeleted");
+        }
         
-        await activityLogRepository.CreateActivityLogAsync(activityLogMapper.ToEntity(logEntry));
-
         return deleted;
     }
     
     public async Task<bool> DeleteChatsBySpaceIdAsync(Guid spaceId)
     {
-        if(spaceId == Guid.Empty)
-            throw new ArgumentException("SpaceId cannot be empty", nameof(spaceId));
+        Guard.AgainstEmptyGuid(spaceId);
         
         var deleted =  await chatRepository.DeleteBySpaceIdAsync(spaceId);
         
         if(deleted)
+        {
             await notificationService.NotifyChatsDeletedBySpaceIdAsync(spaceId);
+            await activityLogHelper.DeleteAllLogsAsync(spaceId);
+        }
         
         return deleted;
     }
 
-    public async Task<IEnumerable<IChatMember>> GetChatMembersAsync(Guid spaceId, Guid chatId)
+    public async Task<IEnumerable<ChatMember>> GetChatMembersAsync(Guid spaceId, Guid chatId)
     {
-        if(chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
-        
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstEmptyGuid(chatId);
         return await memberRepository.GetAllAsync(chatId);
     }
 
-    public async Task<IChatMember> AddMemberToChatAsync(IChatMember chatMember)
+    public async Task<ChatMember?> GetChatMemberAsync(Guid chatId, Guid memberId)
     {
-        if(chatMember.ChatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatMember.ChatId));
-        
-        if(chatMember.MemberId == Guid.Empty)
-            throw new ArgumentException("MemberId cannot be empty", nameof(chatMember.MemberId));
-        
-        var member = await memberRepository.AddMemberToChatAsync(chatMember);
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstEmptyGuid(memberId);
+        return await memberRepository.GetByIdAsync(chatId, memberId);
+    }
+
+    public async Task<ChatMember> AddMemberToChatAsync(MemberDtoShort chatMember)
+    {
+        Guard.AgainstNull(chatMember);
+        Guard.AgainstEmptyGuid(chatMember.ChatId);
+        Guard.AgainstEmptyGuid(chatMember.MemberId);
+        var member = await memberRepository.AddMemberToChatAsync(memberMapper.ToEntity(chatMember));
         await notificationService.NotifyMemberAddedAsync(member.ChatId, member);
         return member;
     }
 
+    public async Task<ChatMember?> UpdateChatMemberAsync(MemberDtoShort updatedChatMember)
+    {
+        Guard.AgainstNull(updatedChatMember);
+        Guard.AgainstEmptyGuid(updatedChatMember.ChatId);
+        Guard.AgainstEmptyGuid(updatedChatMember.MemberId);
+        
+        var updated = await memberRepository
+            .UpdateChatMemberAsync(memberMapper.ToEntity(updatedChatMember));
+        return updated;
+    }
+
     public async Task<bool> RemoveMemberFromChatAsync(Guid chatId, Guid memberId)
     {
-        if(chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
-        
-        if(memberId == Guid.Empty)
-            throw new ArgumentException("MemberId cannot be empty", nameof(memberId));
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstEmptyGuid(memberId);
         
         var removed = await memberRepository.RemoveMemberFromChatAsync(chatId, memberId);
         if (removed)
+        {
             await notificationService.NotifyMemberRemovedAsync(chatId, memberId);
+        }
 
         return removed;
     }

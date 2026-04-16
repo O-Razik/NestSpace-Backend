@@ -1,16 +1,16 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Models;
 
 namespace ChatNotifyService.ABS.IRepositories;
 
 public interface IMessageReadRepository
 {
-    Task<IEnumerable<IMessageRead>> GetAllAsync(Guid messageId);
+    Task<IEnumerable<MessageRead>> GetAllAsync(Guid messageId);
 
-    Task<IMessageRead?> GetByIdAsync(Guid messageId, Guid readerId);
+    Task<MessageRead?> GetByIdAsync(Guid messageId, Guid readerId);
 
-    Task<IMessageRead> MarkAsReadAsync(Guid messageId, Guid readerId);
+    Task<MessageRead> MarkAsReadAsync(Guid messageId, Guid readerId);
     
-    Task<IEnumerable<IMessageRead>> MarkAsReadsAsync(IEnumerable<IMessage> messages, Guid readerId);
+    Task<IEnumerable<MessageRead>> MarkAsReadsAsync(IEnumerable<Message> messages, Guid readerId);
 
     Task<bool> ExistsAsync(Guid messageId, Guid readerId);
 }

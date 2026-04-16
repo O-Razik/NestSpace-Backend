@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.Exceptions;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.Models;
@@ -63,7 +63,7 @@ public class SoloEventController(
     [HttpPost("create")]
     [ProducesResponseType(typeof(SoloEventDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SoloEventDto>> CreateSoloEventAsync([FromRoute] Guid spaceId, [FromBody] CreateSoloEventDto newEvent)
+    public async Task<ActionResult<SoloEventDto>> CreateSoloEventAsync([FromRoute] Guid spaceId, [FromBody] SoloEventCreateDto newEvent)
     {
         var createdEvent = await soloEventService.CreateSoloEventAsync(newEvent);
         return Created(

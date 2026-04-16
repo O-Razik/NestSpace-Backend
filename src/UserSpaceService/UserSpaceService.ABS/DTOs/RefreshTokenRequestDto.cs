@@ -1,6 +1,0 @@
-namespace UserSpaceService.ABS.DTOs;
-
-public class RefreshTokenRequestDto
-{
-    public string RefreshToken { get; set; } = string.Empty;
-}

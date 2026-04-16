@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.Models;
 
@@ -6,7 +6,7 @@ namespace EventScheduleService.BLL.Mappers;
 
 public class SoloEventMapper(
     TagMapper tagMapper
-) : IMapper<SoloEvent, SoloEventDto>, IEntityMapper<SoloEvent, CreateSoloEventDto>
+) : IMapper<SoloEvent, SoloEventDto>, IEntityMapper<SoloEvent, SoloEventCreateDto>
 {
     public SoloEventDto ToDto(SoloEvent source)
     {
@@ -40,7 +40,7 @@ public class SoloEventMapper(
         };
     }
 
-    public SoloEvent ToEntity(CreateSoloEventDto dto)
+    public SoloEvent ToEntity(SoloEventCreateDto dto)
     {
         return new SoloEvent
         {

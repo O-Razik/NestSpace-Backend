@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using UserSpaceService.ABS.DTOs;
+using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.Exceptions;
 using UserSpaceService.ABS.IHelpers;
 

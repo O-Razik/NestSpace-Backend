@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.Models;
 
@@ -6,7 +6,7 @@ namespace EventScheduleService.BLL.Mappers;
 
 public class RegularEventMapper(
     TagMapper tagMapper
-) : IMapper<RegularEvent, RegularEventDto> , IEntityMapper<RegularEvent, CreateRegularEventDto>
+) : IMapper<RegularEvent, RegularEventDto> , IEntityMapper<RegularEvent, RegularEventCreateDto>
     
 {
     public RegularEventDto ToDto(RegularEvent source)
@@ -43,7 +43,7 @@ public class RegularEventMapper(
         };
     }
 
-    public RegularEvent ToEntity(CreateRegularEventDto createDto)
+    public RegularEvent ToEntity(RegularEventCreateDto createDto)
     {
         return new RegularEvent
         {

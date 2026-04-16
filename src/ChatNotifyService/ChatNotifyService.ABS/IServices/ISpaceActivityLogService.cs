@@ -1,12 +1,13 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Dtos;
+using ChatNotifyService.ABS.Models;
 
 namespace ChatNotifyService.ABS.IServices;
 
 public interface ISpaceActivityLogService
 {
-    Task<IEnumerable<ISpaceActivityLog>> GetActivityLogsBySpaceAsync(Guid spaceId, int limit, int offset);
+    Task<IEnumerable<SpaceActivityLog>> GetActivityLogsBySpaceAsync(Guid spaceId, int limit, int offset);
     
-    Task<ISpaceActivityLog> CreateActivityLogAsync(ISpaceActivityLog newActivityLog);
+    Task<SpaceActivityLog> CreateActivityLogAsync(SpaceActivityLogCreateDto newActivityLog);
     
     Task<bool> DeleteActivityLogsBySpaceIdAsync(Guid spaceId);
 }

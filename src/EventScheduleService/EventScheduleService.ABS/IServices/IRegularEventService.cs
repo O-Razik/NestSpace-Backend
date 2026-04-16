@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.ABS.IServices;
@@ -9,7 +9,7 @@ public interface IRegularEventService
     
     Task<RegularEvent?> GetRegularEventByIdAsync(Guid regularEventId);
     
-    Task<RegularEvent> CreateRegularEventAsync(CreateRegularEventDto newRegularEvent);
+    Task<RegularEvent> CreateRegularEventAsync(RegularEventCreateDto newRegularEvent);
     
     Task<RegularEvent?> UpdateRegularEventAsync(RegularEvent updatedRegularEvent);
     

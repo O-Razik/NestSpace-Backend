@@ -1,4 +1,4 @@
-using EventScheduleService.ABS.Dto;
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.ABS.IServices;
@@ -23,7 +23,7 @@ public class EventService(
         return await categoryRepository.GetByIdAsync(eventId);
     }
 
-    public async Task<EventCategory> CreateCategoryAsync(CreateCategoryDto newCategory)
+    public async Task<EventCategory> CreateCategoryAsync(CategoryCreateDto newCategory)
     {
         Guard.AgainstNull(newCategory);
 

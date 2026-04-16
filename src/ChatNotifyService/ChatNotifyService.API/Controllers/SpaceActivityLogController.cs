@@ -1,9 +1,10 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Dtos;
 using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IServices;
-using ChatNotifyService.BLL.Dtos.Send;
+using ChatNotifyService.ABS.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Guard = ChatNotifyService.BLL.Helpers.Guard;
 
 namespace ChatNotifyService.API.Controllers;
 
@@ -19,7 +20,7 @@ namespace ChatNotifyService.API.Controllers;
 public class SpaceActivityLogController(
     ISpaceActivityLogService activityLogService,
     IHttpContextAccessor httpContextAccessor,
-    IMapper<ISpaceActivityLog, SpaceActivityLogDto> activityLogMapper) 
+    IMapper<SpaceActivityLog, SpaceActivityLogDto> activityLogMapper) 
     : ControllerBase
 {
     /// <summary>
@@ -31,9 +32,12 @@ public class SpaceActivityLogController(
     [HttpGet]
     public async Task<ActionResult<IEnumerable<SpaceActivityLogDto>>> GetActivityLogs(
         [FromRoute] Guid spaceId,
-        [FromQuery] int page = 1,
-        [FromQuery] int amount = 20)
+        [FromQuery] int page,
+        [FromQuery] int amount)
     {
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstNegativeOrZero(page);
+        Guard.AgainstNegativeOrZero(amount);
         var logs = await activityLogService.GetActivityLogsBySpaceAsync(spaceId, page, amount);
         return Ok(logs.Select(activityLogMapper.ToDto));
     }
