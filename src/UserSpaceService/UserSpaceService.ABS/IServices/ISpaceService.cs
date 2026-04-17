@@ -1,28 +1,32 @@
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Dtos;
+using UserSpaceService.ABS.Filters;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.ABS.IServices;
 
 public interface ISpaceService
 {
-    Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId);
+    Task<PagedResult<Space>> SearchSpacesAsync(SpaceFilter filter);
     
-    Task<ISpace> GetSpaceByIdAsync(Guid spaceId);
+    Task<IEnumerable<Space>> GetAllSpacesOfUserAsync(Guid userId);
     
-    Task<ISpace> CreateSpaceAsync(Guid creatorId, string name);
+    Task<Space?> GetSpaceByIdAsync(Guid spaceId);
     
-    Task<ISpace?> UpdateSpaceNameAsync(Guid spaceId, string newName);
+    Task<Space> CreateSpaceAsync(CreateSpaceDto createSpaceDto);
+    
+    Task<Space?> UpdateSpaceNameAsync(Guid spaceId, string newName, Guid memberId);
     
     Task<bool> DeleteSpaceAsync(Guid spaceId);
     
-    Task<ISpaceRole> CreateSpaceRoleAsync(Guid spaceId, string roleName, Permission permissions);
+    Task<SpaceRole> CreateSpaceRoleAsync(Guid spaceId, string roleName, Permission permissions, Guid memberId);
     
-    Task<ISpaceRole?> UpdateSpaceRoleAsync(ISpaceRole spaceRole);
+    Task<SpaceRole?> UpdateSpaceRoleAsync(SpaceRole spaceRole, Guid memberId);
     
-    Task<bool> DeleteSpaceRoleAsync(Guid spaceId, Guid roleId);
+    Task<bool> DeleteSpaceRoleAsync(Guid spaceId, Guid roleId, Guid memberId);
     
-    Task<ISpaceMember> AddMemberToSpaceAsync(Guid spaceId, Guid userId, Guid roleId);
+    Task<SpaceMember> AddMemberToSpaceAsync(Guid spaceId, Guid userId, Guid roleId);
     
-    Task<ISpaceMember?> UpdateSpaceMemberAsync(ISpaceMember spaceMember);
+    Task<SpaceMember?> UpdateSpaceMemberAsync(SpaceMember spaceMember);
     
     Task<bool> RemoveMemberFromSpaceAsync(Guid spaceId, Guid userId);
 }

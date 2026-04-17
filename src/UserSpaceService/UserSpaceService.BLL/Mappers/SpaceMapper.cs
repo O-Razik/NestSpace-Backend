@@ -1,29 +1,29 @@
+using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
-using UserSpaceService.BLL.DTOs;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.BLL.Mappers;
 
 public class SpaceMapper(
-    IEntityFactory<ISpace> entityFactory,
-    IMapper<ISpaceMember, SpaceMemberDto> spaceMemberMapper,
-    IMapper<ISpaceRole, SpaceRoleDto> roleMapper)
-    : IMapper<ISpace, SpaceDto>
+    IMapper<SpaceMember, SpaceMemberDto> spaceMemberMapper,
+    IMapper<SpaceRole, SpaceRoleDto> roleMapper)
+    : IMapper<Space, SpaceDto>
 {
-    public ISpace ToEntity(SpaceDto dto)
+    public Space ToEntity(SpaceDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var space = entityFactory.CreateEntity();
-        space.Id = dto.Id;
-        space.Name = dto.Name;
-        space.Members = dto.Members
-            .Select(spaceMemberMapper.ToEntity)
-            .ToList();;
-        space.Roles = dto.Roles.Select(roleMapper.ToEntity).ToList();
-        return space;
+        return new Space
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+            Members = dto.Members
+                .Select(spaceMemberMapper.ToEntity)
+                .ToList(),
+            Roles = dto.Roles.Select(roleMapper.ToEntity).ToList()
+        };
     }
 
-    public SpaceDto ToDto(ISpace entity)
+    public SpaceDto ToDto(Space entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceDto
@@ -38,11 +38,10 @@ public class SpaceMapper(
     }
 }
 
-public class SpaceShortMapper(
-    IEntityFactory<ISpace> entityFactory)
-    : IMapper<ISpace, SpaceDtoShort>
+public class SpaceShortMapper()
+    : IMapper<Space, SpaceDtoShort>
 {
-    public SpaceDtoShort ToDto(ISpace entity)
+    public SpaceDtoShort ToDto(Space entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceDtoShort
@@ -52,13 +51,14 @@ public class SpaceShortMapper(
         };
     }
 
-    public ISpace ToEntity(SpaceDtoShort dto)
+    public Space ToEntity(SpaceDtoShort dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var space = entityFactory.CreateEntity();
-        space.Id = dto.Id;
-        space.Name = dto.Name;
-        return space;
+        return new Space
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+        };
     }
 }
 

@@ -1,9 +1,8 @@
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IServices;
-using EventScheduleService.BLL.Dto.Create;
-using EventScheduleService.BLL.Dto.Send;
-using EventScheduleService.BLL.Dto.Update;
+using EventScheduleService.BLL.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,16 +13,12 @@ namespace EventScheduleService.API.Controllers;
 /// </summary>
 /// <param name="regularEventService"></param>
 /// <param name="regularEventMapper"></param>
-/// <param name="createMapper"></param>
-/// <param name="updateMapper"></param>
 [Authorize]
 [Route("api/space/{spaceId:guid}/[controller]")]
 [ApiController]
 public class RegularEventController(
     IRegularEventService regularEventService,
-    IMapper<IRegularEvent, RegularEventDto> regularEventMapper,
-    ICreateMapper<IRegularEvent, RegularEventCreateDto> createMapper,
-    ICreateMapper<IRegularEvent, RegularEventUpdateDto> updateMapper)
+    IMapper<RegularEvent, RegularEventDto> regularEventMapper)
     : ControllerBase
 {
     /// <summary>
@@ -36,16 +31,9 @@ public class RegularEventController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<RegularEventDto>>> GetRegularEventsBySpaceAsync(Guid spaceId)
     {
-        try
-        {
-            var events = await regularEventService.GetRegularEventsBySpaceAsync(spaceId);
-            return Ok(events.Select(regularEventMapper.ToDto));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while retrieving regular events.");
-        }
+        Guard.AgainstEmptyGuid(spaceId);
+        var events = await regularEventService.GetRegularEventsBySpaceAsync(spaceId);
+        return Ok(events.Select(regularEventMapper.ToDto));
     }
 
     /// <summary>
@@ -59,43 +47,29 @@ public class RegularEventController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegularEventDto>> GetRegularEventByIdAsync(Guid eventId)
     {
-        try
-        {
-            var eventItem = await regularEventService.GetRegularEventByIdAsync(eventId);
-            if (eventItem == null)
-                return NotFound("Regular event not found.");
-            return Ok(regularEventMapper.ToDto(eventItem));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while retrieving the regular event.");
-        }
+        Guard.AgainstEmptyGuid(eventId);
+        var eventItem = await regularEventService.GetRegularEventByIdAsync(eventId);
+        return eventItem != null ? 
+            Ok(regularEventMapper.ToDto(eventItem)) : 
+            NotFound();
     }
 
     /// <summary>
     /// Creates a new regular event in the specified schedule with the provided details.
     /// </summary>
     /// <param name="spaceId"></param>
-    /// <param name="newEvent"></param>
+    /// <param name="newCategory"></param>
     /// <returns></returns>
     [HttpPost("create")]
     [ProducesResponseType(typeof(RegularEventDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<RegularEventDto>> CreateRegularEventAsync([FromRoute] Guid spaceId, [FromBody] RegularEventCreateDto newEvent)
+    public async Task<ActionResult<RegularEventDto>> CreateRegularEventAsync([FromRoute] Guid spaceId, [FromBody] RegularEventCreateDto newRegularEvent)
     {
-        try
-        {
-            var createdEvent = await regularEventService.CreateRegularEventAsync(createMapper.ToEntity(spaceId, newEvent));
-            return Created(
-                "regular_event/" + createdEvent.Id,
-                regularEventMapper.ToDto(createdEvent));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while creating the regular event.");
-        }
+        Guard.AgainstEmptyGuid(spaceId);
+        var createdEvent = await regularEventService.CreateRegularEventAsync(newRegularEvent);
+        return Created(
+            new Uri("regular_event/" + createdEvent.Id),
+            regularEventMapper.ToDto(createdEvent));
     }
 
     /// <summary>
@@ -107,19 +81,18 @@ public class RegularEventController(
     [HttpPut("update")]
     [ProducesResponseType(typeof(RegularEventDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<RegularEventDto>> UpdateRegularEventAsync([FromRoute] Guid spaceId, [FromBody] RegularEventUpdateDto updatedEvent)
+    public async Task<ActionResult<RegularEventDto>> UpdateRegularEventAsync([FromRoute] Guid spaceId, [FromBody] RegularEventDto updatedEvent)
     {
-        try
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstEmptyGuid(updatedEvent.Id);
+        if (updatedEvent.Id != spaceId)
         {
-            var result = await regularEventService.UpdateRegularEventAsync(updateMapper.ToEntity(spaceId, updatedEvent));
-            if (result == null) return NotFound();
-            return Ok(regularEventMapper.ToDto(result));
+            return BadRequest("Event ID in the body does not match the space ID in the route.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while updating the regular event.");
-        }
+        var result = await regularEventService.UpdateRegularEventAsync(regularEventMapper.ToEntity(updatedEvent));
+        return result == null
+            ? NotFound("Regular event not found.")
+            : Ok(regularEventMapper.ToDto(result));
     }
     
     /// <summary>
@@ -133,16 +106,9 @@ public class RegularEventController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> DeleteRegularEventAsync(Guid eventId)
     {
-        try
-        {
-            var result = await regularEventService.DeleteRegularEventAsync(eventId);
-            if (!result) return NotFound("Regular event not found.");
-            return NoContent();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while deleting the regular event.");
-        }
+        var result = await regularEventService.DeleteRegularEventAsync(eventId);
+        return result ?
+            Ok("Regular event deleted successfully.") : 
+            NotFound("Regular event not found.");
     }
 }

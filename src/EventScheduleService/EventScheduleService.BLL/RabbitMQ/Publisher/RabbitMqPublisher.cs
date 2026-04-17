@@ -8,7 +8,6 @@ namespace EventScheduleService.BLL.RabbitMQ.Publisher;
 
 public class RabbitMqPublisher(IOptions<RabbitSettings> rabbitSettings) : IEventPublisher
 {
-    private IConnection? _connection;
     private IChannel? _channel;
 
     public async Task PublishAsync<TEvent>(TEvent createdEvent, string routingKey, string exchangeName) where TEvent : class
@@ -40,7 +39,7 @@ public class RabbitMqPublisher(IOptions<RabbitSettings> rabbitSettings) : IEvent
             return;
         }
 
-        var factory = new ConnectionFactory()
+        var factory = new ConnectionFactory
         {
             HostName = rabbitSettings.Value.HostName,
             Port = rabbitSettings.Value.Port,
@@ -48,8 +47,8 @@ public class RabbitMqPublisher(IOptions<RabbitSettings> rabbitSettings) : IEvent
             Password = rabbitSettings.Value.Password
         };
 
-        _connection = await factory.CreateConnectionAsync(); 
-        _channel = await _connection.CreateChannelAsync();
+        var connection = await factory.CreateConnectionAsync(); 
+        _channel = await connection.CreateChannelAsync();
         
         await _channel.ExchangeDeclareAsync(exchange: "event.exchange", type: ExchangeType.Topic, durable: true);
         await _channel.ExchangeDeclareAsync(exchange: "log.exchange", type: ExchangeType.Topic, durable: true);

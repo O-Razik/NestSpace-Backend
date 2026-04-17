@@ -1,311 +1,253 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UserSpaceService.ABS.Dtos;
+using UserSpaceService.ABS.Exceptions;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IServices;
-using UserSpaceService.BLL.DTOs;
+using UserSpaceService.BLL.Helpers;
 
 namespace UserSpaceService.API.Controllers;
 
 /// <summary>
 /// Controller for managing spaces and their members and roles.
 /// </summary>
-/// <param name="spaceService"></param>
-/// <param name="httpContextAccessor"></param>
-/// <param name="spaceDtoMapper"></param>
-/// <param name="spaceShortDtoMapper"></param>
-/// <param name="spaceMemberDtoMapper"></param>
-/// <param name="spaceMemberShortMapper"></param>
-/// <param name="spaceRoleDtoMapper"></param>
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class SpaceController(
     ISpaceService spaceService,
-    IHttpContextAccessor httpContextAccessor,
-    IMapper<ISpace, SpaceDto> spaceDtoMapper,
-    IMapper<ISpace, SpaceDtoShort> spaceShortDtoMapper,
-    IMapper<ISpaceRole, SpaceRoleDto> spaceRoleDtoMapper,
-    IMapper<ISpaceMember, SpaceMemberDto> spaceMemberDtoMapper,
-    IMapper<ISpaceMember, SpaceMemberDtoShort> spaceMemberShortMapper)
+    IGetCurrentUser currentUser,
+    IMapper<Space, SpaceDto> spaceDtoMapper,
+    IMapper<Space, SpaceDtoShort> spaceShortDtoMapper,
+    IMapper<SpaceRole, SpaceRoleDto> spaceRoleDtoMapper,
+    IMapper<SpaceMember, SpaceMemberDto> spaceMemberDtoMapper,
+    IMapper<SpaceMember, SpaceMemberDtoShort> spaceMemberShortMapper)
     : ControllerBase
 {
+
     /// <summary>
     /// Gets all spaces of the user based on the JWT token.
     /// </summary>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
     [HttpGet("my-spaces")]
     [ProducesResponseType(typeof(IEnumerable<SpaceDtoShort>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<SpaceDtoShort>>> GetAllSpacesOfUserAsync()
     {
-        try
-        {
-            var userIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userIdClaim == null)
-                throw new InvalidOperationException("User ID claim not found in JWT token.");
-            
-            var result = await spaceService.GetAllSpacesOfUserAsync(new Guid(userIdClaim));
-            return Ok(result.Select(spaceShortDtoMapper.ToDto));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500);
-        }
+        var userId = currentUser.UserId();
+        var result = await spaceService.GetAllSpacesOfUserAsync(userId);
+        return Ok(result.Select(spaceShortDtoMapper.ToDto));
     }
-    
-    
+
     /// <summary>
     /// Gets full information about a space by its ID.
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <returns></returns>
     [HttpGet("{spaceId:guid}")]
     [ProducesResponseType(typeof(SpaceDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<SpaceDto>> GetSpaceByIdAsync(Guid spaceId)
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<SpaceDto>> GetSpaceByIdAsync([FromRoute] Guid spaceId)
     {
-        try
+        Guard.AgainstEmptyGuid(spaceId);
+        var result = await spaceService.GetSpaceByIdAsync(spaceId);
+        
+        if (result == null)
         {
-            var result = await spaceService.GetSpaceByIdAsync(spaceId);
-            return Ok(spaceDtoMapper.ToDto(result));
+            throw new NotFoundException("Space not found.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return NotFound();
-        }
+        
+        return Ok(spaceDtoMapper.ToDto(result));
     }
-    
+
     /// <summary>
     /// Creates a new space with the specified name.
     /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    [HttpPost("create/{name}")]
+    [HttpPost("create")]
     [ProducesResponseType(typeof(SpaceDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceDto>> CreateSpaceAsync(string name)
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<SpaceDto>> CreateSpaceAsync([FromBody] CreateSpaceDto createSpaceDto)
     {
-        try
+        var currentUserId = currentUser.UserId();
+        
+        if (createSpaceDto.CreatorId != currentUserId)
         {
-            var creatorIdClaim = httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (creatorIdClaim == null)
-                throw new InvalidOperationException("User ID claim not found in JWT token.");
-            
-            var result = await spaceService.CreateSpaceAsync(new Guid(creatorIdClaim), name);
-            return Created((string?)null, spaceDtoMapper.ToDto(result));
+            throw new ForbiddenException("You can only create spaces for yourself.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while creating the space.");
-        }
+        
+        var result = await spaceService.CreateSpaceAsync(createSpaceDto);
+        return Created(new Uri(string.Empty), spaceDtoMapper.ToDto(result));
     }
-    
+
     /// <summary>
     /// Updates the name of a space by its ID.
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <param name="updatedSpace"></param>
-    /// <returns></returns>
     [HttpPut("{spaceId:guid}/update")]
     [ProducesResponseType(typeof(SpaceDtoShort), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceDtoShort>> UpdateSpaceNameAsync(Guid spaceId, [FromBody] SpaceDtoShort updatedSpace)
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<SpaceDtoShort>> UpdateSpaceNameAsync(
+        [FromRoute] Guid spaceId, 
+        [FromBody] SpaceDtoShort updatedSpace)
     {
-        try
+        Guard.AgainstEmptyGuid(spaceId);
+        var currentUserId = currentUser.UserId();
+        
+        if (string.IsNullOrWhiteSpace(updatedSpace.Name))
         {
-            if (string.IsNullOrWhiteSpace(updatedSpace.Name))
-                return BadRequest("Invalid space data provided.");
-            
-            var result = await spaceService.UpdateSpaceNameAsync(spaceId, updatedSpace.Name);
-            if (result == null)
-                return NotFound();
-            return Ok(spaceShortDtoMapper.ToDto(result));
+            throw new BadRequestException("Space name cannot be null or empty.");
         }
-        catch (Exception e)
+        
+        var result = await spaceService.UpdateSpaceNameAsync(spaceId, updatedSpace.Name, currentUserId);
+        
+        if (result == null)
         {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while updating the space name.");
+            throw new NotFoundException("Space not found.");
         }
+        
+        return Ok(spaceShortDtoMapper.ToDto(result));
     }
-    
+
     /// <summary>
     /// Deletes a space by its ID.
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <returns></returns>
     [HttpDelete("{spaceId:guid}/delete")]
-    [ProducesResponseType(typeof(bool), StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<bool>> DeleteSpaceAsync(Guid spaceId)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DeleteSpaceAsync(Guid spaceId)
     {
-        try
+        Guard.AgainstEmptyGuid(spaceId);
+        var result = await spaceService.DeleteSpaceAsync(spaceId);
+        
+        if (!result)
         {
-            var result = await spaceService.DeleteSpaceAsync(spaceId);
-            if (!result)
-                return NotFound();
-            return NoContent();
+            throw new NotFoundException("Space not found.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while deleting the space.");
-        }
+        
+        return NoContent();
     }
-    
+
     /// <summary>
     /// Creates a new space role with the specified name in the given space.
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <param name="role"></param>
-    /// <returns></returns>
     [HttpPost("{spaceId:guid}/role/create")]
     [ProducesResponseType(typeof(SpaceRoleDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceRoleDto>> CreateSpaceRoleAsync(Guid spaceId, [FromBody] SpaceRoleDtoShort role)
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<SpaceRoleDto>> CreateSpaceRoleAsync(
+        [FromRoute] Guid spaceId, 
+        [FromBody] SpaceRoleDtoShort role)
     {
-        try
-        {
-            var result = await spaceService.CreateSpaceRoleAsync(spaceId, role.Name, role.RolePermissions);
-            return Created((string?)null, spaceRoleDtoMapper.ToDto(result));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while creating the space role.");
-        }
+        Guard.AgainstEmptyGuid(spaceId);
+        var currentUserId = currentUser.UserId();
+        
+        var result = await spaceService.CreateSpaceRoleAsync(
+            spaceId, 
+            role.Name, 
+            role.RolePermissions, 
+            currentUserId);
+        
+        return Created(new Uri(string.Empty), spaceRoleDtoMapper.ToDto(result));
     }
-    
+
     /// <summary>
     /// Updates an existing space role.
     /// </summary>
-    /// <param name="spaceRole"></param>
-    /// <returns></returns>
     [HttpPut("{spaceId:guid}/role/update")]
-    [ProducesResponseType(typeof(ISpaceRole), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ISpaceRole?>> UpdateSpaceRoleAsync([FromBody] SpaceRoleDto spaceRole)
+    [ProducesResponseType(typeof(SpaceRoleDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<SpaceRoleDto>> UpdateSpaceRoleAsync([FromBody] SpaceRoleDto spaceRole)
     {
-        try
+        var currentUserId = currentUser.UserId();
+        
+        var result = await spaceService.UpdateSpaceRoleAsync(
+            spaceRoleDtoMapper.ToEntity(spaceRole), 
+            currentUserId);
+        
+        if (result == null)
         {
-            var result = await spaceService.UpdateSpaceRoleAsync(spaceRoleDtoMapper.ToEntity(spaceRole));
-            if (result == null)
-                return NotFound();
-            return Ok(spaceRoleDtoMapper.ToDto(result));
+            throw new NotFoundException("Space role not found.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while updating the space role.");
-        }
+        
+        return Ok(spaceRoleDtoMapper.ToDto(result));
     }
-    
+
     /// <summary>
     /// Deletes a space role by its ID in the specified space.
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <param name="roleId"></param>
-    /// <returns></returns>
     [HttpDelete("{spaceId:guid}/role/{roleId:guid}/delete")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult> DeleteSpaceRoleAsync(Guid spaceId, Guid roleId)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> DeleteSpaceRoleAsync(
+        [FromRoute] Guid spaceId, 
+        [FromRoute] Guid roleId)
     {
-        try
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstEmptyGuid(roleId);
+        var currentUserId = currentUser.UserId();
+        
+        var result = await spaceService.DeleteSpaceRoleAsync(spaceId, roleId, currentUserId);
+        
+        if (!result)
         {
-            var result = await spaceService.DeleteSpaceRoleAsync(spaceId, roleId);
-            if (!result)
-                return NotFound();
-            return NoContent();
+            throw new NotFoundException("Space role not found.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while deleting the space role.");
-        }
+        
+        return NoContent();
     }
-    
+
     /// <summary>
     /// Adds a member to a space with the specified user ID and role ID.
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <param name="member"></param>
-    /// <returns></returns>
     [HttpPost("{spaceId:guid}/member/add")]
     [ProducesResponseType(typeof(SpaceMemberDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceMemberDto>> AddMemberToSpaceAsync(Guid spaceId, [FromBody] AddSpaceMemberDto member)
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<SpaceMemberDto>> AddMemberToSpaceAsync(
+        [FromRoute] Guid spaceId, 
+        [FromBody] AddSpaceMemberDto member)
     {
-        try
-        {
-            var result = await spaceService.AddMemberToSpaceAsync(spaceId, member.UserId, member.RoleId);
-            return Created((string?)null, spaceMemberDtoMapper.ToDto(result));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while adding a member to the space.");
-        }
+        Guard.AgainstEmptyGuid(spaceId);
+        var result = await spaceService.AddMemberToSpaceAsync(spaceId, member.UserId, member.RoleId);
+        return Created(new Uri(string.Empty), spaceMemberDtoMapper.ToDto(result));
     }
-    
+
     /// <summary>
     /// Updates the information of a space member.
     /// </summary>
-    /// <param name="spaceMember"></param>
-    /// <returns></returns>
     [HttpPut("{spaceId:guid}/member/update")]
     [ProducesResponseType(typeof(SpaceMemberDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SpaceMemberDto?>> UpdateSpaceMemberAsync([FromBody] SpaceMemberDtoShort spaceMember)
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<SpaceMemberDto>> UpdateSpaceMemberAsync([FromBody] SpaceMemberDtoShort spaceMember)
     {
-        try
+        var result = await spaceService.UpdateSpaceMemberAsync(spaceMemberShortMapper.ToEntity(spaceMember));
+        
+        if (result == null)
         {
-            var result = await spaceService.UpdateSpaceMemberAsync(spaceMemberShortMapper.ToEntity(spaceMember));
-            if (result == null)
-                return NotFound();
-            return Ok(spaceMemberDtoMapper.ToDto(result));
+            throw new NotFoundException("Space member not found.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while updating the space member.");
-        }
+        
+        return Ok(spaceMemberDtoMapper.ToDto(result));
     }
-    
+
     /// <summary>
     /// Removes a member from a space by their user ID.
     /// </summary>
-    /// <param name="spaceId"></param>
-    /// <param name="userId"></param>
-    /// <returns></returns>
     [HttpDelete("{spaceId:guid}/member/remove/{userId:guid}")]
-    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<bool>> RemoveMemberFromSpaceAsync(Guid spaceId, Guid userId)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> RemoveMemberFromSpaceAsync(
+        [FromRoute] Guid spaceId, [FromRoute] Guid userId)
     {
-        try
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstEmptyGuid(userId);
+        var result = await spaceService.RemoveMemberFromSpaceAsync(spaceId, userId);
+        
+        if (!result)
         {
-            var result = await spaceService.RemoveMemberFromSpaceAsync(spaceId, userId);
-            if (!result)
-                return NotFound();
-            return NoContent();
+            throw new NotFoundException("Space member not found.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while removing the member from the space.");
-        }
+        
+        return NoContent();
     }
 }

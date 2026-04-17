@@ -1,25 +1,24 @@
 using Microsoft.EntityFrameworkCore;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
 using UserSpaceService.DAL.Data;
-using UserSpaceService.DAL.Models;
 
 namespace UserSpaceService.DAL.Repositories;
 
 public class SpaceRoleRepository(UserSpaceDbContext context) : ISpaceRoleRepository
 {
-    public async Task<ISpaceRole?> GetByIdAsync(Guid id)
+    public async Task<SpaceRole?> GetByIdAsync(Guid roleId)
     {
         return await context.SpaceRoles
-            .FirstOrDefaultAsync(r => r.Id == id);
+            .FirstOrDefaultAsync(r => r.Id == roleId);
     }
 
-    public async Task<IEnumerable<ISpaceRole>> GetBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<SpaceRole>> GetBySpaceAsync(Guid spaceId)
     {
         return await context.SpaceRoles.Where(sr => sr.SpaceId == spaceId).ToListAsync();
     }
 
-    public async Task<ISpaceRole> CreateAsync(Guid spaceId, string roleName, Permission permissions)
+    public async Task<SpaceRole> CreateAsync(Guid spaceId, string roleName, Permission permissions)
     {
         var role = new SpaceRole
         {
@@ -33,22 +32,27 @@ public class SpaceRoleRepository(UserSpaceDbContext context) : ISpaceRoleReposit
         return role;
     }
 
-    public async Task<ISpaceRole?> UpdateAsync(ISpaceRole entity)
+    public async Task<SpaceRole?> UpdateAsync(SpaceRole updatedRole)
     {
-        var role = (SpaceRole)entity;
-        var existingRole = await context.SpaceRoles.FindAsync(role.Id);
+        var existingRole = await context.SpaceRoles.FindAsync(updatedRole.Id);
         if (existingRole == null)
         {
             return null;
         }
-        context.Entry(existingRole).CurrentValues.SetValues(role);
+        context.Entry(existingRole).CurrentValues.SetValues(updatedRole);
         await context.SaveChangesAsync();
         return existingRole;
     }
 
-    public async Task<bool> DeleteAsync(ISpaceRole spaceRole)
+    public async Task<bool> DeleteAsync(Guid roleId)
     {
-        context.SpaceRoles.Remove((SpaceRole)spaceRole);
+        var existingRole = await context.SpaceRoles.FindAsync(roleId);
+        if (existingRole == null)
+        {
+            return false;
+        }
+        
+        context.SpaceRoles.Remove(existingRole);
         await context.SaveChangesAsync();
         return true;
     }

@@ -1,14 +1,13 @@
-using ChatNotifyService.ABS.IEntities;
 using ChatNotifyService.ABS.IRepositories;
+using ChatNotifyService.ABS.Models;
 using ChatNotifyService.DAL.Data;
-using ChatNotifyService.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Repositories;
 
 public class ChatRepository(ChatNotifyDbContext context) : IChatRepository
 {
-    public async Task<IEnumerable<IChat>> GetAllAsync(Guid spaceId, Guid memberId)
+    public async Task<IEnumerable<Chat>> GetAllAsync(Guid spaceId, Guid memberId)
     {
         return await context.Chats
             .Include(c => c.Members)
@@ -18,7 +17,7 @@ public class ChatRepository(ChatNotifyDbContext context) : IChatRepository
             .ToListAsync();
     }
 
-    public async Task<IChat?> GetByIdAsync(Guid chatId, Guid memberId)
+    public async Task<Chat?> GetByIdAsync(Guid chatId, Guid memberId)
     {
         return await context.Chats
             .Include(c => c.Members)
@@ -27,38 +26,37 @@ public class ChatRepository(ChatNotifyDbContext context) : IChatRepository
                 c.Members.Any(m => m.MemberId == memberId));
     }
 
-    public async Task<IChat> CreateAsync(IChat chat)
+    public async Task<Chat> CreateAsync(Chat chat)
     {
-        var entity = (Chat)chat;
-        context.Chats.Add(entity);
+        context.Chats.Add(chat);
         await context.SaveChangesAsync();
-        return entity;
+        return chat;
     }
 
-    public async Task<IChat?> UpdateAsync(IChat chat)
+    public async Task<Chat?> UpdateAsync(Chat updatedChat)
     {
-        var updatedChat = (Chat)chat;
-
         var existingChat = await context.Chats
             .FirstOrDefaultAsync(c => c.Id == updatedChat.Id);
 
         if (existingChat == null)
+        {
             return null;
+        }
 
         existingChat.Name = updatedChat.Name;
         await context.SaveChangesAsync();
         return existingChat;
     }
 
-    public async Task<bool> DeleteAsync(IChat chat)
+    public async Task<bool> DeleteAsync(Chat chat)
     {
-        var entity = (Chat)chat;
-
         var existing = await context.Chats
-            .FirstOrDefaultAsync(c => c.Id == entity.Id);
+            .FirstOrDefaultAsync(c => c.Id == chat.Id);
 
         if (existing == null)
+        {
             return false;
+        }
 
         context.Chats.Remove(existing);
         await context.SaveChangesAsync();
@@ -72,7 +70,9 @@ public class ChatRepository(ChatNotifyDbContext context) : IChatRepository
             .ToListAsync();
 
         if (chats.Count == 0)
+        {
             return false;
+        }
 
         context.Chats.RemoveRange(chats);
         await context.SaveChangesAsync();

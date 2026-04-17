@@ -1,9 +1,9 @@
-using System.Security.Claims;
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Dtos;
+using ChatNotifyService.ABS.Models;
 using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IServices;
-using ChatNotifyService.BLL.Dtos.Create;
-using ChatNotifyService.BLL.Dtos.Send;
+using ChatNotifyService.API.Helpers;
+using ChatNotifyService.BLL.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +13,6 @@ namespace ChatNotifyService.API.Controllers;
 /// 
 /// </summary>
 /// <param name="messageService"></param>
-/// <param name="httpContextAccessor"></param>
 /// <param name="messageMapper"></param>
 /// <param name="messageCreateMapper"></param>
 [Authorize]
@@ -21,20 +20,11 @@ namespace ChatNotifyService.API.Controllers;
 [ApiController]
 public class MessageController(
     IMessageService messageService,
-    IHttpContextAccessor httpContextAccessor,
-    IBigMapper<IMessage, MessageDto, MessageDtoShort> messageMapper,
-    ICreateMapper<IMessage, MessageCreateDto> messageCreateMapper
+    GetUserHelper getUserHelper,
+    IBigMapper<Message, MessageDto, MessageDtoShort> messageMapper,
+    ICreateMapper<Message, MessageCreateDto> messageCreateMapper
 ) : ControllerBase
 {
-    private Guid GetCurrentUserId()
-    {
-        var user = httpContextAccessor.HttpContext?.User;
-        var idClaim = user?.FindFirst(ClaimTypes.NameIdentifier) ?? user?.FindFirst("sub");
-        if (idClaim == null || !Guid.TryParse(idClaim.Value, out var userId))
-            throw new UnauthorizedAccessException("User id not found in claims.");
-        return userId;
-    }
-
     /// <summary>
     /// 
     /// </summary>
@@ -45,9 +35,12 @@ public class MessageController(
     [HttpGet("all")]
     public async Task<ActionResult<IEnumerable<MessageDtoShort>>> GetMessagesAll(
         [FromRoute] Guid chatId,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 50)
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize)
     {
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstNegativeOrZero(pageNumber);
+        Guard.AgainstNegativeOrZero(pageSize);
         var messages = await messageService.GetAllMessagesAsync(chatId, pageNumber, pageSize);
         var dto = messages.Select(messageMapper.ToShortDto).ToList();
         return Ok(dto);
@@ -62,8 +55,10 @@ public class MessageController(
     [HttpGet("recent")]
     public async Task<ActionResult<IEnumerable<MessageDtoShort>>> GetRecentMessages(
         [FromRoute] Guid chatId,
-        [FromQuery] int count = 20)
+        [FromQuery] int count)
     {
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstNegativeOrZero(count);
         var messages = await messageService.GetRecentMessagesAsync(chatId, count);
         return Ok(messages.Select(messageMapper.ToShortDto).ToList());
     }
@@ -77,7 +72,8 @@ public class MessageController(
     public async Task<ActionResult<IEnumerable<MessageDtoShort>>> GetUnreadMessages(
         [FromRoute] Guid chatId)
     {
-        var userId = GetCurrentUserId();
+        Guard.AgainstEmptyGuid(chatId);
+        var userId = getUserHelper.GetCurrentUserId();
         var messages = await messageService.GetUnreadMessagesAsync(chatId, userId);
         return Ok(messages.Select(messageMapper.ToShortDto).ToList());
     }
@@ -91,9 +87,9 @@ public class MessageController(
     public async Task<ActionResult<MessageDto>> GetMessageById(
         [FromRoute] Guid messageId)
     {
+        Guard.AgainstEmptyGuid(messageId);
         var message = await messageService.GetMessageByIdAsync(messageId);
-        if (message == null) return NotFound();
-        return Ok(messageMapper.ToDto(message));
+        return message == null ? NotFound() : Ok(messageMapper.ToDto(message));
     }
 
     /// <summary>
@@ -102,17 +98,19 @@ public class MessageController(
     /// <param name="chatId"></param>
     /// <param name="createDto"></param>
     /// <returns></returns>
-    [HttpPost()]
+    [HttpPost]
     public async Task<ActionResult<MessageDto>> SendMessage(
         [FromRoute] Guid chatId,
         [FromBody] MessageCreateDto createDto)
     {
-        var entity = messageCreateMapper.ToEntity(chatId, createDto);
-        entity.SenderId = GetCurrentUserId();
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstNull(createDto);
+        var entity = messageCreateMapper.ToEntity(createDto);
+        entity.SenderId = getUserHelper.GetCurrentUserId();
 
-        var created = await messageService.SendMessageAsync(entity);
+        var created = await messageService.SendMessageAsync(createDto);
         var dto = messageMapper.ToDto(created);
-        return Created("message/" + dto.Id, dto);
+        return Created(new Uri("message/" + dto.Id), dto);
     }
 
     /// <summary>
@@ -128,13 +126,16 @@ public class MessageController(
         [FromRoute] Guid messageId,
         [FromBody] MessageDto updateDto)
     {
+        Guard.AgainstEmptyGuid(chatId); 
+        Guard.AgainstEmptyGuid(messageId); 
+        Guard.AgainstNull(updateDto);
+        
         updateDto.Id = messageId;
         updateDto.ChatId = chatId;
-        updateDto.SenderId = GetCurrentUserId();
+        updateDto.SenderId = getUserHelper.GetCurrentUserId();
 
         var updated = await messageService.EditMessageAsync(messageMapper.ToEntity(updateDto));
-        if (updated == null) return NotFound();
-        return Ok(messageMapper.ToDto(updated));
+        return updated == null ? NotFound() : Ok(messageMapper.ToDto(updated));
     }
 
     /// <summary>
@@ -146,7 +147,8 @@ public class MessageController(
     public async Task<IActionResult> MarkMessageAsRead(
         [FromRoute] Guid messageId)
     {
-        var userId = GetCurrentUserId();
+        Guard.AgainstEmptyGuid(messageId);
+        var userId = getUserHelper.GetCurrentUserId();
         await messageService.MarkMessageAsReadAsync(messageId, userId);
         return NoContent();
     }
@@ -162,7 +164,8 @@ public class MessageController(
         [FromRoute] Guid chatId,
         [FromQuery] DateTime upToTime)
     {
-        var userId = GetCurrentUserId();
+        Guard.AgainstEmptyGuid(chatId);
+        var userId = getUserHelper.GetCurrentUserId();
         var reads = await messageService
             .MarkMessagesAsReadAsync(chatId, userId, upToTime);
         return Ok(new { Count = reads?.Count() ?? 0, UpTo = upToTime });
@@ -177,8 +180,8 @@ public class MessageController(
     public async Task<IActionResult> DeleteMessage(
         [FromRoute] Guid messageId)
     {
+        Guard.AgainstEmptyGuid(messageId);
         var deleted = await messageService.DeleteMessageAsync(messageId);
-        if (!deleted) return NotFound();
-        return NoContent();
+        return deleted ? NoContent() : NotFound();
     }
 }

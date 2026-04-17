@@ -1,125 +1,106 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Dtos;
+using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IRepositories;
 using ChatNotifyService.ABS.IServices;
+using ChatNotifyService.ABS.Models;
+using ChatNotifyService.BLL.Helpers;
 
 namespace ChatNotifyService.BLL.Services;
 
 public class MessageService(
     IMessageRepository messageRepository,
     IMessageReadRepository messageReadRepository,
-    IChatNotificationService chatNotificationService
+    ICreateMapper<Message, MessageCreateDto> messageCreateMapper,
+    IChatNotificationService chatNotificationService,
+    IDateTimeProvider dateTimeProvider
 ) : IMessageService
 {
-    public async Task<IEnumerable<IMessage>> GetAllMessagesAsync(Guid chatId, int pageNumber, int pageSize)
+    private const int MinPageSize = 10;
+    private const int MaxPageSize = 100;
+    
+    public async Task<IEnumerable<Message>> GetAllMessagesAsync(Guid chatId, int pageNumber, int pageSize)
     {
-        if (chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
-
-        if (pageNumber < 1)
-            throw new ArgumentException("PageNumber must be greater than zero", nameof(pageNumber));
-
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstOutOfRange(pageNumber, 1, int.MaxValue);
+        Guard.AgainstOutOfRange(pageSize, MinPageSize, MaxPageSize);
         return await messageRepository.GetAllAsync(chatId, pageNumber, pageSize);
     }
 
-    public async Task<IEnumerable<IMessage>> GetRecentMessagesAsync(Guid chatId, int count = 20)
+    public async Task<IEnumerable<Message>> GetRecentMessagesAsync(Guid chatId, int count = 20)
     {
-        if (chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
-
-        if (count < 1)
-            throw new ArgumentException("Count must be greater than zero", nameof(count));
-
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstOutOfRange(count, 1, int.MaxValue);
         return await messageRepository.GetRecentMessagesAsync(chatId, count);
     }
 
-    public async Task<IEnumerable<IMessage>> GetUnreadMessagesAsync(Guid chatId, Guid userId)
+    public async Task<IEnumerable<Message>> GetUnreadMessagesAsync(Guid chatId, Guid userId)
     {
-        if (chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
-
-        if (userId == Guid.Empty)
-            throw new ArgumentException("UserId cannot be empty", nameof(userId));
-
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstEmptyGuid(userId);
         return await messageRepository.GetUnreadMessagesAsync(chatId, userId);
     }
 
-    public async Task<IMessage?> GetMessageByIdAsync(Guid messageId)
+    public async Task<Message?> GetMessageByIdAsync(Guid messageId)
     {
-        if (messageId == Guid.Empty)
-            throw new ArgumentException("MessageId cannot be empty", nameof(messageId));
-
+        Guard.AgainstEmptyGuid(messageId);
         return await messageRepository.GetByIdAsync(messageId);
     }
 
-    public async Task<IMessage> SendMessageAsync(IMessage message)
+    public async Task<Message> SendMessageAsync(MessageCreateDto message)
     {
-        ArgumentNullException.ThrowIfNull(message);
-
-        message.Id = Guid.NewGuid();
-        message.SentAt = DateTime.UtcNow;
-
-        var createdMessage = await messageRepository.CreateAsync(message);
+        Guard.AgainstNull(message);
+        var createdMessage = await messageRepository.CreateAsync(messageCreateMapper.ToEntity(message));
         await chatNotificationService.NotifyMessageSentAsync(createdMessage);
-
         return createdMessage;
     }
 
-    public async Task<IMessage?> EditMessageAsync(IMessage updatedMessage)
+    public async Task<Message?> EditMessageAsync(Message updatedMessage)
     {
-        ArgumentNullException.ThrowIfNull(updatedMessage);
+        Guard.AgainstNull(updatedMessage);
+        Guard.AgainstEmptyGuid(updatedMessage.Id);
 
-        if (updatedMessage.Id == Guid.Empty)
-            throw new ArgumentException("MessageId cannot be empty", nameof(updatedMessage));
-
-        updatedMessage.ModifiedAt = DateTime.UtcNow;
+        updatedMessage.ModifiedAt = dateTimeProvider.UtcNow.DateTime;
 
         var message = await messageRepository.UpdateAsync(updatedMessage);
 
         if (message != null)
+        {
             await chatNotificationService.NotifyMessageEditedAsync(message);
+        }
 
         return message;
     }
 
-    public async Task<IMessageRead> MarkMessageAsReadAsync(Guid messageId, Guid readerId)
+    public async Task<MessageRead> MarkMessageAsReadAsync(Guid messageId, Guid readerId)
     {
-        if (messageId == Guid.Empty)
-            throw new ArgumentException("MessageId cannot be empty", nameof(messageId));
-
-        if (readerId == Guid.Empty)
-            throw new ArgumentException("ReaderId cannot be empty", nameof(readerId));
+        Guard.AgainstEmptyGuid(messageId);
+        Guard.AgainstEmptyGuid(readerId);
 
         var read = await messageReadRepository.MarkAsReadAsync(messageId, readerId);
-
         await chatNotificationService.NotifyMessageReadAsync(messageId, readerId);
-
         return read;
     }
 
-    public async Task<IEnumerable<IMessageRead>> MarkMessagesAsReadAsync(Guid chatId, Guid readerId, DateTime upToTime)
+    public async Task<IEnumerable<MessageRead>> MarkMessagesAsReadAsync(Guid chatId, Guid readerId, DateTime upToTime)
     {
-        if (chatId == Guid.Empty)
-            throw new ArgumentException("ChatId cannot be empty", nameof(chatId));
-
-        if (readerId == Guid.Empty)
-            throw new ArgumentException("ReaderId cannot be empty", nameof(readerId));
-
+        Guard.AgainstEmptyGuid(chatId);
+        Guard.AgainstEmptyGuid(readerId);
         var unreadMessages = await messageRepository.GetUnreadMessagesAsync(chatId, readerId);
         var messagesToMark = unreadMessages.Where(m => m.SentAt <= upToTime);
-
         return await messageReadRepository.MarkAsReadsAsync(messagesToMark, readerId);
     }
 
 
     public async Task<bool> DeleteMessageAsync(Guid messageId)
     {
-        if (messageId == Guid.Empty)
-            throw new ArgumentException("MessageId cannot be empty", nameof(messageId));
+        Guard.AgainstEmptyGuid(messageId);
 
         var deleted = await messageRepository.DeleteAsync(messageId);
 
         if (deleted)
+        {
             await chatNotificationService.NotifyMessageDeletedAsync(messageId);
+        }
 
         return deleted;
     }

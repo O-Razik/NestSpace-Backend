@@ -1,14 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using UserSpaceService.ABS.IModels;
 using UserSpaceService.ABS.IRepositories;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.DAL.Data;
-using UserSpaceService.DAL.Models;
 
 namespace UserSpaceService.DAL.Repositories;
 
 public class SpaceMemberRepository(UserSpaceDbContext context) : ISpaceMemberRepository
 {
-    public async Task<ISpaceMember?> GetByIdAsync(Guid spaceId, Guid userId)
+    public async Task<SpaceMember?> GetByIdAsync(Guid spaceId, Guid userId)
     {
         return await context.SpaceMembers
             .Include(sm => sm.Role)
@@ -16,7 +15,7 @@ public class SpaceMemberRepository(UserSpaceDbContext context) : ISpaceMemberRep
             .FirstOrDefaultAsync(sm => sm.SpaceId == spaceId && sm.UserId == userId);
     }
 
-    public async Task<ISpaceMember> CreateAsync(Guid spaceId, Guid userId, Guid roleId)
+    public async Task<SpaceMember> CreateAsync(Guid spaceId, Guid userId, Guid roleId)
     {
         var spaceMember = new SpaceMember
         {
@@ -31,7 +30,7 @@ public class SpaceMemberRepository(UserSpaceDbContext context) : ISpaceMemberRep
         return spaceMember;
     }
 
-    public async Task<ISpaceMember?> UpdateAsync(ISpaceMember spaceMember)
+    public async Task<SpaceMember?> UpdateAsync(SpaceMember spaceMember)
     {
         var existingSpaceMember = await context.SpaceMembers.FindAsync(spaceMember.Id);
         if (existingSpaceMember == null)
@@ -44,9 +43,13 @@ public class SpaceMemberRepository(UserSpaceDbContext context) : ISpaceMemberRep
         return await this.GetByIdAsync(existingSpaceMember.Id, existingSpaceMember.UserId);
     }
 
-    public async Task<bool> DeleteAsync(ISpaceMember spaceMember)
+    public async Task<bool> DeleteAsync(Guid spaceId, Guid userId)
     {
-        context.SpaceMembers.Remove((SpaceMember)spaceMember);
+        var existingSpaceMember = await context.SpaceMembers.FindAsync(spaceId, userId);
+        if (existingSpaceMember == null)        {
+            return false;
+        }
+        context.SpaceMembers.Remove(existingSpaceMember);
         await context.SaveChangesAsync();
         return true;
     }

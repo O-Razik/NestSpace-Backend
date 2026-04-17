@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace EventScheduleService.BLL.RabbitMQ.Consumer;
 
@@ -12,7 +13,7 @@ public class RabbitMqConsumer(IOptions<RabbitSettings> options) : IDisposable, I
     private IChannel? _channel;
     private bool _disposed;
 
-    public async Task StartConsuming<TEvent>(RabbitMqSubscription<TEvent> subscription) where TEvent : class
+    public async Task StartConsumingAsync<TEvent>(RabbitMqSubscription<TEvent> subscription) where TEvent : class
     {
         EnsureNotDisposed();
 
@@ -32,19 +33,27 @@ public class RabbitMqConsumer(IOptions<RabbitSettings> options) : IDisposable, I
         await _channel.QueueBindAsync(subscription.QueueName, subscription.ExchangeName, subscription.RoutingKey);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
-        consumer.ReceivedAsync += async (sender, ea) =>
+        consumer.ReceivedAsync += async (_, ea) =>
         {
             try
             {
                 var body = ea.Body.ToArray();
                 var message = JsonSerializer.Deserialize<TEvent>(body);
                 if (message != null)
+                {
                     await subscription.HandleEvent(message);
+                }
 
                 await _channel.BasicAckAsync(ea.DeliveryTag, false);
             }
-            catch
+            catch (JsonException)
             {
+                // JSON deserialization failed, reject and don't requeue
+                await _channel.BasicNackAsync(ea.DeliveryTag, false, false);
+            }
+            catch (Exception) when (ea.DeliveryTag > 0)
+            {
+                // Processing failed, reject and requeue for retry
                 await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
             }
         };
@@ -52,47 +61,92 @@ public class RabbitMqConsumer(IOptions<RabbitSettings> options) : IDisposable, I
         await _channel.BasicConsumeAsync(subscription.QueueName, autoAck: false, consumer: consumer);
     }
 
-    public async Task Stop()
+    public async Task StopAsync()
     {
-        if (_disposed) return;
-
-        await _channel?.CloseAsync()!;
-        await _connection?.CloseAsync()!;
-    }
-
-    private void EnsureNotDisposed()
-    {
-        if (!_disposed) return;
-        throw new ObjectDisposedException(nameof(RabbitMqConsumer));
-    }
-
-    public void Dispose()
-    {
-        if (_disposed) return;
-
-        _channel?.Dispose();
-        _connection?.Dispose();
-        _disposed = true;
-        GC.SuppressFinalize(this);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         if (_channel != null)
         {
             await _channel.CloseAsync();
-            _channel.Dispose();
         }
 
         if (_connection != null)
         {
             await _connection.CloseAsync();
-            _connection.Dispose();
+        }
+    }
+
+    private void EnsureNotDisposed()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeCoreAsync().ConfigureAwait(false);
+        
+        Dispose(disposing: false);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            // Dispose managed resources
+            _channel?.Dispose();
+            _connection?.Dispose();
         }
 
         _disposed = true;
-        GC.SuppressFinalize(this);
+    }
+
+    protected virtual async ValueTask DisposeCoreAsync()
+    {
+        if (_channel != null)
+        {
+            try
+            {
+                await _channel.CloseAsync().ConfigureAwait(false);
+            }
+            catch (AlreadyClosedException)
+            {
+                // Channel already closed, ignore
+            }
+            finally
+            {
+                _channel.Dispose();
+            }
+        }
+
+        if (_connection != null)
+        {
+            try
+            {
+                await _connection.CloseAsync().ConfigureAwait(false);
+            }
+            catch (AlreadyClosedException)
+            {
+                // Connection already closed, ignore
+            }
+            finally
+            {
+                _connection.Dispose();
+            }
+        }
     }
 }

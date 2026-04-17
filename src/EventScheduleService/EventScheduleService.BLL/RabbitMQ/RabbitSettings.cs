@@ -2,11 +2,11 @@ namespace EventScheduleService.BLL.RabbitMQ;
 
 public class RabbitSettings
 {
-    public string HostName { get; set; } = null!;
+    public required string HostName { get; init; }
     
-    public int Port { get; set; }
+    public required int Port { get; init; }
     
-    public string UserName { get; set; } = null!;
+    public required string UserName { get; init; }
     
-    public string Password { get; set; } = null!;
+    public required string Password { get; init; }
 }

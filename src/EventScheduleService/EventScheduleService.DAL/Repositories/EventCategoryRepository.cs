@@ -1,21 +1,20 @@
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IRepositories;
 using EventScheduleService.DAL.Data;
-using EventScheduleService.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventScheduleService.DAL.Repositories;
 
 public class EventCategoryRepository(EventScheduleDbContext context) : IEventCategoryRepository
 {
-    public async Task<IEnumerable<IEventCategory>> GetBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<EventCategory>> GetBySpaceAsync(Guid spaceId)
     {
         return await context.EventCategories
             .Where(ec => ec.SpaceId == spaceId)
             .ToListAsync();
     }
 
-    public async Task<IEventCategory?> GetByIdAsync(Guid eventId)
+    public async Task<EventCategory?> GetByIdAsync(Guid eventId)
     {
         return await context.EventCategories
             .Include(ec => ec.SoloEvents)
@@ -23,23 +22,38 @@ public class EventCategoryRepository(EventScheduleDbContext context) : IEventCat
             .FirstOrDefaultAsync(ec => ec.Id == eventId);
     }
 
-    public async Task<IEventCategory> AddAsync(IEventCategory newEvent)
+    public async Task<EventCategory> AddAsync(Guid spaceId, string title, string description)
     {
-        var eventCategoryEntity = (EventCategory)newEvent;
+        var eventCategoryEntity = new EventCategory
+        {
+            Id = Guid.NewGuid(),
+            SpaceId = spaceId,
+            Title = title,
+            Description = description
+        };
         context.EventCategories.Add(eventCategoryEntity);
         await context.SaveChangesAsync();
-        return (await this.GetByIdAsync(eventCategoryEntity.Id))!;
+        return eventCategoryEntity;
     }
 
-    public async Task<IEventCategory?> UpdateAsync(IEventCategory updatedEvent)
+    public async Task<EventCategory?> UpdateAsync(EventCategory updatedEvent)
     {
-        var eventCategoryEntity = (EventCategory)updatedEvent;
+        var eventCategoryEntity = new EventCategory
+        {
+            Id = updatedEvent.Id,
+            SpaceId = updatedEvent.SpaceId,
+            Title = updatedEvent.Title,
+            Description = updatedEvent.Description
+        };
+        
         var existingEventCategory = await context.EventCategories.FindAsync(eventCategoryEntity.Id);
         if (existingEventCategory == null)
         {
             return null;
         }
-        context.Entry(existingEventCategory).CurrentValues.SetValues(eventCategoryEntity);
+        
+        context.Entry(existingEventCategory)
+            .CurrentValues.SetValues(eventCategoryEntity);
         await context.SaveChangesAsync();
         return existingEventCategory;
     }

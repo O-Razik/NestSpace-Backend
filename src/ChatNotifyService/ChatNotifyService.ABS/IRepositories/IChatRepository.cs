@@ -1,18 +1,18 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Models;
 
 namespace ChatNotifyService.ABS.IRepositories;
 
 public interface IChatRepository
 {
-    Task<IEnumerable<IChat>> GetAllAsync(Guid spaceId, Guid memberId);
+    Task<IEnumerable<Chat>> GetAllAsync(Guid spaceId, Guid memberId);
     
-    Task<IChat?> GetByIdAsync(Guid chatId,  Guid memberId);
+    Task<Chat?> GetByIdAsync(Guid chatId,  Guid memberId);
     
-    Task<IChat> CreateAsync(IChat chat);
+    Task<Chat> CreateAsync(Chat chat);
     
-    Task<IChat?> UpdateAsync(IChat updatedChat);
+    Task<Chat?> UpdateAsync(Chat updatedChat);
     
-    Task<bool> DeleteAsync(IChat chat);
+    Task<bool> DeleteAsync(Chat chat);
     
     Task<bool> DeleteBySpaceIdAsync(Guid spaceId);
 }

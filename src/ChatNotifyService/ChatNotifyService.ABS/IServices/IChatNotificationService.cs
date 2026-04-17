@@ -1,22 +1,22 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Models;
 
 namespace ChatNotifyService.ABS.IServices;
 
 public interface IChatNotificationService
 {
-    Task NotifyMessageSentAsync(IMessage message);
+    Task NotifyMessageSentAsync(Message message);
     
-    Task NotifyMessageEditedAsync(IMessage message);
+    Task NotifyMessageEditedAsync(Message message);
     
     Task NotifyMessageDeletedAsync(Guid messageId);
     
     Task NotifyMessageReadAsync(Guid messageId, Guid readerId);
     
-    Task NotifyChatUpdatedAsync(IChat chat);
+    Task NotifyChatUpdatedAsync(Chat chat);
     
     Task NotifyChatDeletedAsync(Guid chatId);
     
-    Task NotifyMemberAddedAsync(Guid chatId, IChatMember member);
+    Task NotifyMemberAddedAsync(Guid chatId, ChatMember member);
     
     Task NotifyMemberRemovedAsync(Guid chatId, Guid memberId);
     

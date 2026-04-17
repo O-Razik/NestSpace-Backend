@@ -1,14 +1,13 @@
-using EventScheduleService.ABS.IModels;
 using EventScheduleService.ABS.IRepositories;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.DAL.Data;
-using EventScheduleService.DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventScheduleService.DAL.Repositories;
 
 public class RegularEventRepository(EventScheduleDbContext context) : IRegularEventRepository
 {
-    public async Task<IEnumerable<IRegularEvent>> GetAllBySpaceAsync(Guid spaceId)
+    public async Task<IEnumerable<RegularEvent>> GetAllBySpaceAsync(Guid spaceId)
     {
         return await context.RegularEvents
             .Where(re => re.SpaceId == spaceId)
@@ -17,17 +16,29 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
             .ToListAsync();
     }
 
-    public async Task<IRegularEvent?> GetByIdAsync(Guid id)
+    public async Task<RegularEvent?> GetByIdAsync(Guid regularEventId)
     {
         return await context.RegularEvents
             .Include(re => re.Tags)
             .Include(re => re.Category)
-            .FirstOrDefaultAsync(re => re.Id == id);
+            .FirstOrDefaultAsync(re => re.Id == regularEventId);
     }
 
-    public async Task<IRegularEvent> AddAsync(IRegularEvent entity)
+    public async Task<RegularEvent> AddAsync(RegularEvent newRegularEvent)
     {
-        var regularEvent = (RegularEvent)entity;
+        var regularEvent = new RegularEvent
+        {
+            Id = newRegularEvent.Id == Guid.Empty ? Guid.NewGuid() : newRegularEvent.Id,
+            Title = newRegularEvent.Title,
+            Description = newRegularEvent.Description,
+            SpaceId = newRegularEvent.SpaceId,
+            Day = newRegularEvent.Day,
+            Frequency = newRegularEvent.Frequency,
+            CategoryId = newRegularEvent.CategoryId,
+            StartTime = newRegularEvent.StartTime,
+            Duration = newRegularEvent.Duration
+        };
+        
         foreach (var tag in regularEvent.Tags)
         {
             context.Entry(tag).State = EntityState.Unchanged;
@@ -35,34 +46,38 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
         
         context.RegularEvents.Add(regularEvent);
         await context.SaveChangesAsync();
-        return (await GetByIdAsync(regularEvent.Id))!;
+        return regularEvent;
     }
 
-    public async Task<IRegularEvent?> UpdateAsync(IRegularEvent entity)
+    public async Task<RegularEvent?> UpdateAsync(RegularEvent updatedRegularEvent)
     {
-        var regularEvent = (RegularEvent)entity;
-
         var existingRegularEvent = await context.RegularEvents
             .Include(r => r.Tags)
-            .FirstOrDefaultAsync(r => r.Id == regularEvent.Id && r.SpaceId == regularEvent.SpaceId);
+            .FirstOrDefaultAsync(r => 
+                r.Id == updatedRegularEvent.Id && 
+                r.SpaceId == updatedRegularEvent.SpaceId);
 
         if (existingRegularEvent == null)
+        {
             return null;
+        }
 
         context.Entry(existingRegularEvent).CurrentValues.SetValues(new
         {
-            regularEvent.Title,
-            regularEvent.Description,
-            regularEvent.SpaceId,
-            regularEvent.Day,
-            regularEvent.Frequency,
-            regularEvent.CategoryId,
-            regularEvent.StartTime,
-            regularEvent.Duration
+            updatedRegularEvent.Title,
+            updatedRegularEvent.Description,
+            updatedRegularEvent.SpaceId,
+            updatedRegularEvent.Day,
+            updatedRegularEvent.Frequency,
+            updatedRegularEvent.CategoryId,
+            updatedRegularEvent.StartTime,
+            updatedRegularEvent.Duration
         });
 
-        var newTagIds = regularEvent.Tags.Select(t => t.Id).ToList();
-        var existingTagIds = existingRegularEvent.Tags.Select(t => t.Id).ToList();
+        var newTagIds = updatedRegularEvent.Tags
+            .Select(t => t.Id).ToList();
+        var existingTagIds = existingRegularEvent.Tags
+            .Select(t => t.Id).ToList();
 
         // Remove deleted tags
         var tagsToRemove = existingRegularEvent.Tags
@@ -70,7 +85,9 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
             .ToList();
 
         foreach (var tag in tagsToRemove)
+        {
             existingRegularEvent.Tags.Remove(tag);
+        }
 
         // Add new tags
         var tagIdsToAdd = newTagIds
@@ -87,9 +104,9 @@ public class RegularEventRepository(EventScheduleDbContext context) : IRegularEv
         return existingRegularEvent;
     }
     
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task<bool> DeleteAsync(Guid regularEventId)
     {
-        var regularEvent = await context.RegularEvents.FindAsync(id);
+        var regularEvent = await context.RegularEvents.FindAsync(regularEventId);
         if (regularEvent == null)
         {
             return false;

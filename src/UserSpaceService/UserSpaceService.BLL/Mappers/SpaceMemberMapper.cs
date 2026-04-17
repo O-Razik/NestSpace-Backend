@@ -1,30 +1,30 @@
+using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
-using UserSpaceService.BLL.DTOs;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.BLL.Mappers;
 
 public class SpaceMemberMapper(
-    IEntityFactory<ISpaceMember> entityFactory,
-    IMapper<IUser, UserDtoShort> userMapper,
-    IMapper<ISpaceRole, SpaceRoleDto> roleMapper)
-    : IMapper<ISpaceMember, SpaceMemberDto>
+    IMapper<User, UserDtoShort> userMapper,
+    IMapper<SpaceRole, SpaceRoleDto> roleMapper)
+    : IMapper<SpaceMember, SpaceMemberDto>
 {
-    public ISpaceMember ToEntity(SpaceMemberDto dto)
+    public SpaceMember ToEntity(SpaceMemberDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var spaceMember = entityFactory.CreateEntity();
-        spaceMember.Id = dto.Id;
-        spaceMember.SpaceId = dto.SpaceId;
-        spaceMember.UserId = dto.UserId;
-        spaceMember.SpaceUsername = dto.SpaceUsername;
-        spaceMember.RoleId = dto.RoleId;
-        spaceMember.User = userMapper.ToEntity(dto.User);
-        spaceMember.Role = roleMapper.ToEntity(dto.Role);
-        return spaceMember;
+        return new SpaceMember
+        {
+            Id = dto.Id,
+            SpaceId = dto.SpaceId,
+            UserId = dto.UserId,
+            SpaceUsername = dto.SpaceUsername,
+            RoleId = dto.RoleId,
+            User = userMapper.ToEntity(dto.User),
+            Role = roleMapper.ToEntity(dto.Role)
+        };
     }
 
-    public SpaceMemberDto ToDto(ISpaceMember entity)
+    public SpaceMemberDto ToDto(SpaceMember entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceMemberDto
@@ -39,19 +39,20 @@ public class SpaceMemberMapper(
         };
     }
 
-    public ISpaceMember ToEntity(SpaceMemberDtoShort dto)
+    public SpaceMember ToEntity(SpaceMemberDtoShort dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var spaceMember = entityFactory.CreateEntity();
-        spaceMember.Id = dto.Id;
-        spaceMember.SpaceId = dto.SpaceId;
-        spaceMember.UserId = dto.UserId;
-        spaceMember.SpaceUsername = dto.SpaceUsername;
-        spaceMember.RoleId = dto.RoleId;
-        return spaceMember;
+        return new SpaceMember
+        {
+            Id = dto.Id,
+            SpaceId = dto.SpaceId,
+            UserId = dto.UserId,
+            SpaceUsername = dto.SpaceUsername,
+            RoleId = dto.RoleId,
+        };
     }
 
-    public SpaceMemberDtoShort ToShortDto(ISpaceMember entity)
+    public SpaceMemberDtoShort ToShortDto(SpaceMember entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceMemberDtoShort
@@ -65,23 +66,23 @@ public class SpaceMemberMapper(
     }
 }
 
-public class SpaceMemberShortMapper(
-    IEntityFactory<ISpaceMember> entityFactory)
-    : IMapper<ISpaceMember, SpaceMemberDtoShort>
+public class SpaceMemberShortMapper
+    : IMapper<SpaceMember, SpaceMemberDtoShort>
 {
-    public ISpaceMember ToEntity(SpaceMemberDtoShort dto)
+    public SpaceMember ToEntity(SpaceMemberDtoShort dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var spaceMember = entityFactory.CreateEntity();
-        spaceMember.Id = dto.Id;
-        spaceMember.SpaceId = dto.SpaceId;
-        spaceMember.UserId = dto.UserId;
-        spaceMember.SpaceUsername = dto.SpaceUsername;
-        spaceMember.RoleId = dto.RoleId;
-        return spaceMember;
+        return new SpaceMember
+        {
+            Id = dto.Id,
+            SpaceId = dto.SpaceId,
+            UserId = dto.UserId,
+            SpaceUsername = dto.SpaceUsername,
+            RoleId = dto.RoleId,
+        };
     }
 
-    public SpaceMemberDtoShort ToDto(ISpaceMember entity)
+    public SpaceMemberDtoShort ToDto(SpaceMember entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceMemberDtoShort

@@ -1,28 +1,71 @@
 using Microsoft.EntityFrameworkCore;
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Filters;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IRepositories;
+using UserSpaceService.ABS.Models;
 using UserSpaceService.DAL.Data;
-using UserSpaceService.DAL.Models;
 
 namespace UserSpaceService.DAL.Repositories;
 
 public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
 {
-    public async Task<ISpace?> GetByIdAsync(Guid id)
+    public async Task<Space?> GetByIdAsync(Guid spaceId)
     {
         return await context.Spaces
-            .Where(s => s.Id == id)
-            .Include(s => s.Members).ThenInclude(m => m.User)
+            .Where(s => s.Id == spaceId)
+            .Include(s => s.Members)
+                .ThenInclude(m => m.User)
             .Include(s => s.Roles)
             .FirstOrDefaultAsync();
     }
 
-    public async Task<IEnumerable<ISpace>> GetAllAsync()
+    public async Task<PagedResult<Space>> SearchAsync(SpaceFilter filter)
     {
-        return await context.Spaces.ToListAsync();
+        var query = context.Spaces.AsQueryable();
+        
+        if (!string.IsNullOrEmpty(filter.SearchTerm))
+        {
+            query = query.Where(s =>
+                string.Compare(s.Name, filter.SearchTerm,
+                    StringComparison.OrdinalIgnoreCase) == 0);
+        }
+        
+        query = filter.SortBy switch
+        {
+            SpaceSortBy.NameDescending => query.OrderByDescending(s => s.Name),
+            SpaceSortBy.NameAscending => query.OrderBy(s => s.Name),
+            SpaceSortBy.MemberCountDescending => query.OrderByDescending(s => s.Members.Count),
+            SpaceSortBy.MemberCountAscending => query.OrderBy(s => s.Members.Count),
+            _ => query.OrderBy(s => s.Id)
+        };
+        
+        var pageCount = await query.CountAsync() / filter.PageSize
+                        + (await query.CountAsync() % filter.PageSize == 0 ? 0 : 1);
+        
+        var spaces = await query
+            .Skip((filter.PageNumber - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .Include(s => s.Members).ThenInclude(m => m.User)
+            .Include(s => s.Roles)
+            .ToListAsync();
+        
+        return new PagedResult<Space>
+        {
+            Items = spaces,
+            PageNumber = filter.PageNumber,
+            PageSize = filter.PageSize,
+            PageCount = pageCount
+        };
     }
 
-    public async Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId)
+    public async Task<Space?> SearchByNameAsync(string name)
+    {
+        return await context.Spaces
+            .Where(s => s.Name == name)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<Space>> GetAllSpacesOfUserAsync(Guid userId)
     {
         return await context.SpaceMembers
             .Where(sm => sm.UserId == userId)
@@ -30,8 +73,9 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
             .ToListAsync();
     }
 
-    public async Task<ISpace> CreateAsync(Guid creatorId, string name)
+    public async Task<Space> CreateAsync(Guid creatorId, string name, IList<Guid> memberIds)
     {
+        var ownerRoleId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
         
         var space = new Space
@@ -42,9 +86,15 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
             {
                 new SpaceRole
                 {
-                    Id = roleId,
+                    Id = ownerRoleId,
                     Name = "Owner",
                     RolePermissions = Permission.All,
+                },
+                new SpaceRole
+                {
+                    Id = roleId,
+                    Name = "Member",
+                    RolePermissions = Permission.ManageTasks | Permission.ManageNotes ,
                 }
             },
             Members =
@@ -53,32 +103,47 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
                 {
                     Id = Guid.NewGuid(),
                     UserId = creatorId,
-                    RoleId = roleId,
+                    RoleId = ownerRoleId,
                 }
             }
         };
+        
+        foreach (var memberId in memberIds.Where(memberId => memberId != creatorId))
+        {
+            space.Members.Add(new SpaceMember
+            {
+                Id = Guid.NewGuid(),
+                UserId = memberId,
+                RoleId = roleId,
+            });
+        }
         
         context.Spaces.Add(space);
         await context.SaveChangesAsync();
         return space;
     }
 
-    public async Task<ISpace?> UpdateAsync(ISpace entity)
+    public async Task<Space?> UpdateAsync(Space updatedSpace)
     {
-        var space = (Space)entity;
-        var existingSpace = await context.Spaces.FindAsync(space.Id);
+        var existingSpace = await context.Spaces.FindAsync(updatedSpace.Id);
         if (existingSpace == null)
         {
             return null;
         }
-        context.Entry(existingSpace).CurrentValues.SetValues(space);
+        context.Entry(existingSpace).CurrentValues.SetValues(updatedSpace);
         await context.SaveChangesAsync();
         return existingSpace;
     }
 
-    public async Task<bool> DeleteAsync(ISpace space)
+    public async Task<bool> DeleteAsync(Guid spaceId)
     {
-        context.Spaces.Remove((Space)space);
+        var space = await context.Spaces.FindAsync(spaceId);
+        if (space == null)
+        {
+            return false;
+        }
+    
+        context.Spaces.Remove(space);
         await context.SaveChangesAsync();
         return true;
     }

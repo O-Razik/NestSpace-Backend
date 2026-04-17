@@ -3,17 +3,27 @@ using System.Text.Json;
 
 namespace UserSpaceService.BLL.Helpers;
 
+/// <summary>
+/// Validates Microsoft access tokens by calling the Microsoft Graph API.
+/// </summary>
+/// <remarks>
+/// This implementation assumes the token is a Microsoft access token that can be used to call the
+/// Microsoft Graph API to retrieve user information. It extracts the user ID and email from the response.
+/// </remarks>
 public class MicrosoftTokenValidator : IExternalTokenValidator
 {
     private static readonly HttpClient HttpClient = new();
 
     public async Task<(string? ProviderUserId, string? Email)> ValidateAsync(string token)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, "https://graph.microsoft.com/v1.0/me");
+        var request = new HttpRequestMessage(HttpMethod.Get, new Uri("https://graph.microsoft.com/v1.0/me"));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await HttpClient.SendAsync(request);
-        if (!response.IsSuccessStatusCode) return (null, null);
+        if (!response.IsSuccessStatusCode)
+        {
+            return (null, null);
+        }
 
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);

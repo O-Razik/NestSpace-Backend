@@ -1,16 +1,16 @@
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.ABS.IRepositories;
 
 public interface IEventCategoryRepository
 {
-    Task<IEnumerable<IEventCategory>> GetBySpaceAsync(Guid spaceId);
+    Task<IEnumerable<EventCategory>> GetBySpaceAsync(Guid spaceId);
     
-    Task<IEventCategory?> GetByIdAsync(Guid eventId);
+    Task<EventCategory?> GetByIdAsync(Guid eventId);
     
-    Task<IEventCategory> AddAsync(IEventCategory newEvent);
+    Task<EventCategory> AddAsync(Guid spaceId, string title, string description);
     
-    Task<IEventCategory?> UpdateAsync(IEventCategory updatedEvent);
+    Task<EventCategory?> UpdateAsync(EventCategory updatedEvent);
     
     Task<bool> DeleteAsync(Guid eventId);
     

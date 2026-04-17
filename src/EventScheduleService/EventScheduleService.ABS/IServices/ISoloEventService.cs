@@ -1,16 +1,17 @@
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Dtos;
+using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.ABS.IServices;
 
 public interface ISoloEventService
 {
-    Task<IEnumerable<ISoloEvent>> GetSoloEventsBySpaceAsync(Guid spaceId);
+    Task<IEnumerable<SoloEvent>> GetSoloEventsBySpaceAsync(Guid spaceId);
     
-    Task<ISoloEvent?> GetSoloEventByIdAsync(Guid soloEventId);
+    Task<SoloEvent?> GetSoloEventByIdAsync(Guid soloEventId);
     
-    Task<ISoloEvent> CreateSoloEventAsync(ISoloEvent newSoloEvent);
+    Task<SoloEvent> CreateSoloEventAsync(SoloEventCreateDto newSoloEvent);
     
-    Task<ISoloEvent?> UpdateSoloEventAsync(ISoloEvent updatedSoloEvent);
+    Task<SoloEvent?> UpdateSoloEventAsync(SoloEvent updatedSoloEvent);
     
     Task<bool> DeleteSoloEventAsync(Guid soloEventId);
     

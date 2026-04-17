@@ -1,14 +1,18 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.Exceptions;
+using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IRepositories;
+using ChatNotifyService.ABS.Models;
 using ChatNotifyService.DAL.Data;
-using ChatNotifyService.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Repositories;
 
-public class ChatMemberRepository(ChatNotifyDbContext context) : IChatMemberRepository
+public class ChatMemberRepository(
+    ChatNotifyDbContext context,
+    IDateTimeProvider dateTimeProvider) : 
+    IChatMemberRepository
 {
-    public async Task<IEnumerable<IChatMember>> GetAllAsync(Guid chatId)
+    public async Task<IEnumerable<ChatMember>> GetAllAsync(Guid chatId)
     {
         var chatMembers = await context.ChatMembers
             .Where(c => c.ChatId == chatId)
@@ -17,7 +21,7 @@ public class ChatMemberRepository(ChatNotifyDbContext context) : IChatMemberRepo
         return chatMembers;
     }
 
-    public async Task<IChatMember?> GetByIdAsync(Guid chatId, Guid memberId)
+    public async Task<ChatMember?> GetByIdAsync(Guid chatId, Guid memberId)
     {
         var chatMember = await context.ChatMembers
             .Where(c => c.ChatId == chatId && c.MemberId == memberId)
@@ -26,31 +30,33 @@ public class ChatMemberRepository(ChatNotifyDbContext context) : IChatMemberRepo
         return chatMember;
     }
 
-    public async Task<IChatMember> AddMemberToChatAsync(IChatMember chatMember)
+    public async Task<ChatMember> AddMemberToChatAsync(ChatMember addedMember)
     {
-        var newMember = (ChatMember)chatMember;
+        var newMember = addedMember;
         var exists = await context.Chats.AnyAsync(c => c.Id == newMember.ChatId);
         if (!exists)
-            throw new Exception("Chat not found");
+        {
+            throw new NotFoundException($"Chat with id {newMember.ChatId} not found");
+        }
 
-        newMember.JoinedAt = DateTime.UtcNow;
+        newMember.JoinedAt = dateTimeProvider.UtcNow.DateTime;
         context.ChatMembers.Add(newMember);
         await context.SaveChangesAsync();
 
-        return (await GetByIdAsync(chatMember.ChatId, chatMember.MemberId))!;
+        return (await GetByIdAsync(addedMember.ChatId, addedMember.MemberId))!;
     }
-    
-    public async Task<IChatMember> UpdateMemberInChatAsync(IChatMember chatMember)
-    {
-        var updatedMember = (ChatMember)chatMember;
 
+    public async Task<ChatMember?> UpdateChatMemberAsync(ChatMember updatedMember)
+    {
         var existingMember = await context.ChatMembers
             .FirstOrDefaultAsync(cm =>
                 cm.ChatId == updatedMember.ChatId &&
                 cm.MemberId == updatedMember.MemberId);
 
         if (existingMember == null)
-            throw new Exception("Chat member not found");
+        {
+            throw new NotFoundException($"Chat member with ChatId {updatedMember.ChatId} and MemberId {updatedMember.MemberId} not found");
+        }
 
         existingMember.PermissionLevel = updatedMember.PermissionLevel;
 
@@ -66,7 +72,9 @@ public class ChatMemberRepository(ChatNotifyDbContext context) : IChatMemberRepo
             .FirstOrDefaultAsync(cm => cm.ChatId == chatId && cm.MemberId == memberId);
 
         if (member == null)
+        {
             return false;
+        }
 
         context.ChatMembers.Remove(member);
         await context.SaveChangesAsync();

@@ -1,28 +1,34 @@
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Dtos;
+using UserSpaceService.ABS.Filters;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.ABS.IServices;
 
 public interface IUserService
 {
-    Task<string> RegisterAsync(string username, string email, string password);
+    Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
     
-    Task<string> RegisterByExternalProviderAsync(Provider provider, string providerUserId, string email);
+    Task<AuthResponseDto> RegisterByExternalProviderAsync(Provider provider, string providerUserId, string email);
     
-    Task<string?> LoginAsync(string email, string password);
+    Task<AuthResponseDto?> LoginAsync(LoginDto loginDto);
     
-    Task<string?> LoginByExternalProviderAsync(Provider provider, string providerUserId);
+    Task<AuthResponseDto?> LoginByExternalProviderAsync(Provider provider, string providerUserId);
     
-    Task<IUser?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId);
+    Task<AuthResponseDto> RefreshTokenAsync(string refreshToken);
     
-    Task<IUser?> GetUserByIdAsync(Guid userId);
-    
-    Task<IUser?> GetUserByUsernameAsync(string username);
-    
-    Task<IUser?> GetUserByEmailAsync(string email);
-    
-    Task<IUser?> UpdateUserAsync(IUser user);
-    
+    Task LogoutAsync(string refreshToken);
+
+    Task<User?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId);
+
+    Task<PagedResult<User>> SearchUsersAsync(UserFilter filter);
+
+    Task<User?> GetUserByIdAsync(Guid userId);
+
+    Task<User?> GetUserByUsernameAsync(string username);
+
+    Task<User?> GetUserByEmailAsync(string email);
+
+    Task<User?> UpdateUserAsync(User user);
+
     Task<bool> DeleteUserAsync(Guid userId);
-    
-    string GenerateJwtTokenAsync(IUser user, TimeSpan expiration);
 }

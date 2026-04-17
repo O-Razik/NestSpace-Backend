@@ -6,9 +6,9 @@ public class SpaceActivityLogEvent
     
     public Guid MemberId { get; set; }
     
-    public string Type { get; set; } = null!;
+    public string Type { get; set; } = string.Empty;
     
-    public string Description { get; set; } = null!;
+    public string Description { get; set; } = string.Empty;
     
     public DateTime ActivityAt { get; set; }
 }

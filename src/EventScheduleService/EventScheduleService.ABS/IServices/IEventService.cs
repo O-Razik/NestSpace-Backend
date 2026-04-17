@@ -1,30 +1,31 @@
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Dtos;
+using EventScheduleService.ABS.Models;
 
 namespace EventScheduleService.ABS.IServices;
 
 public interface IEventService
 {
-    Task<IEnumerable<IEventCategory>> GetCategoriesBySpaceAsync(Guid spaceId);
+    Task<IEnumerable<EventCategory>> GetCategoriesBySpaceAsync(Guid spaceId);
     
-    Task<IEventCategory?> GetCategoryByIdAsync(Guid eventId);
+    Task<EventCategory?> GetCategoryByIdAsync(Guid eventId);
     
-    Task<IEventCategory> CreateCategoryAsync(IEventCategory newEvent);
+    Task<EventCategory> CreateCategoryAsync(CategoryCreateDto newCategory);
     
-    Task<IEventCategory?> UpdateCategoryAsync(IEventCategory updatedEvent);
+    Task<EventCategory?> UpdateCategoryAsync(EventCategory updatedCategory);
     
     Task<bool> DeleteCategoryAsync(Guid eventId);
     
     Task<bool> DeleteCategoryBySpaceIdAsync(Guid spaceId);
     
-    Task<IEnumerable<IEventTag>> GetTagsBySpaceAsync(Guid spaceId);
+    Task<IEnumerable<EventTag>> GetTagsBySpaceAsync(Guid spaceId);
     
-    Task<IEventTag?> GetTagByIdAsync(Guid markerId);
+    Task<EventTag?> GetTagByIdAsync(Guid markerId);
     
-    Task<IEventTag> CreateTagAsync(IEventTag newTag);
+    Task<EventTag> CreateTagAsync(CreateTagDto newTag);
     
-    Task<IEventTag?> UpdateTagAsync(IEventTag updatedTag);
+    Task<EventTag?> UpdateTagAsync(EventTag updatedTag);
     
-    Task<bool> DeleteTagAsync(Guid markerId);
+    Task<bool> DeleteTagAsync(Guid tagId);
     
     Task<bool> DeleteTagBySpaceIdAsync(Guid spaceId);
 }

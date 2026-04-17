@@ -13,7 +13,7 @@ public class RabbitMqConsumerHostedService(
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _ = consumer.StartConsuming(new RabbitMqSubscription<DeleteSpaceEvent>
+        _ = consumer.StartConsumingAsync(new RabbitMqSubscription<DeleteSpaceEvent>
         {
             QueueName = "event.space.deleted",
             ExchangeName = "space.exchange",
@@ -47,7 +47,7 @@ public class RabbitMqConsumerHostedService(
     public Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Stopping RabbitMQ consumer...");
-        _ = consumer.Stop();
+        _ = consumer.StopAsync();
         return Task.CompletedTask;
     }
 }

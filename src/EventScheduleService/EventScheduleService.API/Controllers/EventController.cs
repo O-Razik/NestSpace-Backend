@@ -1,8 +1,8 @@
+using EventScheduleService.ABS.Dtos;
 using EventScheduleService.ABS.IHelpers;
-using EventScheduleService.ABS.IModels;
+using EventScheduleService.ABS.Models;
 using EventScheduleService.ABS.IServices;
-using EventScheduleService.BLL.Dto.Create;
-using EventScheduleService.BLL.Dto.Send;
+using EventScheduleService.BLL.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,18 +13,15 @@ namespace EventScheduleService.API.Controllers;
 /// </summary>
 /// <param name="eventService"></param>
 /// <param name="categoryMapper"></param>
-/// <param name="categoryCreateMapper"></param>
 /// <param name="tagMapper"></param>
-/// <param name="tagCreateMapper"></param>
 [Authorize]
 [Route("api/space/{spaceId:guid}/[controller]")]
 [ApiController]
 public class EventController(
     IEventService eventService,
-    IMapper<IEventCategory, CategoryDto, CategoryShortDto> categoryMapper,
-    ICreateMapper<IEventCategory, CategoryCreateDto> categoryCreateMapper,
-    IMapper<IEventTag, TagDto> tagMapper,
-    ICreateMapper<IEventTag, TagCreateDto> tagCreateMapper)
+    IMapper<EventCategory, CategoryDto> categoryMapper,
+    IMapper<EventCategory, CategoryShortDto> categoryShortMapper,
+    IMapper<EventTag, TagDto> tagMapper)
     : ControllerBase
 {
     /// <summary>
@@ -35,102 +32,64 @@ public class EventController(
     [HttpGet("categories")]
     [ProducesResponseType(typeof(IEnumerable<CategoryShortDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<CategoryShortDto>>> GetEventsBySpaceAsync(Guid spaceId)
+    public async Task<ActionResult<IEnumerable<CategoryShortDto>>> GetEventCategoriesBySpaceAsync(Guid spaceId)
     {
-        try
-        {
-            var events = await eventService.GetCategoriesBySpaceAsync(spaceId);
-            return Ok(events.Select(categoryMapper.ToShortDto));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while retrieving events.");
-        }
+        var events = await eventService.GetCategoriesBySpaceAsync(spaceId);
+        return Ok(events.Select(categoryShortMapper.ToDto));
     }
 
     /// <summary>
     /// Gets full information about an event by its ID.
     /// </summary>
     /// <param name="spaceId"></param>
-    /// <param name="eventId"></param>
+    /// <param name="categoryId"></param>
     /// <returns></returns>
     [HttpGet("categories/{eventId:guid}")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<CategoryDto>> GetEventByIdAsync([FromRoute] Guid spaceId, Guid eventId)
+    public async Task<ActionResult<CategoryDto>> GetEventCategoryByIdAsync([FromRoute] Guid spaceId, Guid categoryId)
     {
-        try
-        {
-            if (eventId == Guid.Empty)
-                return BadRequest("Invalid event ID.");
-            if (spaceId == Guid.Empty)
-                return BadRequest("Invalid space ID.");
-            var eventItem = await eventService.GetCategoryByIdAsync(eventId);
-            if (eventItem == null)
-                return NotFound("Event not found.");
-            if (eventItem.SpaceId != spaceId)
-                return BadRequest("Event does not belong to the specified space.");
-            else return Ok(categoryMapper.ToDto(eventItem));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while retrieving the event.");
-        }
+        Guard.AgainstEmptyGuid(categoryId);
+        Guard.AgainstEmptyGuid(spaceId);
+        var eventItem = await eventService.GetCategoryByIdAsync(categoryId);
+        
+        return eventItem != null ?
+            Ok(categoryMapper.ToDto(eventItem)) : 
+            NotFound("Event not found.");
     }
 
     /// <summary>
     /// Creates a new event in the specified space.
     /// </summary>
     /// <param name="spaceId"></param>
-    /// <param name="newEvent"></param>
+    /// <param name="newCategory"></param>
     /// <returns></returns>
     [HttpPost("categories")]
     [ProducesResponseType(typeof(CategoryShortDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<CategoryDto>> CreateEventAsync([FromRoute] Guid spaceId, [FromBody] CategoryCreateDto newEvent)
+    public async Task<ActionResult<CategoryDto>> CreateCategoryAsync([FromRoute] Guid spaceId, [FromBody] CategoryCreateDto newCategory)
     {
-        try
-        {
-            var createdEvent = await eventService.CreateCategoryAsync(categoryCreateMapper.ToEntity(spaceId, newEvent));
-            return Created("catregories/" + createdEvent.Id,
-                categoryMapper.ToShortDto(createdEvent));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while creating the event.");
-        }
+        var createdEvent = await eventService.CreateCategoryAsync(newCategory);
+        return Created(new Uri("catregories/" + createdEvent.Id),
+            categoryShortMapper.ToDto(createdEvent));
     }
 
     /// <summary>
     /// Updates an existing event with the provided details.
     /// </summary>
-    /// <param name="updatedEvent"></param>
+    /// <param name="updatedCategory"></param>
     /// <returns></returns>
     [HttpPut("categories")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<CategoryDto>> UpdateEventAsync([FromBody] CategoryShortDto updatedEvent)
+    public async Task<ActionResult<CategoryDto>> UpdateCategoryAsync([FromBody] CategoryShortDto updatedCategory)
     {
-        if (updatedEvent.Id == Guid.Empty)
-            return BadRequest("Invalid event data.");
-
-        try
-        {
-            var result = await eventService.UpdateCategoryAsync(categoryMapper.ToEntity(updatedEvent));
-            if (result == null)
-                return NotFound("Event not found.");
-            return Ok(categoryMapper.ToDto(result));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while updating the event.");
-        }
+        Guard.AgainstNull(updatedCategory);
+        Guard.AgainstEmptyGuid(updatedCategory.Id);
+        var result = await eventService.UpdateCategoryAsync(categoryShortMapper.ToEntity(updatedCategory));
+        return result != null ? Ok(categoryMapper.ToDto(result)) : NotFound("Event not found.");
     }
 
     /// <summary>
@@ -143,22 +102,11 @@ public class EventController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<bool>> DeleteEventAsync(Guid eventId)
+    public async Task<ActionResult<bool>> DeleteCategoryAsync(Guid eventId)
     {
-        if (eventId == Guid.Empty)
-            return BadRequest("Invalid event ID.");
-        try
-        {
-            var result = await eventService.DeleteCategoryAsync(eventId);
-            if (!result)
-                return NotFound("Event not found.");
-            return NoContent();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while deleting the event.");
-        }
+        Guard.AgainstEmptyGuid(eventId);
+        var result = await eventService.DeleteCategoryAsync(eventId);
+        return result ? NoContent() : NotFound("Event not found.");
     }
     
     /// <summary>
@@ -171,16 +119,8 @@ public class EventController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<TagDto>>> GetTagsBySpaceAsync(Guid spaceId)
     {
-        try
-        {
-            var markers = await eventService.GetTagsBySpaceAsync(spaceId);
-            return Ok(markers.Select(tagMapper.ToDto));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while retrieving markers.");
-        }
+        var markers = await eventService.GetTagsBySpaceAsync(spaceId);
+        return Ok(markers.Select(tagMapper.ToDto));
     }
     
     /// <summary>
@@ -194,18 +134,8 @@ public class EventController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<TagDto>> GetTagByIdAsync(Guid tagId)
     {
-        try
-        {
-            var marker = await eventService.GetTagByIdAsync(tagId);
-            if (marker == null)
-                return NotFound("Marker not found.");
-            return Ok(tagMapper.ToDto(marker));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while retrieving the marker.");
-        }
+        var marker = await eventService.GetTagByIdAsync(tagId);
+        return marker != null ? Ok(tagMapper.ToDto(marker)) : NotFound("Marker not found.");
     }
 
     /// <summary>
@@ -217,20 +147,17 @@ public class EventController(
     [HttpPost("tags")]
     [ProducesResponseType(typeof(TagDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<TagDto>> CreateTagAsync([FromRoute] Guid spaceId, [FromBody] TagCreateDto newTag)
+    public async Task<ActionResult<TagDto>> CreateTagAsync([FromRoute] Guid spaceId, [FromBody] CreateTagDto newTag)
     {
-        try
+        Guard.AgainstEmptyGuid(spaceId);
+        Guard.AgainstNull(newTag);
+        if (newTag.SpaceId != spaceId)
         {
-            var createdTag = await eventService.CreateTagAsync(tagCreateMapper.ToEntity(spaceId, newTag));
-            return Created( 
-                "tags/" + createdTag.Id,
-                tagMapper.ToDto(createdTag));
+            return BadRequest("Tag's space ID does not match the specified space ID.");
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while creating the marker.");
-        }
+        
+        var createdTag = await eventService.CreateTagAsync(newTag);
+        return Created( new Uri("tags/" + createdTag.Id), tagMapper.ToDto(createdTag));
     }
     
     /// <summary>
@@ -243,23 +170,11 @@ public class EventController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<TagDto>> UpdateMarkerAsync([FromBody] TagDto updatedTag)
+    public async Task<ActionResult<TagDto>> UpdateTagAsync([FromBody] TagDto updatedTag)
     {
-        if (updatedTag.Id == Guid.Empty)
-            return BadRequest("Invalid marker data.");
-
-        try
-        {
-            var result = await eventService.UpdateTagAsync(tagMapper.ToEntity(updatedTag));
-            if (result == null)
-                return NotFound("Tag not found.");
-            return Ok(tagMapper.ToDto(result));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while updating the marker.");
-        }
+        Guard.AgainstEmptyGuid(updatedTag.Id);
+        var result = await eventService.UpdateTagAsync(tagMapper.ToEntity(updatedTag));
+        return result != null ? Ok(tagMapper.ToDto(result)) : NotFound("Marker not found.");
     }
     
     /// <summary>
@@ -274,19 +189,8 @@ public class EventController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<bool>> DeleteTagAsync(Guid tagId)
     {
-        if (tagId == Guid.Empty)
-            return BadRequest("Invalid tag ID.");
-        try
-        {
-            var result = await eventService.DeleteTagAsync(tagId);
-            if (!result)
-                return NotFound("Tag not found.");
-            return NoContent();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return StatusCode(500, "An error occurred while deleting the tag.");
-        }
+        Guard.AgainstEmptyGuid(tagId);
+        var result = await eventService.DeleteTagAsync(tagId);
+        return result ? NoContent() : NotFound("Tag not found.");
     }
 }

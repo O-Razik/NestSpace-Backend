@@ -1,14 +1,17 @@
-using ChatNotifyService.ABS.IEntities;
+using ChatNotifyService.ABS.IHelpers;
 using ChatNotifyService.ABS.IRepositories;
+using ChatNotifyService.ABS.Models;
 using ChatNotifyService.DAL.Data;
-using ChatNotifyService.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatNotifyService.DAL.Repositories;
 
-public class MessageReadRepository(ChatNotifyDbContext context) : IMessageReadRepository
+public class MessageReadRepository(
+    ChatNotifyDbContext context,
+    IDateTimeProvider dateTimeProvider)
+    : IMessageReadRepository
 {
-    public async Task<IEnumerable<IMessageRead>> GetAllAsync(Guid messageId)
+    public async Task<IEnumerable<MessageRead>> GetAllAsync(Guid messageId)
     {
         return await context.MessageReads
             .Where(r => r.MessageId == messageId)
@@ -16,7 +19,7 @@ public class MessageReadRepository(ChatNotifyDbContext context) : IMessageReadRe
             .ToListAsync();
     }
 
-    public async Task<IMessageRead?> GetByIdAsync(Guid messageId, Guid readerId)
+    public async Task<MessageRead?> GetByIdAsync(Guid messageId, Guid readerId)
     {
         return await context.MessageReads
             .Include(r => r.Reader)
@@ -29,19 +32,21 @@ public class MessageReadRepository(ChatNotifyDbContext context) : IMessageReadRe
             .AnyAsync(r => r.MessageId == messageId && r.ReaderId == readerId);
     }
 
-    public async Task<IMessageRead> MarkAsReadAsync(Guid messageId, Guid readerId)
+    public async Task<MessageRead> MarkAsReadAsync(Guid messageId, Guid readerId)
     {
         // If exists → return existing record
         var existing = await GetByIdAsync(messageId, readerId);
         if (existing != null)
+        {
             return existing;
+        }
 
         // Create new record
         var messageRead = new MessageRead
         {
             MessageId = messageId,
             ReaderId = readerId,
-            ReadAt = DateTime.UtcNow
+            ReadAt = dateTimeProvider.UtcNow.DateTime
         };
 
         context.MessageReads.Add(messageRead);
@@ -50,26 +55,32 @@ public class MessageReadRepository(ChatNotifyDbContext context) : IMessageReadRe
         return messageRead;
     }
 
-    public async Task<IEnumerable<IMessageRead>> MarkAsReadsAsync(IEnumerable<IMessage> messages, Guid readerId)
+    public async Task<IEnumerable<MessageRead>> MarkAsReadsAsync(IEnumerable<Message> messages, Guid readerId)
     {
         var toInsert = new List<MessageRead>();
 
-        foreach (var message in messages)
+        foreach (var messageId in messages.Select(m => m.Id))
         {
             var exists = await context.MessageReads
-                .AnyAsync(r => r.MessageId == message.Id && r.ReaderId == readerId);
+                .AnyAsync(r => r.MessageId == messageId && r.ReaderId == readerId);
 
-            if (exists) continue;
+            if (exists)
+            {
+                continue;
+            }
 
             toInsert.Add(new MessageRead
             {
-                MessageId = message.Id,
+                MessageId = messageId,
                 ReaderId = readerId,
-                ReadAt = DateTime.UtcNow
+                ReadAt = dateTimeProvider.UtcNow.DateTime
             });
         }
 
-        if (toInsert.Count <= 0) return toInsert;
+        if (toInsert.Count <= 0)
+        {
+            return toInsert;
+        }
         context.MessageReads.AddRange(toInsert);
         await context.SaveChangesAsync();
 

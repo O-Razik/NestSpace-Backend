@@ -1,15 +1,14 @@
+using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.IModels;
-using UserSpaceService.BLL.DTOs;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.BLL.Mappers;
 
 public class UserMapper(
-    IEntityFactory<IUser> entityFactory,
-    IMapper<IExternalLogin, ExternalLoginDto> externalLoginMapper)
-        : IMapper<IUser, UserDto>
+    IMapper<ExternalLogin, ExternalLoginDto> externalLoginMapper)
+        : IMapper<User, UserDto>
 {
-    public UserDto ToDto(IUser source)
+    public UserDto ToDto(User source)
     {
         return new UserDto
         {
@@ -21,25 +20,25 @@ public class UserMapper(
         };
     }
 
-    public IUser ToEntity(UserDto dto)
+    public User ToEntity(UserDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var user = entityFactory.CreateEntity();
-        user.Id = dto.Id;
-        user.Username = dto.Username;
-        user.Email = dto.Email;
-        user.ExternalLogins = dto.ExternalLogins
-            .Select(externalLoginMapper.ToEntity)
-            .ToList();
-        return user;
+        return new User
+        {
+            Id = dto.Id,
+            Username = dto.Username,
+            Email = dto.Email,
+            ExternalLogins = dto.ExternalLogins
+                .Select(externalLoginMapper.ToEntity)
+                .ToList()
+        };
     }
 }
 
-public class UserShortMapper(
-    IEntityFactory<IUser> entityFactory)
-        : IMapper<IUser, UserDtoShort>
+public class UserShortMapper
+        : IMapper<User, UserDtoShort>
 {
-    public UserDtoShort ToDto(IUser source)
+    public UserDtoShort ToDto(User source)
     {
         return new UserDtoShort
         {
@@ -49,13 +48,14 @@ public class UserShortMapper(
         };
     }
 
-    public IUser ToEntity(UserDtoShort dto)
+    public User ToEntity(UserDtoShort dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
-        var user = entityFactory.CreateEntity();
-        user.Id = dto.Id;
-        user.Username = dto.Username;
-        user.Email = dto.Email;
-        return user;
+        return new User
+        {
+            Id = dto.Id,
+            Username = dto.Username,
+            Email = dto.Email
+        };
     }
 }

@@ -1,18 +1,21 @@
-using UserSpaceService.ABS.IModels;
+using UserSpaceService.ABS.Filters;
+using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.ABS.IRepositories;
 
 public interface ISpaceRepository
 {
-    Task<IEnumerable<ISpace>> GetAllAsync();
+    Task<PagedResult<Space>> SearchAsync(SpaceFilter filter);
     
-    Task<IEnumerable<ISpace>> GetAllSpacesOfUserAsync(Guid userId);
+    Task<Space?> SearchByNameAsync(string name);
     
-    Task<ISpace?> GetByIdAsync(Guid spaceId);
+    Task<IEnumerable<Space>> GetAllSpacesOfUserAsync(Guid userId);
     
-    Task<ISpace> CreateAsync(Guid creatorId, string name);
+    Task<Space?> GetByIdAsync(Guid spaceId);
     
-    Task<ISpace?> UpdateAsync(ISpace updatedSpace);
+    Task<Space> CreateAsync(Guid creatorId, string name, IList<Guid> memberIds);
     
-    Task<bool> DeleteAsync(ISpace space);
+    Task<Space?> UpdateAsync(Space updatedSpace);
+    
+    Task<bool> DeleteAsync(Guid spaceId);
 }
