@@ -28,14 +28,15 @@ public static class Program
         {
             options.Filters.Add<FluentValidationFilter>();
         });
+        builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddJwtAuthentication(builder.Configuration);
+        builder.Services.AddSwagger();
 
         builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         builder
             .AddSqlDbContext()
             .AddModels()
             .AddRepositories()
-            .AddHelpers()
             .AddRabbitMqServices()
             .AddServices()
             .AddMappers()
@@ -47,14 +48,10 @@ public static class Program
             .AddAuthorization()
             .AddEndpointsApiExplorer();
 
-        builder.Services.AddSwagger();
-
         var app = builder.Build();
-
         if (app.Environment.IsDevelopment())
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerWithUi();
         }
 
         app.UseHttpsRedirection();

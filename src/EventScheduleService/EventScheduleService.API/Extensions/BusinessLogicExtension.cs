@@ -1,4 +1,3 @@
-using EventScheduleService.ABS.IHelpers;
 using EventScheduleService.ABS.IServices;
 using EventScheduleService.BLL.Services;
 
@@ -21,18 +20,6 @@ public static class BusinessLogicExtension
         builder.Services.AddScoped<IEventService, EventService>();
         builder.Services.AddScoped<ISoloEventService, SoloEventService>();
         builder.Services.AddScoped<IRegularEventService, RegularEventService>();
-        return builder;
-    }
-    
-    /// <summary>
-    /// Registers the application's helper services with the dependency injection container,
-    /// allowing them to be injected into services and controllers as needed.
-    /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
-    public static WebApplicationBuilder AddHelpers(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         return builder;
     }
 }

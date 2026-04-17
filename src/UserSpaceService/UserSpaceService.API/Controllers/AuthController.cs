@@ -26,7 +26,9 @@ public class AuthController(IUserService service) : ControllerBase
         [FromBody] RegisterDto registerDto)
     {
         var authResponse = await service.RegisterAsync(registerDto);
-        return Created(new Uri(string.Empty), authResponse);
+        return Created(
+            new Uri($"/users/{authResponse.User.Id}", UriKind.Relative),
+            authResponse);
     }
 
     /// <summary>
@@ -91,7 +93,9 @@ public class AuthController(IUserService service) : ControllerBase
             providerUserId,
             email);
 
-        return Created(new Uri(string.Empty), authResponse);
+        return Created(
+            new Uri($"/users/{authResponse.User.Id}", UriKind.Relative),
+            authResponse);
     }
 
     /// <summary>

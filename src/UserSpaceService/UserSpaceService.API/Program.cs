@@ -20,7 +20,6 @@ public static class Program
         });
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerWithJwtAuth();
-        
 
         builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         builder.AddSqlDbContext()
@@ -33,14 +32,13 @@ public static class Program
             .AddSerilog()
             .AddOpenTelemetry();
         
-        builder.Services.AddAuthorization();
-        builder.Services.AddAllAuthentication(builder.Configuration);
-        builder.Services.AddHttpContextAccessor();
+        builder.Services
+            .AddAuthorization()
+            .AddAllAuthentication(builder.Configuration)
+            .AddHttpContextAccessor();
 
         
         var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             app.UseSwaggerWithUi();
