@@ -11,9 +11,9 @@ public class RefreshTokenRepository(
     IDateTimeProvider dateTimeProvider
     ) : IRefreshTokenRepository
 {
-    public async Task<RefreshToken> CreateAsync(Guid userId, string token, DateTime expiresAt)
+    public async Task<RefreshToken> CreateAsync(Guid userId, string token, DateTimeOffset expiresAt)
     {
-        var refreshToken = new RefreshToken(dateTimeProvider)
+        var refreshToken = new RefreshToken
         {
             Id = Guid.NewGuid(),
             UserId = userId,
@@ -42,7 +42,7 @@ public class RefreshTokenRepository(
             .ToListAsync();
     }
 
-    public async Task RevokeAsync(string token, string? replacedByToken = null)
+    public async Task RevokeAsync(string token, string? replacedByToken)
     {
         var refreshToken = await context.RefreshTokens
             .FirstOrDefaultAsync(rt => rt.Token == token);

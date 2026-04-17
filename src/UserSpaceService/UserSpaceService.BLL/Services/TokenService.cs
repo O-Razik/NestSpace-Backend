@@ -56,7 +56,7 @@ public class TokenService(
 
     public async Task<RefreshToken> SaveRefreshTokenAsync(Guid userId, string token)
     {
-        var expiresAt = dateTimeProvider.UtcNow.DateTime.AddDays(7); // 7 днів
+        var expiresAt = dateTimeProvider.UtcNow.AddDays(7);
         return await refreshTokenRepository.CreateAsync(userId, token, expiresAt);
     }
 
@@ -64,8 +64,13 @@ public class TokenService(
     {
         return await refreshTokenRepository.GetByTokenAsync(token);
     }
+    
+    public bool IsRefreshTokenValid(RefreshToken refreshToken)
+    {
+        return refreshToken.RevokedAt == null && refreshToken.ExpiresAt > dateTimeProvider.UtcNow;
+    }
 
-    public async Task RevokeRefreshTokenAsync(string token, string? replacedByToken = null)
+    public async Task RevokeRefreshTokenAsync(string token, string? replacedByToken)
     {
         await refreshTokenRepository.RevokeAsync(token, replacedByToken);
     }

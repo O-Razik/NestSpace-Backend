@@ -13,6 +13,7 @@ public class UserService(
     ITokenService tokenService)
     : IUserService
 {
+    private const int AccessTokenExpirySeconds = 900;
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
     {
@@ -61,17 +62,36 @@ public class UserService(
     public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken)
     {
         Guard.AgainstNullOrEmpty(refreshToken);
-        var token = await tokenService.GetRefreshTokenAsync(refreshToken);
 
-        if (token is not { IsActive: true })
+        var token = await tokenService.GetRefreshTokenAsync(refreshToken);
+        Guard.AgainstNull(token);
+
+        if(!string.IsNullOrEmpty(token.ReplacedByToken))
+        {
+            throw new UnauthorizedAccessException("Refresh token has been replaced by a newer token.");
+        }
+        if (!tokenService.IsRefreshTokenValid(token))
         {
             throw new UnauthorizedAccessException("Invalid or expired refresh token.");
         }
 
         var newRefreshTokenValue = tokenService.GenerateRefreshToken();
-        await tokenService.RevokeRefreshTokenAsync(refreshToken, newRefreshTokenValue);
 
-        return await GenerateAuthResponseAsync(token.User);
+        await tokenService.RevokeRefreshTokenAsync(refreshToken, newRefreshTokenValue);
+        await tokenService.SaveRefreshTokenAsync(token.UserId, newRefreshTokenValue);
+
+        var accessToken = tokenService.GenerateAccessToken(token.User);
+
+        return new AuthResponseDto {
+            AccessToken = accessToken,
+            RefreshToken = newRefreshTokenValue,
+            TokenType = "Bearer",
+            ExpiresIn = AccessTokenExpirySeconds,
+            User = new UserDtoShort {
+                Id = token.User.Id,
+                Username = token.User.Username,
+                Email = token.User.Email }
+        };
     }
     
     public async Task LogoutAsync(string refreshToken)
@@ -150,7 +170,7 @@ public class UserService(
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             TokenType = "Bearer",
-            ExpiresIn = 900,
+            ExpiresIn = AccessTokenExpirySeconds,
             User = new UserDtoShort
             {
                 Id = user.Id,
