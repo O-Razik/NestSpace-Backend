@@ -7,3 +7,5 @@ riderModule.iml
 
 **/appsettings.Docker.json
 **/appsettings.Development.json
+
+**/Migrations/
