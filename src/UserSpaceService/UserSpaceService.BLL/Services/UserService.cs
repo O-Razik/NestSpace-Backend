@@ -97,7 +97,7 @@ public class UserService(
     public async Task LogoutAsync(string refreshToken)
     {
         Guard.AgainstNullOrEmpty(refreshToken);
-        await tokenService.RevokeRefreshTokenAsync(refreshToken);
+        await tokenService.RevokeRefreshTokenAsync(refreshToken, null);
     }
 
     public async Task<User?> AddExternalLoginAsync(Guid userId, Provider provider, string providerUserId)

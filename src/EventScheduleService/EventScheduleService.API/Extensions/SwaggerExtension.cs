@@ -62,4 +62,18 @@ public static class SwaggerExtension
             }
         });
     }
+    
+    public static IApplicationBuilder UseSwaggerWithUi(this IApplicationBuilder app)
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Event Schedule Service API v1");
+            c.RoutePrefix = "swagger";
+            c.DocumentTitle = "EventSchedule Service API";
+            c.DisplayRequestDuration();
+        });
+
+        return app;
+    }
 }
