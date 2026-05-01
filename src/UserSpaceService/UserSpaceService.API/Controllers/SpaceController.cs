@@ -17,6 +17,7 @@ namespace UserSpaceService.API.Controllers;
 [ApiController]
 public class SpaceController(
     ISpaceService spaceService,
+    IAvatarService avatarService,
     IGetCurrentUser currentUser,
     IMapper<Space, SpaceDto> spaceDtoMapper,
     IMapper<Space, SpaceDtoShort> spaceShortDtoMapper,
@@ -75,7 +76,7 @@ public class SpaceController(
         }
         
         var result = await spaceService.CreateSpaceAsync(createSpaceDto);
-        return Created(new Uri(string.Empty), spaceDtoMapper.ToDto(result));
+        return Created(new Uri($"spaces/{result.Id}", UriKind.Relative), spaceDtoMapper.ToDto(result));
     }
 
     /// <summary>
@@ -128,6 +129,55 @@ public class SpaceController(
     }
 
     /// <summary>
+    /// Uploads or replaces the avatar of a space.
+    /// </summary>
+    [HttpPost("{spaceId:guid}/avatar")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(SpaceDtoShort), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<SpaceDtoShort>> UploadSpaceAvatarAsync(
+        [FromRoute] Guid spaceId, IFormFile avatar)
+    {
+        Guard.AgainstEmptyGuid(spaceId);
+        var currentUserId = currentUser.UserId();
+
+        var space = await spaceService.GetSpaceByIdAsync(spaceId)
+            ?? throw new NotFoundException("Space not found.");
+
+        var oldAvatarUrl = space.AvatarUrl;
+        var newAvatarUrl = await avatarService.SaveAvatarAsync(
+            avatar.OpenReadStream(), avatar.FileName, avatar.Length, "spaces", spaceId);
+
+        await avatarService.DeleteAvatarAsync(oldAvatarUrl);
+
+        var updated = await spaceService.UpdateSpaceAvatarAsync(spaceId, newAvatarUrl, currentUserId)
+            ?? throw new NotFoundException("Space not found.");
+
+        return Ok(spaceShortDtoMapper.ToDto(updated));
+    }
+
+    /// <summary>
+    /// Deletes the avatar of a space.
+    /// </summary>
+    [HttpDelete("{spaceId:guid}/avatar")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DeleteSpaceAvatarAsync([FromRoute] Guid spaceId)
+    {
+        Guard.AgainstEmptyGuid(spaceId);
+        var currentUserId = currentUser.UserId();
+
+        var space = await spaceService.GetSpaceByIdAsync(spaceId)
+            ?? throw new NotFoundException("Space not found.");
+
+        await avatarService.DeleteAvatarAsync(space.AvatarUrl);
+        await spaceService.UpdateSpaceAvatarAsync(spaceId, null, currentUserId);
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Creates a new space role with the specified name in the given space.
     /// </summary>
     [HttpPost("{spaceId:guid}/role/create")]
@@ -146,7 +196,7 @@ public class SpaceController(
             role.RolePermissions, 
             currentUserId);
         
-        return Created(new Uri(string.Empty), spaceRoleDtoMapper.ToDto(result));
+        return Created(new Uri($"spaces/{spaceId}/role/{result.Id}", UriKind.Relative), spaceRoleDtoMapper.ToDto(result));
     }
 
     /// <summary>
@@ -209,7 +259,7 @@ public class SpaceController(
     {
         Guard.AgainstEmptyGuid(spaceId);
         var result = await spaceService.AddMemberToSpaceAsync(spaceId, member.UserId, member.RoleId);
-        return Created(new Uri(string.Empty), spaceMemberDtoMapper.ToDto(result));
+        return Created(new Uri($"space/{spaceId}/member/{result.UserId}", UriKind.Relative), spaceMemberDtoMapper.ToDto(result));
     }
 
     /// <summary>

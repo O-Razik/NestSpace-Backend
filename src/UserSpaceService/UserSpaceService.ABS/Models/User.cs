@@ -32,7 +32,11 @@ public sealed class User
     [Column("security_stamp")]
     [MaxLength(255)]
     public string SecurityStamp { get; set; } = string.Empty;
-    
+
+    [Column("avatar_url")]
+    [MaxLength(512)]
+    public string? AvatarUrl { get; set; }
+
     public ICollection<ExternalLogin> ExternalLogins { get; set; } = [];
 
     public ICollection<SpaceMember> SpaceMemberships { get; set; } = [];

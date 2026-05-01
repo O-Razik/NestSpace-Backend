@@ -15,6 +15,7 @@ public class UserMapper(
             Id = source.Id,
             Username = source.Username,
             Email = source.Email,
+            AvatarUrl = source.AvatarUrl,
             ExternalLogins = source.ExternalLogins
                 .Select(externalLoginMapper.ToDto).ToList()
         };
@@ -28,6 +29,7 @@ public class UserMapper(
             Id = dto.Id,
             Username = dto.Username,
             Email = dto.Email,
+            AvatarUrl = dto.AvatarUrl,
             ExternalLogins = dto.ExternalLogins
                 .Select(externalLoginMapper.ToEntity)
                 .ToList()
@@ -44,7 +46,8 @@ public class UserShortMapper
         {
             Id = source.Id,
             Username = source.Username,
-            Email = source.Email
+            Email = source.Email,
+            AvatarUrl = source.AvatarUrl
         };
     }
 
@@ -55,7 +58,8 @@ public class UserShortMapper
         {
             Id = dto.Id,
             Username = dto.Username,
-            Email = dto.Email
+            Email = dto.Email,
+            AvatarUrl = dto.AvatarUrl
         };
     }
 }

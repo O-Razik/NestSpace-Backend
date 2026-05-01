@@ -107,6 +107,15 @@ public class SpaceService(
         return space;
     }
 
+    public async Task<Space?> UpdateSpaceAvatarAsync(Guid spaceId, string? avatarUrl, Guid memberId)
+    {
+        Guard.AgainstEmptyGuid(spaceId);
+        var space = await spaceRepository.GetByIdAsync(spaceId)
+            ?? throw new KeyNotFoundException($"Space with ID {spaceId} not found.");
+        space.AvatarUrl = avatarUrl;
+        return await spaceRepository.UpdateAsync(space);
+    }
+
     public async Task<bool> DeleteSpaceAsync(Guid spaceId)
     {
         Guard.AgainstEmptyGuid(spaceId);
@@ -253,7 +262,8 @@ public class SpaceService(
     public async Task<SpaceMember?> UpdateSpaceMemberAsync(SpaceMember spaceMember)
     {
         Guard.AgainstNull(spaceMember);
-        Guard.AgainstEmptyGuid(spaceMember.Id);
+        Guard.AgainstEmptyGuid(spaceMember.SpaceId);
+        Guard.AgainstEmptyGuid(spaceMember.UserId);
 
         var existingMember = await spaceMemberRepository.GetByIdAsync(spaceMember.SpaceId, spaceMember.UserId)
                             ?? throw new KeyNotFoundException($"Member with User ID {spaceMember.UserId} not found in space {spaceMember.SpaceId}.");

@@ -5,10 +5,6 @@ namespace UserSpaceService.ABS.Models;
 
 public sealed class SpaceMember
 {
-    [Key]
-    [Column("space_member_id")]
-    public Guid Id { get; set; }
-    
     [Column("space_id")]
     public Guid SpaceId { get; set; }
     
@@ -17,10 +13,16 @@ public sealed class SpaceMember
 
     [Column("space_username")]
     [MaxLength(255)]
-    public string? SpaceUsername { get; set; } = null;
+    public string? SpaceUsername { get; set; }
     
     [Column("role_id")]
     public Guid RoleId { get; set; }
+    
+    [Column("joined_at")]
+    public DateTimeOffset JoinedAt { get; set; }
+    
+    [Column("subgroup_id")]
+    public Guid? SubgroupId { get; set; }
 
     [ForeignKey("SpaceId")]
     public Space Space { get; set; } = null!;
@@ -30,4 +32,7 @@ public sealed class SpaceMember
 
     [ForeignKey("RoleId")]
     public SpaceRole Role { get; set; } = null!;
+    
+    [ForeignKey("SubgroupId")]
+    public Subgroup? Subgroup { get; set; }
 }

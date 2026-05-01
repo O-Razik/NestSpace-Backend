@@ -30,5 +30,7 @@ public interface IUserService
 
     Task<User?> UpdateUserAsync(User user);
 
+    Task<User?> UpdateUserAvatarAsync(Guid userId, string? avatarUrl);
+
     Task<bool> DeleteUserAsync(Guid userId);
 }

@@ -13,7 +13,7 @@ public class UserService(
     ITokenService tokenService)
     : IUserService
 {
-    private const int AccessTokenExpirySeconds = 900;
+    private const int AccessTokenExpirySeconds = 7200;
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
     {
@@ -148,6 +148,15 @@ public class UserService(
     {
         Guard.AgainstNull(user);
         Guard.AgainstNullOrEmpty(user.Username);
+        return await repository.UpdateAsync(user);
+    }
+
+    public async Task<User?> UpdateUserAvatarAsync(Guid userId, string? avatarUrl)
+    {
+        Guard.AgainstEmptyGuid(userId);
+        var user = await repository.GetByIdAsync(userId)
+            ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
+        user.AvatarUrl = avatarUrl;
         return await repository.UpdateAsync(user);
     }
 

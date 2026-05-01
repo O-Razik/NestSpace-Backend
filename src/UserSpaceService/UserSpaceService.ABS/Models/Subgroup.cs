@@ -3,23 +3,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace UserSpaceService.ABS.Models;
 
-public sealed class Space
+public class Subgroup
 {
     [Key]
-    [Column("space_id")]
+    [Column("subgroup_id")]
     public Guid Id { get; set; }
-    
+
+    [Column("space_id")]
+    public Guid SpaceId { get; set; }
+
     [Column("name")]
     [MaxLength(255)]
     public string Name { get; set; } = string.Empty;
 
-    [Column("avatar_url")]
-    [MaxLength(512)]
-    public string? AvatarUrl { get; set; }
+    [ForeignKey("SpaceId")]
+    public Space Space { get; set; } = null!;
 
     public ICollection<SpaceMember> Members { get; set; } = new List<SpaceMember>();
-    
-    public ICollection<SpaceRole> Roles { get; set; } = new List<SpaceRole>();
-    
-    public ICollection<Subgroup> Subgroups { get; set; } = new List<Subgroup>();
 }

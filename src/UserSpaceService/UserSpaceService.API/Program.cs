@@ -45,6 +45,7 @@ public static class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseStaticFiles();
         app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
         app.UseAuthentication();

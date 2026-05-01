@@ -20,6 +20,9 @@ public class UserSpaceDbContext : DbContext
     public DbSet<ExternalLogin> ExternalLogins { get; set; } = null!;
     public DbSet<SpaceRole> SpaceRoles { get; set; } = null!;
     public DbSet<SpaceMember> SpaceMembers { get; set; } = null!;
+    
+    public DbSet<Subgroup> Subgroups { get; set; } = null!;
+    
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<Space> Spaces { get; set; } = null!;
@@ -34,6 +37,8 @@ public class UserSpaceDbContext : DbContext
             entity.HasMany(s => s.Members).WithOne(sm => sm.Space)
                 .HasForeignKey(sm => sm.SpaceId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(s => s.Roles).WithOne(e => e.Space)
+                .HasForeignKey(e => e.SpaceId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(s => s.Subgroups).WithOne(e => e.Space)
                 .HasForeignKey(e => e.SpaceId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -85,11 +90,25 @@ public class UserSpaceDbContext : DbContext
 
         // SpaceMember
         modelBuilder.Entity<SpaceMember>(entity =>
+        {             
+            entity.HasKey(e => new { e.SpaceId, e.UserId });
+            entity.HasIndex(sm => sm.SubgroupId);
+            entity.Property(e => e.SpaceUsername).HasMaxLength(MaxStringLength);
+            entity.HasOne(sm => sm.Space).WithMany(s => s.Members)
+                    .HasForeignKey(sm => sm.SpaceId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(sm => sm.User).WithMany(u => u.SpaceMemberships)
+                .HasForeignKey(sm => sm.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(sm => sm.Role).WithMany(sr => sr.Members)
+                .HasForeignKey(sm => sm.RoleId).OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        // Subgroup
+        modelBuilder.Entity<Subgroup>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.SpaceUsername).HasMaxLength(MaxStringLength);
-            entity.HasIndex(e => e.SpaceId);
-            entity.HasIndex(e => e.UserId);
+            entity.Property(e => e.Name).HasMaxLength(MaxStringLength);
+            entity.HasMany(sg => sg.Members).WithOne(sm => sm.Subgroup)
+                .HasForeignKey(sm => sm.SubgroupId).OnDelete(DeleteBehavior.SetNull);
         });
 
         base.OnModelCreating(modelBuilder);

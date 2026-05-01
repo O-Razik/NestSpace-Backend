@@ -2,15 +2,18 @@ namespace UserSpaceService.ABS.Dtos;
 
 public class SpaceMemberDtoShort
 {
-    public Guid Id { get; set; }
-    
+    // 🔧 Composite Key: (SpaceId, UserId) - нема окремого .Id
     public Guid SpaceId { get; set; }
-    
+
     public Guid UserId { get; set; }
-    
+
     public Guid RoleId { get; set; }
-    
+
     public string? SpaceUsername { get; set; }
+
+    public Guid? SubgroupId { get; set; }
+
+    public DateTimeOffset JoinedAt { get; set; }
 }
 
 public class SpaceMemberDto : SpaceMemberDtoShort

@@ -14,13 +14,28 @@ public class SpaceMemberMapper(
         ArgumentNullException.ThrowIfNull(dto);
         return new SpaceMember
         {
-            Id = dto.Id,
             SpaceId = dto.SpaceId,
             UserId = dto.UserId,
             SpaceUsername = dto.SpaceUsername,
             RoleId = dto.RoleId,
+            SubgroupId = dto.SubgroupId,
+            JoinedAt = dto.JoinedAt,
             User = userMapper.ToEntity(dto.User),
             Role = roleMapper.ToEntity(dto.Role)
+        };
+    }
+    
+    public SpaceMember ToEntity(SpaceMemberDtoShort dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return new SpaceMember
+        {
+            SpaceId = dto.SpaceId,
+            UserId = dto.UserId,
+            SpaceUsername = dto.SpaceUsername,
+            RoleId = dto.RoleId,
+            SubgroupId = dto.SubgroupId,
+            JoinedAt = dto.JoinedAt
         };
     }
 
@@ -29,26 +44,14 @@ public class SpaceMemberMapper(
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceMemberDto
         {
-            Id = entity.Id,
             SpaceId = entity.SpaceId,
             UserId = entity.UserId,
             SpaceUsername = entity.SpaceUsername,
             RoleId = entity.RoleId,
+            SubgroupId = entity.SubgroupId,
+            JoinedAt = entity.JoinedAt,
             User = userMapper.ToDto(entity.User),
             Role = roleMapper.ToDto(entity.Role),
-        };
-    }
-
-    public SpaceMember ToEntity(SpaceMemberDtoShort dto)
-    {
-        ArgumentNullException.ThrowIfNull(dto);
-        return new SpaceMember
-        {
-            Id = dto.Id,
-            SpaceId = dto.SpaceId,
-            UserId = dto.UserId,
-            SpaceUsername = dto.SpaceUsername,
-            RoleId = dto.RoleId,
         };
     }
 
@@ -57,11 +60,12 @@ public class SpaceMemberMapper(
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceMemberDtoShort
         {
-            Id = entity.Id,
             SpaceId = entity.SpaceId,
             UserId = entity.UserId,
             SpaceUsername = entity.SpaceUsername,
             RoleId = entity.RoleId,
+            SubgroupId = entity.SubgroupId,
+            JoinedAt = entity.JoinedAt
         };
     }
 }
@@ -74,11 +78,12 @@ public class SpaceMemberShortMapper
         ArgumentNullException.ThrowIfNull(dto);
         return new SpaceMember
         {
-            Id = dto.Id,
             SpaceId = dto.SpaceId,
             UserId = dto.UserId,
             SpaceUsername = dto.SpaceUsername,
             RoleId = dto.RoleId,
+            SubgroupId = dto.SubgroupId,
+            JoinedAt = dto.JoinedAt
         };
     }
 
@@ -87,11 +92,12 @@ public class SpaceMemberShortMapper
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceMemberDtoShort
         {
-            Id = entity.Id,
             SpaceId = entity.SpaceId,
             UserId = entity.UserId,
             SpaceUsername = entity.SpaceUsername,
             RoleId = entity.RoleId,
+            SubgroupId = entity.SubgroupId,
+            JoinedAt = entity.JoinedAt
         };
     }
 }

@@ -3,6 +3,7 @@ using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IServices;
 using UserSpaceService.API.Helpers;
+using UserSpaceService.API.Services;
 using UserSpaceService.BLL.Helpers;
 using UserSpaceService.BLL.Services;
 
@@ -15,7 +16,8 @@ public static class BusinessLogicExtension
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<ISpaceService, SpaceService>();
-        
+        builder.Services.AddScoped<IAvatarService, AvatarService>();
+
         builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         builder.Services.AddScoped<PasswordHasher<User>>();
         builder.Services.AddScoped<PasswordService>();
@@ -23,7 +25,7 @@ public static class BusinessLogicExtension
         builder.Services.AddScoped<GoogleTokenValidator>();
         builder.Services.AddScoped<MicrosoftTokenValidator>();
         builder.Services.AddScoped<ExternalTokenValidatorFactory>();
-        
+
         return builder;
     }
 }

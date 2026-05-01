@@ -15,6 +15,8 @@ public interface ISpaceService
     Task<Space> CreateSpaceAsync(CreateSpaceDto createSpaceDto);
     
     Task<Space?> UpdateSpaceNameAsync(Guid spaceId, string newName, Guid memberId);
+
+    Task<Space?> UpdateSpaceAvatarAsync(Guid spaceId, string? avatarUrl, Guid memberId);
     
     Task<bool> DeleteSpaceAsync(Guid spaceId);
     

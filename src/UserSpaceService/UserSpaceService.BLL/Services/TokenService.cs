@@ -18,6 +18,8 @@ public class TokenService(
     IDateTimeProvider dateTimeProvider
         ) : ITokenService
 {
+    private const int AccessTokenExpirySeconds = 7200;
+    
     public string GenerateAccessToken(User user)
     {
         Guard.AgainstNull(user);
@@ -34,7 +36,7 @@ public class TokenService(
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             ]),
-            Expires = dateTimeProvider.UtcNow.DateTime.AddMinutes(15),
+            Expires = dateTimeProvider.UtcNow.UtcDateTime.AddSeconds(AccessTokenExpirySeconds),
             Issuer = configuration["Jwt:Issuer"],
             Audience = configuration["Jwt:Audience"],
             SigningCredentials = new SigningCredentials(
@@ -56,7 +58,7 @@ public class TokenService(
 
     public async Task<RefreshToken> SaveRefreshTokenAsync(Guid userId, string token)
     {
-        var expiresAt = dateTimeProvider.UtcNow.AddDays(7);
+        var expiresAt = dateTimeProvider.UtcNow.AddDays(7).AddHours(8);
         return await refreshTokenRepository.CreateAsync(userId, token, expiresAt);
     }
 

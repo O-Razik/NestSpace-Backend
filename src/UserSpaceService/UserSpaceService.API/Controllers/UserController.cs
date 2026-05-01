@@ -12,6 +12,7 @@ namespace UserSpaceService.API.Controllers;
 /// Controller for managing user accounts, including registration, login, and external authentication.
 /// </summary>
 /// <param name="service"> User service for handling user operations. </param>
+/// <param name="avatarService"> Service for managing avatar file storage. </param>
 /// <param name="currentUser"> Helper for retrieving information about the currently authenticated user. </param>
 /// <param name="userMapper"> Mapper for converting between IUser and UserDto. </param>
 /// <param name="userShortMapper"> Mapper for converting between IUser and UserDtoShort. </param>
@@ -19,6 +20,7 @@ namespace UserSpaceService.API.Controllers;
 [ApiController]
 public class UserController(
     IUserService service,
+    IAvatarService avatarService,
     IGetCurrentUser currentUser,
     IMapper<User,UserDto> userMapper,
     IMapper<User,UserDtoShort> userShortMapper) : ControllerBase
@@ -169,6 +171,52 @@ public class UserController(
         return Ok(userMapper.ToDto(updatedUser));
     }
     
+    /// <summary>
+    /// Uploads or replaces the avatar of the currently authenticated user.
+    /// </summary>
+    [Authorize]
+    [HttpPost("me/avatar")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto>> UploadAvatarAsync(IFormFile avatar)
+    {
+        var userId = currentUser.UserId();
+        var user = await service.GetUserByIdAsync(userId)
+            ?? throw new NotFoundException("User not found.");
+
+        var oldAvatarUrl = user.AvatarUrl;
+        var newAvatarUrl = await avatarService.SaveAvatarAsync(
+            avatar.OpenReadStream(), avatar.FileName, avatar.Length, "users", userId);
+
+        await avatarService.DeleteAvatarAsync(oldAvatarUrl);
+
+        var updated = await service.UpdateUserAvatarAsync(userId, newAvatarUrl)
+            ?? throw new NotFoundException("User not found.");
+
+        return Ok(userMapper.ToDto(updated));
+    }
+
+    /// <summary>
+    /// Deletes the avatar of the currently authenticated user.
+    /// </summary>
+    [Authorize]
+    [HttpDelete("me/avatar")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DeleteAvatarAsync()
+    {
+        var userId = currentUser.UserId();
+        var user = await service.GetUserByIdAsync(userId)
+            ?? throw new NotFoundException("User not found.");
+
+        await avatarService.DeleteAvatarAsync(user.AvatarUrl);
+        await service.UpdateUserAvatarAsync(userId, null);
+
+        return NoContent();
+    }
+
     /// <summary>
     /// Deletes a user by their ID.
     /// </summary>

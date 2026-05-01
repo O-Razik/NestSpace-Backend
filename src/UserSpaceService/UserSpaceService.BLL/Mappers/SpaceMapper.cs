@@ -16,6 +16,7 @@ public class SpaceMapper(
         {
             Id = dto.Id,
             Name = dto.Name,
+            AvatarUrl = dto.AvatarUrl,
             Members = dto.Members
                 .Select(spaceMemberMapper.ToEntity)
                 .ToList(),
@@ -30,6 +31,7 @@ public class SpaceMapper(
         {
             Id = entity.Id,
             Name = entity.Name,
+            AvatarUrl = entity.AvatarUrl,
             Members = entity.Members
                 .Select(spaceMemberMapper.ToDto)
                 .ToList(),
@@ -38,7 +40,7 @@ public class SpaceMapper(
     }
 }
 
-public class SpaceShortMapper()
+public class SpaceShortMapper
     : IMapper<Space, SpaceDtoShort>
 {
     public SpaceDtoShort ToDto(Space entity)
@@ -48,6 +50,7 @@ public class SpaceShortMapper()
         {
             Id = entity.Id,
             Name = entity.Name,
+            AvatarUrl = entity.AvatarUrl,
         };
     }
 
@@ -58,6 +61,7 @@ public class SpaceShortMapper()
         {
             Id = dto.Id,
             Name = dto.Name,
+            AvatarUrl = dto.AvatarUrl,
         };
     }
 }

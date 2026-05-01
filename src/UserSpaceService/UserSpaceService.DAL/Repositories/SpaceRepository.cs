@@ -101,7 +101,6 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
             {
                 new SpaceMember
                 {
-                    Id = Guid.NewGuid(),
                     UserId = creatorId,
                     RoleId = ownerRoleId,
                 }
@@ -112,7 +111,6 @@ public class SpaceRepository(UserSpaceDbContext context) : ISpaceRepository
         {
             space.Members.Add(new SpaceMember
             {
-                Id = Guid.NewGuid(),
                 UserId = memberId,
                 RoleId = roleId,
             });
