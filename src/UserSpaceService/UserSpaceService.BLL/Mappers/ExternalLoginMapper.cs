@@ -1,13 +1,11 @@
 using UserSpaceService.ABS.Dtos;
-using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.BLL.Mappers;
 
-public class ExternalLoginMapper
-    : IMapper<ExternalLogin, ExternalLoginDto>
+public static class ExternalLoginMapper
 {
-    public ExternalLoginDto ToDto(ExternalLogin source)
+    public static ExternalLoginDto ToDto(this ExternalLogin source)
     {
         ArgumentNullException.ThrowIfNull(source);
         return new ExternalLoginDto
@@ -19,7 +17,7 @@ public class ExternalLoginMapper
         };
     }
 
-    public ExternalLogin ToEntity(ExternalLoginDto dto)
+    public static ExternalLogin ToEntity(this ExternalLoginDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
         return new ExternalLogin

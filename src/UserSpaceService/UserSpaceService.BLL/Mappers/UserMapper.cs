@@ -1,27 +1,11 @@
 using UserSpaceService.ABS.Dtos;
-using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.BLL.Mappers;
 
-public class UserMapper(
-    IMapper<ExternalLogin, ExternalLoginDto> externalLoginMapper)
-        : IMapper<User, UserDto>
+public static class UserMapper
 {
-    public UserDto ToDto(User source)
-    {
-        return new UserDto
-        {
-            Id = source.Id,
-            Username = source.Username,
-            Email = source.Email,
-            AvatarUrl = source.AvatarUrl,
-            ExternalLogins = source.ExternalLogins
-                .Select(externalLoginMapper.ToDto).ToList()
-        };
-    }
-
-    public User ToEntity(UserDto dto)
+    public static User ToEntity(this UserDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
         return new User
@@ -31,27 +15,12 @@ public class UserMapper(
             Email = dto.Email,
             AvatarUrl = dto.AvatarUrl,
             ExternalLogins = dto.ExternalLogins
-                .Select(externalLoginMapper.ToEntity)
+                .Select(x => x.ToEntity())
                 .ToList()
         };
     }
-}
 
-public class UserShortMapper
-        : IMapper<User, UserDtoShort>
-{
-    public UserDtoShort ToDto(User source)
-    {
-        return new UserDtoShort
-        {
-            Id = source.Id,
-            Username = source.Username,
-            Email = source.Email,
-            AvatarUrl = source.AvatarUrl
-        };
-    }
-
-    public User ToEntity(UserDtoShort dto)
+    public static User ToEntity(this UserDtoShort dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
         return new User
@@ -60,6 +29,30 @@ public class UserShortMapper
             Username = dto.Username,
             Email = dto.Email,
             AvatarUrl = dto.AvatarUrl
+        };
+    }
+    
+    public static UserDto ToDto(this User source)
+    {
+        return new UserDto
+        {
+            Id = source.Id,
+            Username = source.Username,
+            Email = source.Email,
+            AvatarUrl = source.AvatarUrl,
+            ExternalLogins = source.ExternalLogins
+                .Select(x => x.ToDto()).ToList()
+        };
+    }
+    
+    public static UserDtoShort ToShortDto(this User source)
+    {
+        return new UserDtoShort
+        {
+            Id = source.Id,
+            Username = source.Username,
+            Email = source.Email,
+            AvatarUrl = source.AvatarUrl
         };
     }
 }

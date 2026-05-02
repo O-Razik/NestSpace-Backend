@@ -27,7 +27,6 @@ public static class Program
             .AddRabbitMqServices()
             .AddRepositories()
             .AddServices()
-            .AddMappersAndFactories()
             .AddValidation()
             .AddSerilog()
             .AddOpenTelemetry();

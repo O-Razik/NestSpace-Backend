@@ -4,10 +4,9 @@ using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.BLL.Mappers;
 
-public class SpaceRoleMapper
-    : IMapper<SpaceRole, SpaceRoleDto>
+public static class SpaceRoleMapper
 {
-    public SpaceRole ToEntity(SpaceRoleDto dto)
+    public static SpaceRole ToEntity(this SpaceRoleDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
         return new SpaceRole
@@ -19,7 +18,7 @@ public class SpaceRoleMapper
         };
     }
 
-    public SpaceRoleDto ToDto(SpaceRole entity)
+    public static SpaceRoleDto ToDto(this SpaceRole entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceRoleDto

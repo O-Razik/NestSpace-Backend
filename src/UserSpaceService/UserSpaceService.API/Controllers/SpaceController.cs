@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.Exceptions;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IServices;
 using UserSpaceService.BLL.Helpers;
+using UserSpaceService.BLL.Mappers;
 
 namespace UserSpaceService.API.Controllers;
 
@@ -18,12 +18,7 @@ namespace UserSpaceService.API.Controllers;
 public class SpaceController(
     ISpaceService spaceService,
     IAvatarService avatarService,
-    IGetCurrentUser currentUser,
-    IMapper<Space, SpaceDto> spaceDtoMapper,
-    IMapper<Space, SpaceDtoShort> spaceShortDtoMapper,
-    IMapper<SpaceRole, SpaceRoleDto> spaceRoleDtoMapper,
-    IMapper<SpaceMember, SpaceMemberDto> spaceMemberDtoMapper,
-    IMapper<SpaceMember, SpaceMemberDtoShort> spaceMemberShortMapper)
+    IGetCurrentUser currentUser)
     : ControllerBase
 {
 
@@ -37,7 +32,7 @@ public class SpaceController(
     {
         var userId = currentUser.UserId();
         var result = await spaceService.GetAllSpacesOfUserAsync(userId);
-        return Ok(result.Select(spaceShortDtoMapper.ToDto));
+        return Ok(result.Select(x => x.ToShortDto()));
     }
 
     /// <summary>
@@ -56,7 +51,7 @@ public class SpaceController(
             throw new NotFoundException("Space not found.");
         }
         
-        return Ok(spaceDtoMapper.ToDto(result));
+        return Ok(result.ToDto());
     }
 
     /// <summary>
@@ -76,7 +71,7 @@ public class SpaceController(
         }
         
         var result = await spaceService.CreateSpaceAsync(createSpaceDto);
-        return Created(new Uri($"spaces/{result.Id}", UriKind.Relative), spaceDtoMapper.ToDto(result));
+        return Created(new Uri($"spaces/{result.Id}", UriKind.Relative), result.ToDto());
     }
 
     /// <summary>
@@ -106,7 +101,7 @@ public class SpaceController(
             throw new NotFoundException("Space not found.");
         }
         
-        return Ok(spaceShortDtoMapper.ToDto(result));
+        return Ok(result.ToShortDto());
     }
 
     /// <summary>
@@ -154,7 +149,7 @@ public class SpaceController(
         var updated = await spaceService.UpdateSpaceAvatarAsync(spaceId, newAvatarUrl, currentUserId)
             ?? throw new NotFoundException("Space not found.");
 
-        return Ok(spaceShortDtoMapper.ToDto(updated));
+        return Ok(updated.ToShortDto());
     }
 
     /// <summary>
@@ -196,7 +191,7 @@ public class SpaceController(
             role.RolePermissions, 
             currentUserId);
         
-        return Created(new Uri($"spaces/{spaceId}/role/{result.Id}", UriKind.Relative), spaceRoleDtoMapper.ToDto(result));
+        return Created(new Uri($"spaces/{spaceId}/role/{result.Id}", UriKind.Relative), result.ToDto());
     }
 
     /// <summary>
@@ -211,7 +206,7 @@ public class SpaceController(
         var currentUserId = currentUser.UserId();
         
         var result = await spaceService.UpdateSpaceRoleAsync(
-            spaceRoleDtoMapper.ToEntity(spaceRole), 
+            spaceRole.ToEntity(), 
             currentUserId);
         
         if (result == null)
@@ -219,7 +214,7 @@ public class SpaceController(
             throw new NotFoundException("Space role not found.");
         }
         
-        return Ok(spaceRoleDtoMapper.ToDto(result));
+        return Ok(result.ToDto());
     }
 
     /// <summary>
@@ -259,7 +254,7 @@ public class SpaceController(
     {
         Guard.AgainstEmptyGuid(spaceId);
         var result = await spaceService.AddMemberToSpaceAsync(spaceId, member.UserId, member.RoleId);
-        return Created(new Uri($"space/{spaceId}/member/{result.UserId}", UriKind.Relative), spaceMemberDtoMapper.ToDto(result));
+        return Created(new Uri($"space/{spaceId}/member/{result.UserId}", UriKind.Relative), result.ToDto());
     }
 
     /// <summary>
@@ -270,14 +265,14 @@ public class SpaceController(
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SpaceMemberDto>> UpdateSpaceMemberAsync([FromBody] SpaceMemberDtoShort spaceMember)
     {
-        var result = await spaceService.UpdateSpaceMemberAsync(spaceMemberShortMapper.ToEntity(spaceMember));
+        var result = await spaceService.UpdateSpaceMemberAsync(spaceMember.ToEntity());
         
         if (result == null)
         {
             throw new NotFoundException("Space member not found.");
         }
         
-        return Ok(spaceMemberDtoMapper.ToDto(result));
+        return Ok(result.ToDto());
     }
 
     /// <summary>

@@ -1,15 +1,11 @@
 using UserSpaceService.ABS.Dtos;
-using UserSpaceService.ABS.IHelpers;
 using UserSpaceService.ABS.Models;
 
 namespace UserSpaceService.BLL.Mappers;
 
-public class SpaceMapper(
-    IMapper<SpaceMember, SpaceMemberDto> spaceMemberMapper,
-    IMapper<SpaceRole, SpaceRoleDto> roleMapper)
-    : IMapper<Space, SpaceDto>
+public static class SpaceMapper
 {
-    public Space ToEntity(SpaceDto dto)
+    public static Space ToEntity(this SpaceDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
         return new Space
@@ -17,14 +13,23 @@ public class SpaceMapper(
             Id = dto.Id,
             Name = dto.Name,
             AvatarUrl = dto.AvatarUrl,
-            Members = dto.Members
-                .Select(spaceMemberMapper.ToEntity)
-                .ToList(),
-            Roles = dto.Roles.Select(roleMapper.ToEntity).ToList()
+            Members = dto.Members.Select(x => x.ToEntity()).ToList(),
+            Roles = dto.Roles.Select(x => x.ToEntity()).ToList()
+        };
+    }
+    
+    public static Space ToEntity(this SpaceDtoShort dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return new Space
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+            AvatarUrl = dto.AvatarUrl,
         };
     }
 
-    public SpaceDto ToDto(Space entity)
+    public static SpaceDto ToDto(this Space entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceDto
@@ -32,18 +37,12 @@ public class SpaceMapper(
             Id = entity.Id,
             Name = entity.Name,
             AvatarUrl = entity.AvatarUrl,
-            Members = entity.Members
-                .Select(spaceMemberMapper.ToDto)
-                .ToList(),
-            Roles = entity.Roles.Select(roleMapper.ToDto).ToList()
+            Members = entity.Members.Select(x => x.ToDto()).ToList(),
+            Roles = entity.Roles.Select(x => x.ToDto()).ToList()
         };
     }
-}
 
-public class SpaceShortMapper
-    : IMapper<Space, SpaceDtoShort>
-{
-    public SpaceDtoShort ToDto(Space entity)
+    public static SpaceDtoShort ToShortDto(this Space entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         return new SpaceDtoShort
@@ -51,17 +50,6 @@ public class SpaceShortMapper
             Id = entity.Id,
             Name = entity.Name,
             AvatarUrl = entity.AvatarUrl,
-        };
-    }
-
-    public Space ToEntity(SpaceDtoShort dto)
-    {
-        ArgumentNullException.ThrowIfNull(dto);
-        return new Space
-        {
-            Id = dto.Id,
-            Name = dto.Name,
-            AvatarUrl = dto.AvatarUrl,
         };
     }
 }

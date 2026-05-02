@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using UserSpaceService.ABS.Dtos;
 using UserSpaceService.ABS.Exceptions;
 using UserSpaceService.ABS.IHelpers;
-using UserSpaceService.ABS.Models;
 using UserSpaceService.ABS.IServices;
+using UserSpaceService.BLL.Mappers;
 
 namespace UserSpaceService.API.Controllers;
 
@@ -14,16 +14,12 @@ namespace UserSpaceService.API.Controllers;
 /// <param name="service"> User service for handling user operations. </param>
 /// <param name="avatarService"> Service for managing avatar file storage. </param>
 /// <param name="currentUser"> Helper for retrieving information about the currently authenticated user. </param>
-/// <param name="userMapper"> Mapper for converting between IUser and UserDto. </param>
-/// <param name="userShortMapper"> Mapper for converting between IUser and UserDtoShort. </param>
 [Route("api/[controller]")]
 [ApiController]
 public class UserController(
     IUserService service,
     IAvatarService avatarService,
-    IGetCurrentUser currentUser,
-    IMapper<User,UserDto> userMapper,
-    IMapper<User,UserDtoShort> userShortMapper) : ControllerBase
+    IGetCurrentUser currentUser) : ControllerBase
 {
     /// <summary>
     /// Retrieves a user by their ID.
@@ -45,11 +41,9 @@ public class UserController(
             throw new NotFoundException("User not found.");
         }
 
-        var response =  currentUser.UserId() == userId
-            ? userMapper.ToDto(user)
-            : userShortMapper.ToDto(user);
-
-        return Ok(response);
+        return Ok(currentUser.UserId() == userId
+            ? user.ToDto()
+            : user.ToShortDto());
     }
 
     /// <summary>
@@ -72,7 +66,7 @@ public class UserController(
             throw new NotFoundException("User not found.");
         }
 
-        return Ok(userShortMapper.ToDto(user));
+        return Ok(user.ToShortDto());
     }
     
     /// <summary>
@@ -95,7 +89,7 @@ public class UserController(
             throw new NotFoundException("User not found.");
         }
 
-        return Ok(userShortMapper.ToDto(user));
+        return Ok(user.ToShortDto());
     }
     
     /// <summary>
@@ -115,7 +109,7 @@ public class UserController(
             throw new NotFoundException("User not found.");
         }
 
-        return Ok(userMapper.ToDto(user));
+        return Ok(user.ToDto());
     }
 
     /// <summary>
@@ -139,7 +133,7 @@ public class UserController(
             throw new NotFoundException("User not found or external login already exists.");
         }
 
-        return Created(new Uri(string.Empty), userMapper.ToDto(updatedUser));
+        return Created(new Uri(string.Empty), updatedUser.ToDto());
     }
 
     /// <summary>
@@ -162,13 +156,13 @@ public class UserController(
             throw new ForbiddenException("You can only update your own account.");
         }
         
-        var updatedUser = await service.UpdateUserAsync(userMapper.ToEntity(user));
+        var updatedUser = await service.UpdateUserAsync(user.ToEntity());
         if (updatedUser == null)
         {
             throw new NotFoundException("User not found.");
         }
 
-        return Ok(userMapper.ToDto(updatedUser));
+        return Ok(updatedUser.ToDto());
     }
     
     /// <summary>
@@ -195,7 +189,7 @@ public class UserController(
         var updated = await service.UpdateUserAvatarAsync(userId, newAvatarUrl)
             ?? throw new NotFoundException("User not found.");
 
-        return Ok(userMapper.ToDto(updated));
+        return Ok(updated.ToDto());
     }
 
     /// <summary>
